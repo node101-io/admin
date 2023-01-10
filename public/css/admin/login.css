@@ -1,0 +1,19 @@
+.all-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form {
+  width: 500px;
+  height: fit-content;
+  min-height: fit-content;
+  background-color: var(--box-color);
+  padding: 20px;
+  border-radius: 7px;
+  box-shadow: 0 0 4px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+}

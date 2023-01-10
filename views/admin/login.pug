@@ -1,0 +1,9 @@
+extends ../partials/head
+block content
+  .all-wrapper
+    form.login-form#form
+      h1.general-title= __('System Admin Login')
+      h2.general-text= __('Please use the admin password to log in. Use this page only to create and edit system admins.')
+      input.general-input#password(type='password' placeholder=__('Password') autofocus autocomplete='off')
+      button.general-button= __('Log In')
+      .general-error#error(style='display: none;') The password is wrong.

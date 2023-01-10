@@ -1,14 +1,22 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const Image = require('../image/Image');
+
+const generateRandomHex = require('./functions/generateRandomHex');
 const hashPassword = require('./functions/hashPassword');
 const getAdmin = require('./functions/getAdmin');
 const verifyPassword = require('./functions/verifyPassword');
 
+const DEFAULT_IMAGE_ROUTE = '/res/images/default/admin.webp';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const IMAGE_HEIGHT = 50;
+const IMAGE_WIDTH = 50;
+const IMAGE_NAME_PREFIX = 'node101 team member ';
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const RANDOM_PASSWORD_LENGTH = 16;
 
 const role_values = [
   'blog_view', 'blog_create', 'blog_edit', 'blog_order', 'blog_delete',
@@ -18,7 +26,7 @@ const role_values = [
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
   'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete',
-  'writing_view', 'writing_create', 'writing_edit', 'writing_order', 'writing_delete',
+  'writing_view', 'writing_create', 'writing_edit', 'writing_order', 'writing_delete'
 ];
 
 const Schema = mongoose.Schema;
@@ -32,6 +40,10 @@ const AdminSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
+  is_completed: {
+    type: Boolean,
+    default: false
+  },
   password: {
     type: String,
     required: true,
@@ -40,13 +52,20 @@ const AdminSchema = new Schema({
   },
   name: {
     type: String,
+    minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH,
-    default: null
+    required: true,
+    unique: true
   },
-  role: {
+  roles: {
     type: Array,
     default: [],
     maxlength: MAX_DATABASE_ARRAY_FIELD_LENGTH
+  },
+  image: {
+    type: String,
+    default: DEFAULT_IMAGE_ROUTE,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   }
 });
 
@@ -109,9 +128,6 @@ AdminSchema.statics.createAdmin = function (data, callback) {
   if (!data.email || !validator.isEmail(data.email.toString()))
     return callback('bad_request');
 
-  if (!data.password || typeof data.password != 'string' || data.password.trim().length < MIN_PASSWORD_LENGTH || data.password.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
-
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
@@ -120,22 +136,24 @@ AdminSchema.statics.createAdmin = function (data, callback) {
   if (data.roles && Array.isArray(data.roles))
     roles = data.roles.filter(each => role_values.includes(each));
 
-  const newAdminData = {
-    email: data.email.toString().trim(),
-    password: data.password.trim(),
-    name: data.name.trim(),
-    roles
-  };
-
-  const newAdmin = new Admin(newAdminData);
-
-  newAdmin.save((err, admin) => {
-    if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-      return callback('duplicated_unique_field');
-    if (err)
-      return callback('database_error');
-
-    return callback(null, admin._id.toString());
+  Image.findImageByUrl(data.image, (err, image) => {
+    const newAdminData = {
+      email: data.email.toString().trim(),
+      password: generateRandomHex(RANDOM_PASSWORD_LENGTH),
+      name: data.name.trim(),
+      roles
+    };
+  
+    const newAdmin = new Admin(newAdminData);
+  
+    newAdmin.save((err, admin) => {
+      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+        return callback('duplicated_unique_field');
+      if (err)
+        return callback('database_error');
+  
+       return callback(null, admin._id.toString());
+    });
   });
 };
 
@@ -172,7 +190,8 @@ AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
 
     Admin.findByIdAndUpdate(admin._id, {$set: {
       name: data.name,
-      roles
+      roles,
+      is_completed: true
     }}, err => {
       if (err) return callback('database_error');
 
@@ -199,6 +218,42 @@ AdminSchema.statics.findAdminByIdAndResetPassword = function (id, data, callback
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) {
+  const Admin = this;
+
+  Admin.findAdminById(id, (err, admin) => {
+    if (err) return callback(err);
+
+    if (!admin.name || !admin.name.length)
+      return callback('bad_request');
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: IMAGE_NAME_PREFIX + admin.name,
+      width: IMAGE_WIDTH,
+      height: IMAGE_HEIGHT,
+      is_used: true
+    }, (err, url) => {
+      if (err) return callback(err);
+    
+      Admin.findByIdAndUpdate(admin._id, { $set: {
+        image: url
+      }}, { new: false }, (err, admin) => {
+        if (err) return callback(err);
+
+        if (!admin.image || admin.image == DEFAULT_IMAGE_ROUTE || admin.image == url)
+          return callback(null, url);
+
+        Image.findImageByUrlAndDelete(admin.image, err => {
+          if (err) return callback(err);
+
+          return callback(null, url);
+        });
+      });
     });
   });
 };

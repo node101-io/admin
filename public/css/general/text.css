@@ -1,0 +1,23 @@
+.general-title {
+  font-weight: 600;
+  font-size: var(--title-font-size);
+  line-height: var(--title-line-height);
+  color: var(--text-color);
+  margin-bottom: 5px;
+}
+
+.general-subtitle {
+  font-weight: 400;
+  font-size: var(--subtitle-font-size);
+  line-height: var(--subtitle-line-heigth);
+  color: var(--text-color-two);
+  margin-bottom: 10px;
+}
+
+.general-text {
+  font-weight: 300;
+  font-size: var(--text-font-size);
+  line-height: var(--text-line-height);
+  color: var(--text-color-two);
+  margin-bottom: 10px;
+}

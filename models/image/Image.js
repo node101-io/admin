@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const toURLString = require('../../utils/toURLString');
 
 const deleteImage = require('./functions/deleteImage');
-const parseColor = require('./functions/parseColor');
 const uploadImage = require('./functions/uploadImage');
 
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
@@ -52,15 +51,15 @@ ImageSchema.statics.createImage = function (data, callback) {
     return callback('bad_request');
 
   if (data.original_name && typeof data.original_name == 'string')
-    return callback('bad_request');
+    data.original_name = toURLString(data.original_name);
+  else
+    data.original_name = data.file_name;
 
   if (!data.width || isNaN(parseInt(data.width)) || parseInt(data.width) <= 0 || parseInt(data.width) > MAX_IMAGE_SIZE)
     return callback('bad_request')
 
   if (!data.height || isNaN(parseInt(data.height)) || parseInt(data.height) <= 0 || parseInt(data.height) > MAX_IMAGE_SIZE)
     return callback('bad_request');
-
-  data.fill = parseColor(data.fill);
 
   uploadImage(data, (err, url) => {
     if (err) return callback('aws_database_error');

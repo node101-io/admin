@@ -1,0 +1,63 @@
+:root {
+  --max-input-width: 400px;
+  --input-height: 35px;
+}
+
+.general-input {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--background-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+}
+.general-input::placeholder {
+  font-weight: 500;
+  color: var(--placeholder-color);
+}
+.general-input:focus {
+  border-color: var(--main-color);
+  box-shadow: none;
+}
+
+.general-button {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--background-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.general-button:hover {
+  box-shadow: 0 0 4px var(--shadow-color);
+}
+
+.general-error {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: fit-content;
+  min-height: fit-content;
+  font-size: var(--text-font-size);
+  line-height: var(--text-line-height);
+  font-weight: 400;
+  text-align: center;
+  color: var(--warning-color);
+  margin-bottom: 10px;
+}

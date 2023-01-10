@@ -1,0 +1,25 @@
+doctype html
+html(lang='tr')
+  head
+    meta(name='viewport' content='width=device-width, initial-scale=1.0, shrink-to-fit=no, maximum-scale=1.0, user-scalable=0')
+    meta(charset='UTF-8')
+    if title
+      title #{title} | node101
+    else
+      title node101
+    if includes
+      if includes.external
+        if includes.external.css
+          each file_name in includes.external.css
+            if file_name == 'page'
+              link(rel='stylesheet' href=`/css/${page}.css`)
+            else
+              link(rel='stylesheet' href=`/css/general/${file_name}.css`)
+        if includes.external.js
+          each file_name in includes.external.js
+            if file_name == 'page'
+              script(src=`/js/${page}.js`)
+            else
+              script(src=`/js/functions/${file_name}.js`)
+    body
+    block content

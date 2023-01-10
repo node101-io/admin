@@ -14,9 +14,8 @@ module.exports = (data, callback) => {
     .resize({
       width: data.width,
       height: data.height,
-      fit: 'contain',
-      position: 'center',
-      background: data.fill
+      fit: 'cover',
+      position: 'center'
     })
     .webp()
     .toBuffer()
