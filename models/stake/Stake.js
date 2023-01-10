@@ -127,27 +127,19 @@ StakeSchema.statics.findStakeById = function (id, callback) {
   });
 };
 
-StakeSchema.statics.findStakeByIdentifierAndFormatByLanguage = function (identifier, language, callback) {
+StakeSchema.statics.findStakeByProjectId = function (project_id, callback) {
   const Stake = this;
 
+  if (!project_id || !validator.isMongoId(project_id.toString()))
+    return callback('bad_request');
+
   Stake.findOne({
-    identifiers: identifier
+    project_id: mongoose.Types.ObjectId(project_id.toString())
   }, (err, stake) => {
     if (err) return callback('database_error');
-    if (!stake)
-      return callback('document_not_found');
+    if (!stake) return callback('document_not_found');
 
-    if (!stake.is_completed)
-      return callback('not_authenticated_request');
-
-    if (!language || !validator.isISO31661Alpha2(language.toString()))
-      language = stake.identifier_languages[identifier];
-
-    getStakeByLanguage(stake, language, (err, stake) => {
-      if (err) return callback(err);
-
-      return callback(null, stake);
-    });
+    return callback(null, stake);
   });
 };
 
@@ -224,41 +216,15 @@ StakeSchema.statics.findStakeByIdAndUpdate = function (id, data, callback) {
   Stake.findStakeById(id, (err, stake) => {
     if (err) return callback(err);
 
-    if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-      return callback('bad_request');
-
-    const identifier = toURLString(data.name);
-
-    Stake.findOne({
-      identifiers: identifier
-    }, (err, duplicate) => {
+    Stake.findByIdAndUpdate(stake._id, {$set: {
+      apr: data.apr && !isNaN(parseFloat(data.apr)) ? parseFloat(data.apr) : null,
+      stake_url: data.stake_url && typeof data.stake_url == 'string' && data.stake_url.trim().length && data.stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.stake_url.trim() : null,
+      how_to_stake_url: data.how_to_stake_url && typeof data.how_to_stake_url == 'string' && data.how_to_stake_url.trim().length && data.how_to_stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.how_to_stake_url.trim() : null,
+      not_yet_stakable: data.not_yet_stakable ? true : false
+    }}, err => {
       if (err) return callback('database_error');
-      if (duplicate && duplicate._id.toString() != stake._id.toString())
-        return callback('duplicated_unique_field');
 
-      const identifier_languages = {
-        identifier: DEFAULT_IDENTIFIER_LANGUAGE
-      };
-
-      Object.keys(stake.identifier_languages).forEach(key => {
-        if (key != toURLString(stake.name))
-          identifier_languages[key] = stake.identifier_languages[key]
-      });
-
-      Stake.findByIdAndUpdate(stake._id, {$set: {
-        name: data.name.trim(),
-        identifiers: stake.identifiers.filter(each => each != toURLString(stake.name)).concat(identifier),
-        identifier_languages,
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : stake.description,
-        rating: data.rating && data.rating >= PROJECT_RATING_MIN_VALUE && data.rating <= PROJECT_RATING_MAX_VALUE ? data.rating : stake.rating,
-        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
-      }}, err => {
-        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-          return callback('duplicated_unique_field');
-        if (err) return callback('database_error');
-  
-        return callback(null);
-      });
+      return callback(null);
     });
   });
 };
@@ -278,77 +244,14 @@ StakeSchema.statics.findStakeByIdAndUpdateTranslations = function (id, data, cal
     if (!stake.is_completed)
       return callback('not_authenticated_request');
 
-    const translations = formatTranslations(stake, data);
-    const oldIdentifier = toURLString(stake.translations[data.language]?.name);
-    const newIdentifier = toURLString(translations[data.language].name);
-
-    const identifier_languages = {
-      newIdentifier: data.language
-    };
-
-    Object.keys(stake.identifier_languages).forEach(key => {
-      if (key != oldIdentifier)
-        identifier_languages[key] = stake.identifier_languages[key]
-    });
-
     Stake.findByIdAndUpdate(stake._id, {$set: {
-      identifiers: stake.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier),
-      identifier_languages,
-      translations
+      translations: formatTranslations(stake, data)
     }}, err => {
       if (err) return callback('database_error');
 
       return callback(null);
     });
   });
-};
-
-StakeSchema.statics.findStakesByFilters = function (data, callback) {
-  const Stake = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  const filters = {};
-  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
-  const skip = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? limit * parseInt(data.page) : 0;
-
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
-
-  Stake
-    .find(filters)
-    .limit(limit)
-    .skip(skip)
-    .sort({ name: 1 })
-    .then(stakes => async.timesSeries(
-      stakes.length,
-      (time, next) => Stake.findStakeByIdAndFormat(stakes[time], (err, stake) => next(err, stake))),
-      (err, stakes) => {
-        if (err) return callback(err);
-
-        return callback(null, stakes);
-      }
-    )
-    .catch(_ => callback('database_error'));
-};
-
-StakeSchema.statics.findStakeCountByFilters = function (data, callback) {
-  const Stake = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  const filters = {};
-
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
-
-  Stake
-    .find(filters)
-    .countDocuments()
-    .then(number => callback(null, number))
-    .catch(_ => callback('database_error'));
 };
 
 module.exports = mongoose.model('Stake', StakeSchema);
