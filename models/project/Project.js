@@ -35,7 +35,7 @@ const ProjectSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-  identifiers: { // List of identifier. Created based on Project title on different languages
+  identifiers: { // List of identifiers. Created based on Project title on different languages
     type: Array,
     required: true,
     minlength: 1

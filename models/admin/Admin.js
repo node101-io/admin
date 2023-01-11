@@ -1,4 +1,5 @@
 const async = require('async');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -14,7 +15,7 @@ const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 50;
 const IMAGE_WIDTH = 50;
-const IMAGE_NAME_PREFIX = 'node101 team member ';
+const IMAGE_NAME_PREFIX = 'node101 admin ';
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
@@ -254,13 +255,17 @@ AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) 
       }}, { new: false }, (err, admin) => {
         if (err) return callback(err);
 
-        if (!admin.image || admin.image == DEFAULT_IMAGE_ROUTE || admin.image == url)
-          return callback(null, url);
+        fs.unlink('./public/res/uploads/' + file.filename, err => {
+          if (err) return callback('fs_unlink_error');
 
-        Image.findImageByUrlAndDelete(admin.image, err => {
-          if (err) return callback(err);
+          if (!admin.image || admin.image == DEFAULT_IMAGE_ROUTE || admin.image == url)
+            return callback(null, url);
 
-          return callback(null, url);
+          Image.findImageByUrlAndDelete(admin.image, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
+          });
         });
       });
     });

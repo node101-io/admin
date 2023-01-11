@@ -9,19 +9,22 @@ const indexGetController = require('../controllers/admin/index/get');
 const loginGetController = require('../controllers/admin/login/get');
 const logoutGetController = require('../controllers/admin/logout/get');
 
+const deletePostController = require('../controllers/admin/delete/post');
 const editPostController = require('../controllers/admin/edit/post');
 const createPostController = require('../controllers/admin/create/post');
+const imagePostController = require('../controllers/admin/image/post');
 const loginPostController = require('../controllers/admin/login/post');
+const passwordPostController = require('../controllers/admin/password/post');
 
-router.get(
-  '/edit',
-    isSystemAdmin,
-    editGetController
-);
 router.get(
   '/',
     isSystemAdmin,
     indexGetController
+);
+router.get(
+  '/edit',
+    isSystemAdmin,
+    editGetController
 );
 router.get(
   '/login',
@@ -34,6 +37,11 @@ router.get(
 );
 
 router.post(
+  '/delete',
+    isSystemAdmin,
+    deletePostController
+);
+router.post(
   '/edit',
     isSystemAdmin,
     editPostController
@@ -44,8 +52,18 @@ router.post(
     createPostController
 );
 router.post(
+  '/image',
+    isSystemAdmin,
+    imagePostController
+);
+router.post(
   '/login',
     loginPostController
+);
+router.post(
+  '/password',
+    isSystemAdmin,
+    passwordPostController
 );
 
 module.exports = router;
