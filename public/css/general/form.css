@@ -28,6 +28,106 @@
   box-shadow: none;
 }
 
+.general-input-not-allowed {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--background-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+}
+
+.general-image-input-wrapper {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--background-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+}
+.general-image-input-placeholder {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color-two);
+  cursor: pointer;
+  width: 100%;
+}
+.general-image-input-image {
+  height: calc(var(--input-height) - 10px);
+  min-height: calc(var(--input-height) - 10px);
+  width: calc(var(--input-height) - 10px);
+  min-width: calc(var(--input-height) - 10px);
+  background-color: var(--text-color);
+  background-size: cover;
+  border-radius: 2px;
+}
+.general-image-input-delete-button {
+  margin-left: auto;
+  height: 15px;
+  width: auto;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.general-image-input-delete-button:hover {
+  opacity: 1;
+}
+
+.general-checkbox-input-wrapper {
+  display: flex;
+  align-items: center;
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  cursor: pointer;
+}
+.general-checkbox-input-box {
+  border: 1px solid var(--text-color);
+  background-color: var(--box-color);
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  margin-right: 8px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.general-checkbox-input-box-selected {
+  border-color: var(--main-color);
+  background-color: var(--main-color);
+}
+.general-checkbox-input-icon {
+  height: 13px;
+  min-height: 13px;
+}
+.general-checkbox-input-text {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-color);
+}
+
 .general-button {
   width: calc(min(100%, var(--max-input-width)));
   min-width: calc(min(100%, var(--max-input-width)));
@@ -44,6 +144,9 @@
   padding: 0 15px;
   border-radius: 3px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .general-button:hover {
   box-shadow: 0 0 4px var(--shadow-color);

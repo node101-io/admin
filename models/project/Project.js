@@ -18,6 +18,7 @@ const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 200;
 const IMAGE_WIDTH = 200;
 const IMAGE_NAME_PREFIX = 'node101 project ';
+const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
@@ -38,7 +39,8 @@ const ProjectSchema = new Schema({
   identifiers: { // List of identifiers. Created based on Project title on different languages
     type: Array,
     required: true,
-    minlength: 1
+    minlength: 0,
+    maxlength: MAX_DATABASE_ARRAY_FIELD_LENGTH
   },
   identifier_languages: { // Principal language of each identifier. Default to en
     type: Object,
@@ -81,6 +83,10 @@ const ProjectSchema = new Schema({
   is_deleted: {
     type: Boolean,
     default: false
+  },
+  order: {
+    type: Number,
+    required: true
   }
 });
 
@@ -114,8 +120,17 @@ ProjectSchema.statics.createProject = function (data, callback) {
       if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
         return callback('duplicated_unique_field');
       if (err) return callback('database_error');
-      
-      return callback(null, project._id.toString());
+
+      Project.collection
+        .createIndex(
+          { name: 'text', description: 'text' },
+          { weights: {
+            name: 10,
+            description: 1
+          } }
+        )
+        .then(() => callback(null, project._id.toString()))
+        .catch(err => callback('index_error'));
     });
   });
 };
@@ -246,14 +261,16 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
     if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
-    const identifier = toURLString(data.name);
+    const newIdentifier = toURLString(data.name);
 
     Project.findOne({
-      identifiers: identifier
+      identifiers: newIdentifier
     }, (err, duplicate) => {
       if (err) return callback('database_error');
       if (duplicate && duplicate._id.toString() != project._id.toString())
         return callback('duplicated_unique_field');
+
+      const identifiers = project.identifiers.filter(each => each != toURLString(project.name)).concat(newIdentifier);
 
       const identifier_languages = {
         identifier: DEFAULT_IDENTIFIER_LANGUAGE
@@ -266,9 +283,9 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
 
       Project.findByIdAndUpdate(project._id, {$set: {
         name: data.name.trim(),
-        identifiers: project.identifiers.filter(each => each != toURLString(project.name)).concat(identifier),
+        identifiers,
         identifier_languages,
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : project.description,
+        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.description.trim() : project.description,
         rating: data.rating && data.rating >= PROJECT_RATING_MIN_VALUE && data.rating <= PROJECT_RATING_MAX_VALUE ? data.rating : project.rating,
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
       }}, err => {
@@ -276,7 +293,16 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
   
-        return callback(null);
+        Project.collection
+          .createIndex(
+            { name: 'text', description: 'text' },
+            { weights: {
+              name: 10,
+              description: 1
+            } }
+          )
+          .then(() => callback(null))
+          .catch(err => callback('index_error'));
       });
     });
   });
@@ -301,23 +327,31 @@ ProjectSchema.statics.findProjectByIdAndUpdateTranslations = function (id, data,
     const oldIdentifier = toURLString(project.translations[data.language]?.name);
     const newIdentifier = toURLString(translations[data.language].name);
 
-    const identifier_languages = {
-      newIdentifier: data.language
-    };
-
-    Object.keys(project.identifier_languages).forEach(key => {
-      if (key != oldIdentifier)
-        identifier_languages[key] = project.identifier_languages[key]
-    });
-
-    Project.findByIdAndUpdate(project._id, {$set: {
-      identifiers: project.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier),
-      identifier_languages,
-      translations
-    }}, err => {
+    Project.findOne({
+      identifiers: newIdentifier
+    }, (err, project) => {
       if (err) return callback('database_error');
+      if (project) return callback('duplicated_unique_field');
 
-      return callback(null);
+      const identifiers = project.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+      const identifier_languages = {
+        newIdentifier: data.language
+      };
+  
+      Object.keys(project.identifier_languages).forEach(key => {
+        if (key != oldIdentifier)
+          identifier_languages[key] = project.identifier_languages[key]
+      });
+  
+      Project.findByIdAndUpdate(project._id, {$set: {
+        identifiers,
+        identifier_languages,
+        translations
+      }}, err => {
+        if (err) return callback('database_error');
+  
+        return callback(null);
+      });
     });
   });
 };
@@ -329,27 +363,62 @@ ProjectSchema.statics.findProjectsByFilters = function (data, callback) {
     return callback('bad_request');
 
   const filters = {};
+
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
-  const skip = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? limit * parseInt(data.page) : 0;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
 
-  Project
-    .find(filters)
-    .limit(limit)
-    .skip(skip)
-    .sort({ name: 1 })
-    .then(projects => async.timesSeries(
-      projects.length,
-      (time, next) => Project.findProjectByIdAndFormat(projects[time], (err, project) => next(err, project)),
-      (err, projects) => {
-        if (err) return callback(err);
+  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
+    Project
+      .find(filters)
+      .sort({ name: 1 })
+      .limit(limit)
+      .skip(skip)
+      .then(projects => async.timesSeries(
+        projects.length,
+        (time, next) => Project.findProjectByIdAndFormat(projects[time]._id, (err, project) => next(err, project)),
+        (err, projects) => {
+          if (err) return callback(err);
 
-        return callback(null, projects);
+          return callback(null, {
+            search: null,
+            limit,
+            page,
+            projects
+          });
+        })
+      )
+      .catch(_ => callback('database_error'));
+  } else {
+    filters.$text = { $search: data.search.trim() };
+
+    Project
+      .find(filters)
+      .sort({
+        score: { $meta: 'textScore' }, 
+        name: 1
       })
-    )
-    .catch(_ => callback('database_error'));
+      .limit(limit)
+      .skip(skip)
+      .then(projects => async.timesSeries(
+        projects.length,
+        (time, next) => Project.findProjectByIdAndFormat(projects[time]._id, (err, project) => next(err, project)),
+        (err, projects) => {
+          if (err) return callback(err);
+
+          return callback(null, {
+            search: data.search.trim(),
+            limit,
+            page,
+            projects
+          });
+        })
+      )
+      .catch(_ => callback('database_error'));
+  };
 };
 
 ProjectSchema.statics.findProjectCountByFilters = function (data, callback) {
@@ -360,14 +429,84 @@ ProjectSchema.statics.findProjectCountByFilters = function (data, callback) {
 
   const filters = {};
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
 
-  Project
-    .find(filters)
-    .countDocuments()
-    .then(number => callback(null, number))
-    .catch(_ => callback('database_error'));
+  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
+    Project
+      .find(filters)
+      .countDocuments()
+      .then(count => callback(null, count))
+      .catch(_ => callback('database_error'));
+  } else {
+    filters.$text = { $search: data.search.trim() };
+
+    Project
+      .find(filters)
+      .countDocuments()
+      .then(count => callback(null, count))
+      .catch(_ => callback('database_error'));
+  };
+};
+
+ProjectSchema.statics.findProjectByIdAndDelete = function (id, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (project.is_deleted) return callback(null);
+
+    Project.findByIdAndUpdate(project._id, {$set: {
+      identifiers: [],
+      identifier_languages: {},
+      is_deleted: true
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndRestore = function (id, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.is_deleted) return callback(null);
+
+    identifiers = [ toURLString(project.name) ];
+    const identifierLanguages = {
+      [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
+    };
+
+    Object.values(project.translations).forEach(lang => {
+      identifiers.push(toURLString(lang.name));
+    });
+
+    async.timesSeries(
+      identifiers.length,
+      (time, next) => Project.findOne({ identifiers: identifiers[time] }, (err, project) => {
+        if (err) return next('database_error');
+        if (project) return next('duplicated_unique_field');
+
+        return next(null);
+      }),
+      err => {
+        if (err) return callback(err);
+
+        Project.findByIdAndUpdate({
+          identifiers,
+          identifierLanguages,
+          is_deleted: false
+        }, err => {
+          if (err) return callback('database_error');
+
+          return callback(null);
+        });
+      }
+    );
+  });
 };
 
 module.exports = mongoose.model('Project', ProjectSchema);

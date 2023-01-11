@@ -1,0 +1,115 @@
+.general-create-wrapper {
+  padding: 30px;
+  padding-bottom: 0;
+  flex: 1;
+  width: 100%;
+  min-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.general-create-info {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--warning-color);
+  margin-bottom: 30px;
+}
+
+.general-create-title {
+  font-size: var(--title-font-size);
+  font-weight: 600;
+  color: var(--text-color);
+}
+.general-create-subtitle {
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  margin-bottom: 10px;
+}
+.general-create-required::after {
+  content: "*";
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--warning-color);
+  margin-left: 2px;
+}
+.general-create-seperator {
+  width: 300px;
+  height: 1px;
+  min-height: 1px;
+  background-color: var(--text-color-two);
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.general-create-input-grid-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  height: fit-content;
+  min-height: fit-content;
+  grid-gap: 30px;
+  margin-bottom: 30px;
+}
+.general-create-input-grid-each-item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.general-create-line-wrapper {
+  display: flex;
+  align-items: center;
+  height: fit-content;
+  min-height: fit-content;
+  width: 100%;
+}
+.general-create-text-button {
+  font-weight: 600;
+  color: var(--main-color);
+  font-size: var(--text-font-size);
+  margin-bottom: 9px;
+  margin-left: auto;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+.general-create-text-button:hover {
+  border-color: var(--main-color);
+}
+
+.general-create-button-wrapper {
+  width: 100%;
+  height: fit-content;
+  min-height: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+.general-create-error {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--warning-color);
+}
+.general-create-button {
+  width: 200px;
+  min-width: 200px;
+  height: 35px;
+  min-height: 35px;
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--main-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+.general-create-button:hover {
+  box-shadow: 0 0 4px var(--shadow-color);
+}

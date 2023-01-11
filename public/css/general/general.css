@@ -75,8 +75,8 @@ input[type=number] {
   --text-color-two: rgba(248, 248, 248, 1);
   --border-color: rgba(236, 236, 236, 1);
 
-  --background-color: rgba(6, 6, 6, 1);
-  --box-color: rgba(9, 9, 9, 1);
+  --background-color: rgba(2, 2, 2, 1);
+  --box-color: rgba(6, 6, 6, 1);
   --border-color: rgba(7, 7, 7, 1);
   --shadow-color: rgba(218, 218, 218, 0.2);
 

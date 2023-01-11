@@ -12,8 +12,8 @@ module.exports = (req, res) => {
         title: res.__('System Admin Dashboard'),
         includes: {
           external: {
-            css: ['form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-            js: ['adminListeners', 'createFormPopUp', 'serverRequest']
+            css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+            js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
           }
         },
         navbar: {

@@ -1,0 +1,101 @@
+.general-confirm-outer-wrapper {
+  position: absolute;
+  z-index: 10;
+  left: 0px;
+  top: 0px;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(2, 2, 2, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.general-confirm-wrapper {
+  position: absolute;
+  padding: 30px;
+  max-width: 95%;
+  width: 550px;
+  border-radius: 5px;
+  background-color: var(--box-color);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  top: 20px;
+  box-shadow: 0 0 4px var(--shadow-color);
+}
+
+.general-confirm-title {
+  font-size: 18px;
+  color: var(--text-color);
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.general-confirm-text {
+  font-size: 16px;
+  color: var(--text-color);
+  font-weight: 300;
+  margin-bottom: 30px;
+  width: 100%;
+  white-space: initial !important;
+}
+
+.general-confirm-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+.general-confirm-no-button {
+  border: 1px solid var(--warning-color);
+  border-radius: 7px;
+  padding: 10px 15px;
+  cursor: pointer;
+  color: var(--warning-color);
+  font-weight: 500;
+  font-size: 14px;
+  background-color: var(--background-color);
+  opacity: 0.8;
+}
+.general-confirm-no-button:hover {
+  opacity: 1;
+}
+.general-confirm-yes-button {
+  border: 1px solid var(--second-color);
+  border-radius: 7px;
+  padding: 10px 15px;
+  cursor: pointer;
+  margin-left: 15px;
+  color: var(--second-color);
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 0.8;
+}
+.general-confirm-yes-button:hover {
+  opacity: 1;
+}
+
+.general-slide-down-animation-class {
+  animation: slideDown 0.1s ease-in-out 0s 1 forwards;
+  -webkit-animation: slideDown 0.1s ease-in-out 0s 1 forwards;
+}
+
+@keyframes slideDown {
+  from {
+    top: 20px;
+  }
+  to {
+    top: 100px
+  }
+}
+@-webkit-keyframes slideDown {
+  from {
+    top: 20px;
+  }
+  to {
+    top: 100px
+  }
+}
+

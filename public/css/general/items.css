@@ -19,6 +19,7 @@
   border-radius: 3px;
   margin-bottom: 15px;
   padding: 10px 15px;
+  background-color: var(--box-color);
 }
 
 .general-each-item-title-wrapper {
@@ -53,7 +54,7 @@
   background-color: var(--main-color);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--box-color);
   height: 25px;
   padding: 0 15px;
   border-radius: 3px;

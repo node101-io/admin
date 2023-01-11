@@ -60,5 +60,20 @@
 	"Change the Order of Writings (from Blogs & Books)": "Change the Order of Writings (from Blogs & Books)",
 	"Delete & Restore Writings (from Blogs & Books)": "Delete & Restore Writings (from Blogs & Books)",
 	"Edit Admin": "Edit Admin",
-	"Edit and complete the admin account. Only completed accoounts may access the system.": "Edit and complete the admin account. Only completed accoounts may access the system."
+	"Edit and complete the admin account. Only completed accoounts may access the system.": "Edit and complete the admin account. Only completed accoounts may access the system.",
+	"Manage the admin users that will access the admin panel.": "Manage the admin users that will access the admin panel.",
+	"Admin Email": "Admin Email",
+	"Admin Name": "Admin Name",
+	"Admin Image": "Admin Image",
+	"General Information": "General Information",
+	"Update": "Update",
+	"Security": "Security",
+	"Reset Password": "Reset Password",
+	"Confirm Password": "Confirm Password",
+	"Choose a profile image for the admin to motivate users": "Choose a profile image for the admin to motivate users",
+	"Choose a profile image": "Choose a profile image",
+	"Upload from your device": "Upload from your device",
+	"Admin Roles": "Admin Roles",
+	"Select All": "Select All",
+	"Edit the admin information and reset the password.": "Edit the admin information and reset the password."
 }

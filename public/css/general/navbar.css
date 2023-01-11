@@ -85,7 +85,7 @@
   margin-bottom: 5px;
 }
 .each-navbar-group-link {
-  font-size: var(--subtitle-font-size);
+  font-size: var(--text-font-size);
   line-height: var(--subtitle-line-height);
   color: var(--text-color-two);
   font-weight: 500;

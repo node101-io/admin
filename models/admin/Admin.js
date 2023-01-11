@@ -30,6 +30,7 @@ const role_values = [
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
   'admin_view', 'admin_create', 'admin_edit', 'admin_order', 'admin_delete',
+  'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete',
   'writing_view', 'writing_create', 'writing_edit', 'writing_order', 'writing_delete'
 ];
 
@@ -54,8 +55,7 @@ const AdminSchema = new Schema({
     type: String,
     default: null,
     minlength: 1,
-    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH,
-    sparse: true
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   is_completed: {
     type: Boolean,
@@ -175,7 +175,7 @@ AdminSchema.statics.findAdminByIdAndDelete = function (id, callback) {
 AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
   const Admin = this;
 
-  if (!data || typeof data != 'string')
+  if (!data || typeof data != 'object')
     return callback('bad_request');
 
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
@@ -213,7 +213,7 @@ AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
 AdminSchema.statics.findAdminByIdAndResetPassword = function (id, data, callback) {
   const Admin = this;
 
-  if (!data || typeof data != 'string')
+  if (!data || typeof data != 'object')
     return callback('bad_request');
 
   if (!data.password || typeof data.password != 'string' || data.password.trim().length < MIN_PASSWORD_LENGTH || data.password.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)

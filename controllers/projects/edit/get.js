@@ -1,4 +1,4 @@
-const Admin = require('../../../models/admin/Admin');
+const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
   const roles = {
@@ -44,29 +44,29 @@ module.exports = (req, res) => {
     'writing_delete': res.__('Delete & Restore Writings (from Blogs & Books)')
   };
 
-  Admin.findAdminByIdAndFormat(req.query.id, (err, admin) => {
+  Project.findProjectByIdAndFormat(req.query.id, (err, project) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    return res.render('admin/edit', {
-      page: 'admin/edit',
-      title: res.__('System Admin Dashboard'),
+    return res.render('project/edit', {
+      page: 'project/edit',
+      title: res.__('System Project Dashboard'),
       includes: {
         external: {
-          css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-          js: ['adminListeners', 'ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'formUtilityFunctions', 'page', 'serverRequest']
+          css: ['form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+          js: ['projectListeners', 'createFormPopUp', 'serverRequest']
         }
       },
       navbar: {
-        title: res.__('System Admin'),
-        subtitle: res.__('Create and edit admin user accounts.'),
+        title: res.__('System Project'),
+        subtitle: res.__('Create and edit project user accounts.'),
         menu: {
           'Users': [
-            { name: res.__('All Users'), link: '/admin' },
-            { name: res.__('New User'), link: '/admin/create' }
+            { name: res.__('All Users'), link: '/project' },
+            { name: res.__('New User'), link: '/project/create' }
           ]
         }
       },
-      admin,
+      project,
       roles
     });
   });
