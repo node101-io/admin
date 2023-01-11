@@ -47,13 +47,23 @@ module.exports = (req, res) => {
   Admin.findAdminByIdAndFormat(req.query.id, (err, admin) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    return res.render('admin/login', {
-      page: 'admin/index',
+    return res.render('admin/edit', {
+      page: 'admin/edit',
       title: res.__('System Admin Dashboard'),
       includes: {
         external: {
-          css: ['form', 'general', 'page', 'text'],
-          js: ['page']
+          css: ['form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+          js: ['adminListeners', 'createFormPopUp', 'serverRequest']
+        }
+      },
+      navbar: {
+        title: res.__('System Admin'),
+        subtitle: res.__('Create and edit admin user accounts.'),
+        menu: {
+          'Users': [
+            { name: res.__('All Users'), link: '/admin' },
+            { name: res.__('New User'), link: '/admin/create' }
+          ]
         }
       },
       admin,

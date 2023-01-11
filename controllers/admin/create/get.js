@@ -40,9 +40,10 @@ module.exports = (req, res) => {
     'writing_edit': res.__('Edit & Translate Writings (from Blogs & Books)'),
     'writing_order': res.__('Change the Order of Writings (from Blogs & Books)'),
     'writing_delete': res.__('Delete & Restore Writings (from Blogs & Books)')
-  }
-  return res.render('admin/login', {
-    page: 'admin/index',
+  };
+
+  return res.render('admin/create', {
+    page: 'admin/create',
     title: res.__('System Admin Dashboard'),
     includes: {
       external: {

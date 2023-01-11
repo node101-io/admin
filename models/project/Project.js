@@ -342,12 +342,12 @@ ProjectSchema.statics.findProjectsByFilters = function (data, callback) {
     .sort({ name: 1 })
     .then(projects => async.timesSeries(
       projects.length,
-      (time, next) => Project.findProjectByIdAndFormat(projects[time], (err, project) => next(err, project))),
+      (time, next) => Project.findProjectByIdAndFormat(projects[time], (err, project) => next(err, project)),
       (err, projects) => {
         if (err) return callback(err);
 
         return callback(null, projects);
-      }
+      })
     )
     .catch(_ => callback('database_error'));
 };

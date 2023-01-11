@@ -249,12 +249,12 @@ WriterSchema.statics.findWritersByFilters = function (data, callback) {
     .sort({ name: 1 })
     .then(writers => async.timesSeries(
       writers.length,
-      (time, next) => Writer.findWriterByIdAndFormat(writers[time], (err, writer) => next(err, writer))),
+      (time, next) => Writer.findWriterByIdAndFormat(writers[time], (err, writer) => next(err, writer)),
       (err, writers) => {
         if (err) return callback(err);
 
         return callback(null, writers);
-      }
+      })
     )
     .catch(_ => callback('database_error'));
 };

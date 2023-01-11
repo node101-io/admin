@@ -1,14 +1,16 @@
+const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
 const Image = require('../image/Image');
 
 const generateRandomHex = require('./functions/generateRandomHex');
-const hashPassword = require('./functions/hashPassword');
 const getAdmin = require('./functions/getAdmin');
+const hashPassword = require('./functions/hashPassword');
 const verifyPassword = require('./functions/verifyPassword');
 
 const DEFAULT_IMAGE_ROUTE = '/res/images/default/admin.webp';
+const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 50;
 const IMAGE_WIDTH = 50;
@@ -16,6 +18,7 @@ const IMAGE_NAME_PREFIX = 'node101 team member ';
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const RANDOM_PASSWORD_LENGTH = 16;
 
 const role_values = [
@@ -25,7 +28,7 @@ const role_values = [
   'member_view', 'member_create', 'member_edit', 'member_order', 'member_delete',
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
-  'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete',
+  'admin_view', 'admin_create', 'admin_edit', 'admin_order', 'admin_delete',
   'writing_view', 'writing_create', 'writing_edit', 'writing_order', 'writing_delete'
 ];
 
@@ -40,10 +43,6 @@ const AdminSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-  is_completed: {
-    type: Boolean,
-    default: false
-  },
   password: {
     type: String,
     required: true,
@@ -52,10 +51,14 @@ const AdminSchema = new Schema({
   },
   name: {
     type: String,
+    default: null,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH,
-    required: true,
-    unique: true
+    sparse: true
+  },
+  is_completed: {
+    type: Boolean,
+    default: false
   },
   roles: {
     type: Array,
@@ -122,38 +125,35 @@ AdminSchema.statics.findAdminByIdAndFormat = function (id, callback) {
 AdminSchema.statics.createAdmin = function (data, callback) {
   const Admin = this;
 
-  if (!data || typeof data != 'string')
+  if (!data || typeof data != 'object')
     return callback('bad_request');
 
   if (!data.email || !validator.isEmail(data.email.toString()))
-    return callback('bad_request');
+    return callback('email_validation');
 
-  if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
+  const newAdminData = {
+    email: data.email.toString().trim(),
+    password: generateRandomHex(RANDOM_PASSWORD_LENGTH)
+  };
 
-  let roles = [];
+  const newAdmin = new Admin(newAdminData);
 
-  if (data.roles && Array.isArray(data.roles))
-    roles = data.roles.filter(each => role_values.includes(each));
+  newAdmin.save((err, admin) => {
+    if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+      return callback('duplicated_unique_field');
+    if (err)
+      return callback('database_error');
 
-  Image.findImageByUrl(data.image, (err, image) => {
-    const newAdminData = {
-      email: data.email.toString().trim(),
-      password: generateRandomHex(RANDOM_PASSWORD_LENGTH),
-      name: data.name.trim(),
-      roles
-    };
-  
-    const newAdmin = new Admin(newAdminData);
-  
-    newAdmin.save((err, admin) => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
-      if (err)
-        return callback('database_error');
-  
-       return callback(null, admin._id.toString());
-    });
+    Admin.collection
+      .createIndex(
+        { email: 'text', name: 'text' },
+        { weights: {
+          email: 2,
+          name: 1
+        } }
+      )
+      .then(() => callback(null, admin._id.toString()))
+      .catch(err => callback('index_error'));
   });
 };
 
@@ -195,7 +195,16 @@ AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
     }}, err => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      Admin.collection
+        .createIndex(
+          { email: 'text', name: 'text' },
+          { weights: {
+            email: 2,
+            name: 1
+          } }
+        )
+        .then(() => callback(null))
+        .catch(err => callback('index_error'));
     });
   });
 };
@@ -256,6 +265,82 @@ AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) 
       });
     });
   });
+};
+
+AdminSchema.statics.findAdminsByFilters = function (data, callback) {
+  const Admin = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
+
+  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
+    Admin
+      .find({})
+      .sort({ email: 1 })
+      .limit(limit)
+      .skip(skip)
+      .then(admins => async.timesSeries(
+        admins.length,
+        (time, next) => Admin.findAdminByIdAndFormat(admins[time]._id, (err, admin) => next(err, admin)),
+        (err, admins) => {
+          if (err) return callback(err);
+
+          return callback(null, {
+            search: null,
+            limit,
+            page,
+            admins
+          });
+        })
+      )
+      .catch(_ => callback('database_error'));
+  } else {
+    Admin
+      .find({ $text: { $search: data.search.trim() } })
+      .sort({
+        score: { $meta: 'textScore' }, 
+        email: 1
+      })
+      .limit(limit)
+      .skip(skip)
+      .then(admins => async.timesSeries(
+        admins.length,
+        (time, next) => Admin.findAdminByIdAndFormat(admins[time]._id, (err, admin) => next(err, admin)),
+        (err, admins) => {
+          if (err) return callback(err);
+
+          return callback(null, {
+            search: data.search.trim(),
+            limit,
+            page,
+            admins
+          });
+        })
+      )
+      .catch(_ => callback('database_error'));
+  }
+};
+
+AdminSchema.statics.findAdminCountByFilters = function (data, callback) {
+  const Admin = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  const filters = {};
+
+  if (data.search && typeof data.search == 'string' && data.search.trim().length)
+    filters.$text = { $search: data.search.trim() };
+
+  Admin
+    .find(filters)
+    .countDocuments()
+    .then(number => callback(null, number))
+    .catch(_ => callback('database_error'));
 };
 
 module.exports = mongoose.model('Admin', AdminSchema);

@@ -1,0 +1,79 @@
+.general-page-wrapper {
+  width: 100%;
+  padding: 15px 30px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  min-height: fit-content;
+}
+
+.general-page-search-text {
+  font-size: var(--text-font-size);
+  font-weight: 600;
+  color: var(--second-color);
+  margin-bottom: 10px;
+}
+
+.general-page-inner-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: fit-content;
+  min-height: fit-content;
+}
+
+.general-page-buttons-wrapper {
+  display: flex;
+  align-items: center;
+}
+.general-page-prev-button, .general-page-next-button {
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--third-color);
+  opacity: 0.8;
+  cursor: pointer;
+  text-decoration: none;
+}
+.general-page-prev-button {
+  margin-right: 8px;
+}
+.general-page-next-button {
+  margin-left: 8px;
+}
+.general-page-prev-button:hover, .general-page-next-button:hover {
+  opacity: 1;
+}
+.general-page-prev-button-not-allowed, .general-page-next-button-not-allowed {
+  cursor: not-allowed !important;
+  opacity: 0.7 !important;
+}
+.general-each-page-button {
+  margin: 0 4px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--text-color);
+  border-radius: 2px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.general-each-page-button-selected {
+  cursor: default !important;
+  color: var(--third-color) !important;
+  border-color: var(--third-color) !important;
+}
+.general-each-page-button:hover {
+  color: var(--third-color);
+  border-color: var(--third-color);
+}
+
+.general-page-info {
+  font-weight: 600;
+  color: var(--text-color-two);
+  font-size: 14px;
+}

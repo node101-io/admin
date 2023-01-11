@@ -11,10 +11,11 @@ const getBlogByLanguage = require('./functions/getBlogByLanguage');
 const isBlogComplete = require('./functions/isBlogComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
+const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const IMAGE_HEIGHT = 50;
-const IMAGE_WIDTH = 50;
-const IMAGE_NAME_PREFIX = 'node101 blog cover ';
+const IMAGE_HEIGHT = 300;
+const IMAGE_WIDTH = 300;
+const IMAGE_NAME_PREFIX = 'node101 blog image ';
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const TYPE_VALUES = ['node101', 'project', 'terms'];
@@ -29,6 +30,15 @@ const BlogSchema = new Schema({
     trim: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  identifiers: {
+    type: Array,
+    required: true,
+    minlength: 1
+  },
+  identifier_languages: {
+    type: Object,
+    default: {}
   },
   type: {
     type: String,
@@ -49,7 +59,7 @@ const BlogSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
-  cover: {
+  image: {
     type: String,
     default: null,
     trim: true,
@@ -64,6 +74,10 @@ const BlogSchema = new Schema({
     type: Boolean,
     default: false
   },
+  social_media_accounts: {
+    type: Object,
+    default: {}
+  },
   translations: {
     type: Object,
     default: {}
@@ -71,6 +85,10 @@ const BlogSchema = new Schema({
   is_deleted: {
     type: Boolean,
     default: false
+  },
+  writing_count: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -247,12 +265,12 @@ BlogSchema.statics.findBlogsByFilters = function (data, callback) {
     .sort({ title: 1 })
     .then(blogs => async.timesSeries(
       blogs.length,
-      (time, next) => Blog.findBlogByIdAndFormat(blogs[time], (err, blog) => next(err, blog))),
+      (time, next) => Blog.findBlogByIdAndFormat(blogs[time], (err, blog) => next(err, blog)),
       (err, blogs) => {
         if (err) return callback(err);
 
         return callback(null, blogs);
-      }
+      })
     )
     .catch(_ => callback('database_error'));
 };

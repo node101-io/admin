@@ -1,0 +1,118 @@
+:root {
+  --navbar-header-height: 100px;
+  --navbar-width: 350px;
+  --navbar-header-image-size: 35px;
+}
+
+.all-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+.all-navbar-wrapper {
+  width: var(--navbar-width);
+  min-width: var(--navbar-width);
+  height: 100vh;
+  min-height: 100vh;
+  background-color: var(--box-color);
+  border-right: 1px solid var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.all-navbar-header-wrapper {
+  height: var(--navbar-header-height);
+  min-height: var(--navbar-header-height);
+  width: 100%;
+  min-width: 100%;
+  padding: 0 15px;
+  border-bottom: 1px solid var(--shadow-color);
+  display: flex;
+  align-items: center;
+}
+
+.all-navbar-header-image {
+  background-size: cover;
+  width: var(--navbar-header-image-size);
+  min-width: var(--navbar-header-image-size);
+  height: var(--navbar-header-image-size);
+  min-height: var(--navbar-header-image-size);
+  margin-right: 15px;
+}
+
+.all-navbar-header-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: center;
+}
+
+.all-navbar-header-title {
+  font-size: var(--subtitle-font-size);
+  line-height: var(--subtitle-line-height);
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.all-navbar-header-subtitle {
+  font-size: 13px;
+  color: var(--text-color-two);
+  font-weight: 500;
+}
+
+.all-navbar-content-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: scroll;
+  padding: 30px 15px;
+}
+
+.each-navbar-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.each-navbar-group-title {
+  font-size: var(--title-font-size);
+  line-height: var(--title-line-height);
+  color: var(--text-color);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.each-navbar-group-link {
+  font-size: var(--subtitle-font-size);
+  line-height: var(--subtitle-line-height);
+  color: var(--text-color-two);
+  font-weight: 500;
+  margin-bottom: 5px;
+  margin-left: 30px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.each-navbar-group-link-selected {
+  color: var(--main-color) !important;
+  cursor: default !important;
+}
+.each-navbar-group-link:hover {
+  color: var(--main-color);
+}
+
+.all-navbar-footer-wrapper {
+  padding: 30px 15px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-color-two);
+}
+
+.all-content-wrapper {
+  height: 100vh;
+  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

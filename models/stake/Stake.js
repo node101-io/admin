@@ -1,28 +1,19 @@
-const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
-
-const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 const Project = require('../project/Project');
 
 const formatTranslations = require('./functions/formatTranslations');
-const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const getStake = require('./functions/getStake');
 const getStakeByLanguage = require('./functions/getStakeByLanguage');
 const isStakeComplete = require('./functions/isStakeComplete');
 
-const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
-const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 200;
 const IMAGE_WIDTH = 200;
 const IMAGE_NAME_PREFIX = 'node101 stake ';
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
-const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
-const PROJECT_RATING_MIN_VALUE = 1;
-const PROJECT_RATING_MAX_VALUE = 5;
 
 const Schema = mongoose.Schema;
 

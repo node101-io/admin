@@ -1,0 +1,36 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Edit Admin')
+      .general-header-subtitle= __('Manage the admin users that will access the admin panel')
+    input.general-header-search-input#admin-search-input(type='text' placeholder='Search by name or email' value=admins_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if admins_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{admins_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if admins_page > 0
+            a.general-page-prev-button(href=`/admin?page=${admins_page-1}${admins_search ? '&search=' + admins_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(admins_count / admins_limit) + (admins_count % admins_limit ? 1 : 0); i += 1)
+            if i != admins_page
+              a.general-each-page-button(href=`/admin?page=${i}${admins_search ? '&search=' + admins_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (admins_page + 1) * admins_limit < admins_count
+            a.general-page-next-button(href=`/admin?page=${admins_page+1}${admins_search ? '&search=' + admins_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{admins_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each admin in admins
+        .general-each-item-wrapper(id=admin._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= admin.email
+            span.general-each-item-subtitle(style=(admin.is_completed ? '' : 'color: var(--warning-color)')) (#{admin.is_completed ? admin.name : __('not completed')})
+          .general-each-item-buttons-wrapper
+            .general-each-item-second-button.delete-each-admin-button Delete
+            a.general-each-item-first-button(href='/admin/edit?id=' + admin._id) Edit

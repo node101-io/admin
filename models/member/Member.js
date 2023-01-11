@@ -249,12 +249,12 @@ MemberSchema.statics.findMembersByFilters = function (data, callback) {
     .sort({ name: 1 })
     .then(members => async.timesSeries(
       members.length,
-      (time, next) => Member.findMemberByIdAndFormat(members[time], (err, member) => next(err, member))),
+      (time, next) => Member.findMemberByIdAndFormat(members[time], (err, member) => next(err, member)),
       (err, members) => {
         if (err) return callback(err);
 
         return callback(null, members);
-      }
+      })
     )
     .catch(_ => callback('database_error'));
 };

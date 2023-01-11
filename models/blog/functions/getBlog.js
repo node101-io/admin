@@ -15,7 +15,8 @@ module.exports = (blog, callback) => {
       subtitle: blog.subtitle,
       cover: blog.cover,
       is_completed: blog.is_completed,
-      is_active: blog.is_active
+      is_active: blog.is_active,
+      writing_count: blog.writing_count
     });
 
   if (blog.type == 'project') {
@@ -34,7 +35,8 @@ module.exports = (blog, callback) => {
           subtitle: blog.subtitle,
           cover: blog.cover,
           is_completed: blog.is_completed,
-          is_active: blog.is_active
+          is_active: blog.is_active,
+          writing_count: blog.writing_count
         });
       });
     });
@@ -51,7 +53,8 @@ module.exports = (blog, callback) => {
         subtitle: blog.subtitle,
         cover: blog.cover,
         is_completed: blog.is_completed,
-        is_active: blog.is_active
+        is_active: blog.is_active,
+        writing_count: blog.writing_count
       });
     });
   };

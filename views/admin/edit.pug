@@ -1,0 +1,8 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Admin')} - #{admin.email}
+      .general-header-subtitle= __('Edit and complete the admin account. Only completed accoounts may access the system.')
+    input.general-header-search-input#admin-search-input(type='text' placeholder='Search by name or email')
+  .all-content-inner-wrapper
