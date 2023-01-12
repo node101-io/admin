@@ -1,7 +1,7 @@
 :root {
   --navbar-header-height: 100px;
   --navbar-width: 350px;
-  --navbar-header-image-size: 35px;
+  --navbar-header-image-size: 55px;
 }
 
 .all-wrapper {
@@ -35,11 +35,15 @@
 
 .all-navbar-header-image {
   background-size: cover;
+  background-position: center;
   width: var(--navbar-header-image-size);
   min-width: var(--navbar-header-image-size);
   height: var(--navbar-header-image-size);
   min-height: var(--navbar-header-image-size);
-  margin-right: 15px;
+  margin-right: 10px;
+  background-color: var(--text-color);
+  margin-top: 4px;
+  border-radius: 100%;
 }
 
 .all-navbar-header-text-wrapper {
@@ -54,7 +58,7 @@
   line-height: var(--subtitle-line-height);
   color: var(--text-color);
   font-weight: 600;
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 .all-navbar-header-subtitle {
   font-size: 13px;
@@ -92,8 +96,8 @@
 }
 
 .each-navbar-group-title {
-  font-size: var(--subtitle-font-size);
-  line-height: var(--subtitle-line-height);
+  font-size: var(--text-font-size);
+  line-height: var(--text-line-height);
   color: var(--text-color);
   font-weight: 600;
   margin-bottom: 3px;

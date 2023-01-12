@@ -29,9 +29,7 @@ const role_values = [
   'member_view', 'member_create', 'member_edit', 'member_order', 'member_delete',
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
-  'admin_view', 'admin_create', 'admin_edit', 'admin_order', 'admin_delete',
-  'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete',
-  'writing_view', 'writing_create', 'writing_edit', 'writing_order', 'writing_delete'
+  'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete'
 ];
 
 const Schema = mongoose.Schema;

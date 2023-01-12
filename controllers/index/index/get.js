@@ -1,13 +1,15 @@
 module.exports = (req, res) => {
+  const admin = req.session.admin;
+
   return res.render('index/index', {
     page: 'index/index',
     title: res.__('Admin Dashboard'),
     includes: {
       external: {
-        css: ['form', 'general', 'page', 'text'],
-        js: ['page']
+        css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+        js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
       }
     },
-    user: req.session.user
+    admin
   });
 }
