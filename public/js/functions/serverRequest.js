@@ -1,16 +1,35 @@
 function serverRequest (url, method, data, callback) {
-  if (!url || typeof url != 'string' || !method || typeof method != 'string' || (method != 'GET' && method != 'POST') || !data || typeof data != 'object')
+  const METHOD_VALUES = ['FILE', 'GET', 'POST']
+
+  if (!url || typeof url != 'string' || !url.trim().length)
+    return callback({ success: false, error: 'bad_request' });
+
+  if (!method || !METHOD_VALUES.includes(method))
+    return callback({ success: false, error: 'bad_request' });
+
+  if (!data || typeof data != object)
     return callback({ success: false, error: 'bad_request' });
 
   const xhr = new XMLHttpRequest();
-  xhr.open(method, url);
 
-  if (method == 'POST') {
+  if (method == 'FILE') {
+    xhr.open('POST', url);
+    const formdata = new FormData();
+
+    Object.keys(data).forEach(key => {
+      formdata.append(key, data[key]);
+    });
+
+    xhr.send(formdata);
+  } else if (method == 'POST') {
+    xhr.open('POST', url);
     xhr.setRequestHeader('Content-type', 'application/json');
     xhr.send(JSON.stringify(data));
-  } else {
+  } else if (method == 'GET') {
+    xhr.open('GET', url);
     xhr.send();
-  } 
+  }
+
   xhr.onreadystatechange = function () {
     if (xhr.readyState == 4 && xhr.status != 200)
       return callback({ success: false, error: 'network_error' })
