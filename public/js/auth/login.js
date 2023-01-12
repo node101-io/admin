@@ -14,13 +14,24 @@ window.addEventListener('load', () => {
       return error.innerHTML = 'Please enter your email and password.';
     };
 
-    serverRequest('/admin/login', 'POST', {
+    serverRequest('/auth/login', 'POST', {
+      email,
       password
     }, res => {
-      if (!res.success)
-        return error.style.display = 'unset';
+      if (!res.success) {
+        error.style.display = 'unset';
 
-      return window.location = '/admin';      
+        if (res.error == 'document_not_found')
+          error.innerHTML = 'This user does not exist';
+        else if (res.error == 'password_verification')
+          error.innerHTML = 'Your password is wrong';
+        else
+          error.innerHTML = 'An unknown error occured. Please try again later.';
+
+        return;
+      }
+
+      return window.location = res.redirect;      
     });
   });
 });

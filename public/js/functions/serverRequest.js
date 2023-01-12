@@ -1,5 +1,5 @@
 function serverRequest (url, method, data, callback) {
-  const METHOD_VALUES = ['FILE', 'GET', 'POST']
+  const METHOD_VALUES = ['FILE', 'GET', 'POST'];
 
   if (!url || typeof url != 'string' || !url.trim().length)
     return callback({ success: false, error: 'bad_request' });
@@ -7,7 +7,7 @@ function serverRequest (url, method, data, callback) {
   if (!method || !METHOD_VALUES.includes(method))
     return callback({ success: false, error: 'bad_request' });
 
-  if (!data || typeof data != object)
+  if (!data || typeof data != 'object')
     return callback({ success: false, error: 'bad_request' });
 
   const xhr = new XMLHttpRequest();

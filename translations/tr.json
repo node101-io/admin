@@ -80,5 +80,6 @@
 	"Login to node101 admin page.": "Login to node101 admin page.",
 	"Email": "Email",
 	"Log Out": "Log Out",
-	"The password is wrong.": "The password is wrong."
+	"The password is wrong.": "The password is wrong.",
+	"Admin Dashboard": "Admin Dashboard"
 }
