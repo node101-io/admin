@@ -8,6 +8,8 @@ block content
         .all-navbar-header-text-wrapper
           .all-navbar-header-title= navbar.title
           .all-navbar-header-subtitle= navbar.subtitle
+          if navbar.logout
+            a.all-navbar-header-logout-button(href=navbar.logout)= __('Log Out')
       .all-navbar-content-wrapper
         each group in Object.keys(navbar.menu)
           .each-navbar-group-wrapper

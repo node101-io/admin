@@ -59,6 +59,7 @@ module.exports = (req, res) => {
       navbar: {
         title: res.__('System Admin'),
         subtitle: res.__('Create and edit admin user accounts.'),
+        logout: '/admin/logout',
         menu: {
           'Users': [
             { name: res.__('All Users'), link: '/admin' },

@@ -36,6 +36,7 @@ if (cluster.isMaster) {
   const QUERY_LIMIT = 2;
 
   const adminRouteController = require('./routes/adminRoute');
+  const loginRouteController = require('./routes/loginRoute');
 
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug');
@@ -87,6 +88,7 @@ if (cluster.isMaster) {
   });
 
   app.use('/admin', adminRouteController);
+  app.use('/login', loginRouteController);
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);

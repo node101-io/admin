@@ -1,0 +1,10 @@
+extends ../partials/head
+block content
+  .all-wrapper
+    form.login-form#form
+      h1.general-title= __('Login')
+      h2.general-text= __('Login to node101 admin page.')
+      input.general-input#email(type='email' placeholder=__('Email') autofocus autocomplete='off')
+      input.general-input#password(type='password' placeholder=__('Password') autocomplete='off')
+      button.general-button= __('Log In')
+      .general-error#error(style='display: none;')

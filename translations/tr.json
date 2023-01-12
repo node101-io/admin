@@ -75,5 +75,10 @@
 	"Upload from your device": "Upload from your device",
 	"Admin Roles": "Admin Roles",
 	"Select All": "Select All",
-	"Edit the admin information and reset the password.": "Edit the admin information and reset the password."
+	"Edit the admin information and reset the password.": "Edit the admin information and reset the password.",
+	"Login": "Login",
+	"Login to node101 admin page.": "Login to node101 admin page.",
+	"Email": "Email",
+	"Log Out": "Log Out",
+	"The password is wrong.": "The password is wrong."
 }
