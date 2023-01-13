@@ -10,7 +10,7 @@ module.exports = (writer, language, callback) => {
   return callback(null, {
     _id: writer._id.toString(),
     is_completed: writer.is_completed,
-    name: writer.name,
+    name: writer.name.replace(writer._id.toString(), ''),
     title: translation.title,
     image: writer.image,
     social_media_accounts: translation.social_media_accounts,

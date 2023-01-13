@@ -5,7 +5,7 @@ module.exports = (writer, callback) => {
   return callback(null, {
     _id: writer._id.toString(),
     is_completed: writer.is_completed,
-    name: writer.name,
+    name: writer.name.replace(writer._id.toString(), ''),
     title: writer.title ? writer.title : '',
     image: writer.image,
     social_media_accounts: writer.social_media_accounts,

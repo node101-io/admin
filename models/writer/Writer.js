@@ -277,4 +277,43 @@ WriterSchema.statics.findWriterCountByFilters = function (data, callback) {
     .catch(_ => callback('database_error'));
 };
 
+WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
+  const Writer = this;
+
+  Writer.findWriterById(id, (err, writer) => {
+    if (err) return callback(err);
+    if (writer.is_deleted) return callback(null);
+    
+    Writer.findByIdAndUpdate(writer._id, {$set: {
+      name: writer.name + writer._id.toString(),
+      is_deleted: true
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
+  const Writer = this;
+
+  Writer.findWriterById(id, (err, writer) => {
+    if (err) return callback(err);
+    if (!writer.is_deleted) return callback(null);
+
+    Writer.findByIdAndUpdate(writer._id, {$set: {
+      name: writer.name.replace(writer._id.toString(), ''),
+      is_deleted: false
+    }}, err => {
+      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+        return callback('duplicated_unique_field');
+      if (err)
+        return callback('database_error');
+
+      return callback(null);
+    })
+  })
+}
+
 module.exports = mongoose.model('Writer', WriterSchema);

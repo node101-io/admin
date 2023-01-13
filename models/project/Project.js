@@ -462,6 +462,7 @@ ProjectSchema.statics.findProjectByIdAndDelete = function (id, callback) {
     if (project.is_deleted) return callback(null);
 
     Project.findByIdAndUpdate(project._id, {$set: {
+      name: project.name + project._id.toString(),
       identifiers: [],
       identifier_languages: {},
       is_deleted: true,
@@ -505,6 +506,7 @@ ProjectSchema.statics.findProjectByIdAndRestore = function (id, callback) {
           if (err) return callback(err);
 
           Project.findByIdAndUpdate({
+            name: project.name.replace(project._id.toString(), ''),
             identifiers,
             identifierLanguages,
             is_deleted: false,

@@ -4,7 +4,7 @@ module.exports = (project, callback) => {
 
   return callback(null, {
     _id: project._id.toString(),
-    name: project.name,
+    name: project.name.replace(project._id.toString(), ''),
     identifier: project.identifiers[0],
     description: project.description,
     rating: project.rating,
