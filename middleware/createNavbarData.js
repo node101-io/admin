@@ -1,42 +1,43 @@
 module.exports = (req, res, next) => {
   const allMenuData = {
     'Blogs': [
-      { permission: 'blog_view', name: res.__('All Blogs'), link: '/blogs' },
-      { permission: 'blog_create', name: res.__('New Blog'), link: '/blogs/create' },
-      { permission: 'blog_delete', name: res.__('Deleted Blogs'), link: '/blogs/delete' }
+      { permission: 'blog_view', name: res.__('All Blogs'), link: '/blog' },
+      { permission: 'blog_create', name: res.__('New Blog'), link: '/blog/create' },
+      { permission: 'blog_delete', name: res.__('Deleted Blogs'), link: '/blog/delete' }
     ],
     'Books': [
-      { permission: 'book_view', name: res.__('All Books'), link: '/books' },
-      { permission: 'book_create', name: res.__('New Book'), link: '/books/create' },
-      { permission: 'book_delete', name: res.__('Deleted Books'), link: '/blbooksobooksgs/delete' }
+      { permission: 'book_view', name: res.__('All Books'), link: '/book' },
+      { permission: 'book_create', name: res.__('New Book'), link: '/book/create' },
+      { permission: 'book_delete', name: res.__('Deleted Books'), link: '/book/delete' }
     ],
     'Projects': [
-      { permission: 'project_view', name: res.__('All Projects'), link: '/projects' },
-      { permission: 'project_create', name: res.__('New Project'), link: '/projects/create' },
-      { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/projects/delete' }
+      { permission: 'project_view', name: res.__('All Projects'), link: '/project' },
+      { permission: 'project_create', name: res.__('New Project'), link: '/project/create' },
+      { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/project/delete' }
     ],
     'Stakable Projects': [
-      { permission: 'stake_view', name: res.__('All Stake Projects'), link: '/stakes' },
-      { permission: 'stake_create', name: res.__('New Stake Project'), link: '/stakes/create' },
-      { permission: 'stake_delete', name: res.__('Deleted Stake Projects'), link: '/stakes/delete' }
+      { permission: 'stake_view', name: res.__('All Stake Projects'), link: '/stake' },
+      { permission: 'stake_create', name: res.__('New Stake Project'), link: '/stake/create' },
+      { permission: 'stake_delete', name: res.__('Deleted Stake Projects'), link: '/stake/delete' }
     ],
     'Testnet Guides': [
-      { permission: 'guide_view', name: res.__('All Guides'), link: '/guides' },
-      { permission: 'guide_create', name: res.__('New Guide'), link: '/guides/create' },
-      { permission: 'guide_delete', name: res.__('Deleted Guides'), link: '/guides/delete' }
+      { permission: 'guide_view', name: res.__('All Guides'), link: '/guide' },
+      { permission: 'guide_create', name: res.__('New Guide'), link: '/guide/create' },
+      { permission: 'guide_delete', name: res.__('Deleted Guides'), link: '/guide/delete' }
     ],
     'Team Members': [
-      { permission: 'member_view', name: res.__('All Members'), link: '/members' },
-      { permission: 'member_create', name: res.__('New Member'), link: '/members/create' },
-      { permission: 'member_delete', name: res.__('Deleted Members'), link: '/members/delete' }
+      { permission: 'member_view', name: res.__('All Members'), link: '/member' },
+      { permission: 'member_create', name: res.__('New Member'), link: '/member/create' },
+      { permission: 'member_delete', name: res.__('Deleted Members'), link: '/member/delete' }
     ],
     'Writers': [
-      { permission: 'writer_view', name: res.__('All Writers'), link: '/writers' },
-      { permission: 'writer_create', name: res.__('New Writers'), link: '/writers/create' },
-      { permission: 'writer_delete', name: res.__('Deleted Writers'), link: '/writers/delete' }
+      { permission: 'writer_view', name: res.__('All Writers'), link: '/writer' },
+      { permission: 'writer_create', name: res.__('New Writers'), link: '/writer/create' },
+      { permission: 'writer_delete', name: res.__('Deleted Writers'), link: '/writer/delete' }
     ]
   };
 
+  const route = req.originalUrl.split('?')[0];
   const admin = req.session.admin;
   const menu = {};
 
@@ -46,10 +47,15 @@ module.exports = (req, res, next) => {
         if (!menu[key])
           menu[key] = [];
 
-        menu[key].push({
+        const newPage = {
           name: page.name,
           link: page.link
-        });
+        };
+
+        if (page.link == route)
+          newPage.selected = true;
+
+        menu[key].push(newPage);
       };
     });
   });
@@ -61,6 +67,7 @@ module.exports = (req, res, next) => {
     logout: '/auth/logout',
     menu
   };
+  res.locals.admin = req.session.admin;
 
   return next();
 }

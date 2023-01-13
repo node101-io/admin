@@ -1,6 +1,8 @@
 const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
+  req.query.is_deleted = false;
+
   Project.findProjectCountByFilters(req.query, (err, count) => {
     if (err) return res.redirect('/error?message=' + err);
 
@@ -9,21 +11,11 @@ module.exports = (req, res) => {
 
       return res.render('project/index', {
         page: 'project/index',
-        title: res.__('System Project Dashboard'),
+        title: res.__('Projects'),
         includes: {
           external: {
-            css: ['form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-            js: ['projectListeners', 'createFormPopUp', 'serverRequest']
-          }
-        },
-        navbar: {
-          title: res.__('System Project'),
-          subtitle: res.__('Create and edit project user accounts.'),
-          menu: {
-            'Users': [
-              { name: res.__('All Users'), link: '/project', selected: true },
-              { name: res.__('New User'), link: '/project/create' }
-            ]
+            css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+            js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
           }
         },
         projects_count: count,

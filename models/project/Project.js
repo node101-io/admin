@@ -107,30 +107,35 @@ ProjectSchema.statics.createProject = function (data, callback) {
     if (err) return callback('database_error');
     if (project) return callback('duplicated_unique_field');
 
-    const newProjectData = {
-      name: data.name.trim(),
-      identifiers: [ identifier ],
-      identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-      created_at: new Date()
-    };
-  
-    const newProject = new Project(newProjectData);
-  
-    newProject.save((err, project) => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
-      if (err) return callback('database_error');
+    Project.findProjectCountByFilters({ is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
 
-      Project.collection
-        .createIndex(
-          { name: 'text', description: 'text' },
-          { weights: {
-            name: 10,
-            description: 1
-          } }
-        )
-        .then(() => callback(null, project._id.toString()))
-        .catch(err => callback('index_error'));
+      const newProjectData = {
+        name: data.name.trim(),
+        identifiers: [ identifier ],
+        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+        created_at: new Date(),
+        order
+      };
+    
+      const newProject = new Project(newProjectData);
+    
+      newProject.save((err, project) => {
+        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+          return callback('duplicated_unique_field');
+        if (err) return callback('database_error');
+  
+        Project.collection
+          .createIndex(
+            { name: 'text', description: 'text' },
+            { weights: {
+              name: 10,
+              description: 1
+            } }
+          )
+          .then(() => callback(null, project._id.toString()))
+          .catch(err => callback('index_error'));
+      });
     });
   });
 };
@@ -374,7 +379,7 @@ ProjectSchema.statics.findProjectsByFilters = function (data, callback) {
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Project
       .find(filters)
-      .sort({ name: 1 })
+      .sort({ order: -1 })
       .limit(limit)
       .skip(skip)
       .then(projects => async.timesSeries(
@@ -399,7 +404,7 @@ ProjectSchema.statics.findProjectsByFilters = function (data, callback) {
       .find(filters)
       .sort({
         score: { $meta: 'textScore' }, 
-        name: 1
+        order: -1
       })
       .limit(limit)
       .skip(skip)
@@ -459,7 +464,8 @@ ProjectSchema.statics.findProjectByIdAndDelete = function (id, callback) {
     Project.findByIdAndUpdate(project._id, {$set: {
       identifiers: [],
       identifier_languages: {},
-      is_deleted: true
+      is_deleted: true,
+      order: null
     }}, err => {
       if (err) return callback('database_error');
 
@@ -495,17 +501,51 @@ ProjectSchema.statics.findProjectByIdAndRestore = function (id, callback) {
       err => {
         if (err) return callback(err);
 
-        Project.findByIdAndUpdate({
-          identifiers,
-          identifierLanguages,
-          is_deleted: false
-        }, err => {
-          if (err) return callback('database_error');
+        Project.findprojectCountbyFilters({ is_deleted: false }, (err, count) => {
+          if (err) return callback(err);
 
-          return callback(null);
+          Project.findByIdAndUpdate({
+            identifiers,
+            identifierLanguages,
+            is_deleted: false,
+            count
+          }, err => {
+            if (err) return callback('database_error');
+  
+            return callback(null);
+          });
         });
       }
     );
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndIncOrderByOne = function (id, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (project.is_deleted) return callback('not_authenticated_request');
+
+    Project.findOne({
+      order: project.order + 1
+    }, (err, prev_project) => {
+      if (err) return callback('database_error');
+
+      Project.findByIdAndUpdate(project._id, {$inc: {
+        order: 1
+      }}, err => {
+        if (err) return callback('database_error');
+
+        Project.findByIdAndUpdate(prev_project._id, {$inc: {
+          order: -1
+        }}, err => {
+          if (err) return  callback('database_error');
+
+          return callback(null);
+        });
+      });
+    });
   });
 };
 
