@@ -486,7 +486,23 @@ ProjectSchema.statics.findProjectByIdAndDelete = function (id, callback) {
     }}, err => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      Project.find({
+        order: { gt: project.order }
+      }, (err, projects) => {
+        if (err) return callback('database_error');
+
+        async.timesSeries(
+          projects.length,
+          (time, next) => Project.findByIdAndUpdate(projects[time]._id, {$inc: {
+            order: -1
+          }}, err => next(err)),
+          err => {
+            if (err) return callback('database_error');
+
+            return callback(null);
+          }
+        );
+      });
     });
   });
 };

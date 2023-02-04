@@ -307,7 +307,23 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
     }}, err => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      Writer.find({
+        order: { gt: writer.order }
+      }, (err, writers) => {
+        if (err) return callback('database_error');
+
+        async.timesSeries(
+          writers.length,
+          (time, next) => Writer.findByIdAndUpdate(writers[time]._id, {$inc: {
+            order: -1
+          }}, err => next(err)),
+          err => {
+            if (err) return callback('database_error');
+
+            return callback(null);
+          }
+        );
+      });
     });
   });
 };
@@ -322,7 +338,7 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
     Writer.findWriterCountByFilters({ is_deleted: false }, (err, order) => {
       if (err) return callback(err);
 
-      Writer.findByIdAndUpdate({
+      Writer.findByIdAndUpdate(writer._id, {
         is_deleted: false,
         order
       }, err => {

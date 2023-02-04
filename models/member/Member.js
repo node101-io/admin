@@ -324,13 +324,29 @@ MemberSchema.statics.findMemberByIdAndRestore = function (id, callback) {
     Member.findMemberCountByFilters({ is_deleted: false }, (err, order) => {
       if (err) return callback(err);
 
-      Member.findByIdAndUpdate({
+      Member.findByIdAndUpdate(member._id, {
         is_deleted: false,
         order
       }, err => {
         if (err) return callback('database_error');
 
-        return callback(null);
+        Member.find({
+          order: { gt: member.order }
+        }, (err, members) => {
+          if (err) return callback('database_error');
+  
+          async.timesSeries(
+            members.length,
+            (time, next) => Member.findByIdAndUpdate(members[time]._id, {$inc: {
+              order: -1
+            }}, err => next(err)),
+            err => {
+              if (err) return callback('database_error');
+  
+              return callback(null);
+            }
+          );
+        });
       });
     });
   });
