@@ -347,8 +347,7 @@ MemberSchema.statics.findMemberByIdAndIncOrderByOne = function (id, callback) {
       order: member.order + 1
     }, (err, prev_member) => {
       if (err) return callback('database_error');
-      if (!prev_member)
-        return callback(null);
+      if (!prev_member) return callback(null);
 
       Member.findByIdAndUpdate(member._id, {$inc: {
         order: 1

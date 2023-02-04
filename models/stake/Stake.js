@@ -66,6 +66,10 @@ const StakeSchema = new Schema({
   is_active: {
     type: Boolean,
     default: false
+  },
+  order: {
+    type: Number,
+    required: true
   }
 });
 
@@ -78,20 +82,27 @@ StakeSchema.statics.createStake = function (data, callback) {
   Project.findProjectById(data.project_id, (err, project) => {
     if (err) return callback(err);
 
-    const newStakeData = {
-      projet_id: project._id,
-      created_at: new Date()
-    };
-
-    const newStake = new Stake(newStakeData);
-
-    newStake.save((err, stake) => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
-      if (err) return callback('database_error');
-
-      return callback(null, stake._id.toString());
-    });
+    Stake
+      .find()
+      .countDocuments()
+      .then(order => {
+        const newStakeData = {
+          projet_id: project._id,
+          created_at: new Date(),
+          order
+        };
+    
+        const newStake = new Stake(newStakeData);
+    
+        newStake.save((err, stake) => {
+          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+            return callback('duplicated_unique_field');
+          if (err) return callback('database_error');
+    
+          return callback(null, stake._id.toString());
+        });
+      })
+      .catch(_ => callback('database_error'));
   });
 };
 
@@ -236,11 +247,126 @@ StakeSchema.statics.findStakeByIdAndUpdateTranslations = function (id, data, cal
       return callback('not_authenticated_request');
 
     Stake.findByIdAndUpdate(stake._id, {$set: {
-      translations: formatTranslations(stake, data)
+      translations: formatTranslations(stake, data.language, data)
     }}, err => {
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+StakeSchema.statics.findStakesByFilters = function (data, callback) {
+  const Stake = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  data.is_deleted = false;
+
+  Project.findProjectsByFilters(data, (err, project_data) => {
+    if (err) return callback(err);
+    
+    const data = {
+      search: project_data.search,
+      limit: project_data.limit,
+      page: project_data.page,
+      stakes: []
+    };
+
+    if (!project_data.projects || !project_data.projects.length)
+      return data;
+    
+    Stake
+      .find({
+        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
+      })
+      .sort({ order: -1 })
+      .then(stakes => async.timesSeries(
+        stakes.length,
+        (time, next) => Stake.findStakeByIdAndFormat(stakes[time]._id, (err, stake) => next(err, stake)),
+        (err, stakes) => {
+          if (err) return callback(err);
+
+          data.stakes = stakes;
+
+          return callback(null, data);
+        })
+      )
+      .catch(_ => callback('database_error'));
+  })
+};
+
+Stake.statics.findStakeCountByFilters = function (data, callback) {
+  const Stake = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  data.is_deleted = false;
+
+  Project.findProjectCountByFilters(data, (err, count) => {
+    if (err) return callback(err);
+
+    Stake
+      .find({
+        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
+      })
+      .countDocuments()
+      .then(count => callback(null, count))
+      .catch(_ => callback('database_error'));
+  });
+};
+
+StakeSchema.statics.findStakeByIdAndRevertIsActive = function (id, callback) {
+  const Stake = this;
+
+  Stake.findStakeById(id, (err, stake) => {
+    if (err) return callback(err);
+
+    Stake.findByIdAndUpdate(stake._id, {$set: {
+      is_active: !stake.is_active
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+StakeSchema.statics.findStakeByIdAndIncOrderByOne = function (id, callback) {
+  const Stake = this;
+
+  Stake.findStakeById(id, (err, stake) => {
+    if (err) return callback(err);
+    if (stake.is_deleted) return callback('not_authenticated_request');
+
+    Stake.findOne({
+      order: stake.order + 1
+    }, (err, prev_stake) => {
+      if (err) return callback('database_error');
+      if (!prev_stake) return callback(null);
+
+      Stake.findByIdAndUpdate(stake._id, {$inc: {
+        order: 1
+      }}, err => {
+        if (err) return callback('database_error');
+
+        Stake.findByIdAndUpdate(prev_stake._id, {$inc: {
+          order: -1
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Project.findProjectById(prev_stake.project_id, (err, project) => {
+            if (err) return callback(err);
+
+            if (!project.is_deleted)
+              return callback(null);
+
+            return Stake.findStakeByIdAndIncOrderByOne(stake._id, err => callback(err));
+          });
+        });
+      });
     });
   });
 };

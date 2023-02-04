@@ -345,8 +345,7 @@ WriterSchema.statics.findWriterByIdAndIncOrderByOne = function (id, callback) {
       order: writer.order + 1
     }, (err, prev_writer) => {
       if (err) return callback('database_error');
-      if (!prev_writer)
-        return callback(null);
+      if (!prev_writer) return callback(null);
 
       Writer.findByIdAndUpdate(writer._id, {$inc: {
         order: 1
