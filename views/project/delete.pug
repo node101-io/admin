@@ -1,0 +1,35 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Deleted Projects')
+      .general-header-subtitle= __('See and restore deleted projects.')
+    input.general-header-search-input#project-search-input(type='text' placeholder='Search by name or description' value=projects_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if projects_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{projects_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if projects_page > 0
+            a.general-page-prev-button(href=`/project/delete?page=${projects_page-1}${projects_search ? '&search=' + projects_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(projects_count / projects_limit) + (projects_count % projects_limit ? 1 : 0); i += 1)
+            if i != projects_page
+              a.general-each-page-button(href=`/project/delete?page=${i}${projects_search ? '&search=' + projects_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (projects_page + 1) * projects_limit < projects_count
+            a.general-page-next-button(href=`/project/delete?page=${projects_page+1}${projects_search ? '&search=' + projects_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{projects_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each project in projects
+        .general-each-item-wrapper(id=project._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= project.name
+            span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
+          .general-each-item-buttons-wrapper
+            .general-each-item-first-button.restore-each-project-button= __('Restore')

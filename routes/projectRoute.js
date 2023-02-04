@@ -17,7 +17,7 @@ const deletePostController = require('../controllers/project/delete/post');
 const editPostController = require('../controllers/project/edit/post');
 const imagePostController = require('../controllers/project/image/post');
 const orderPostController = require('../controllers/project/order/post');
-const restorePostController = require('../controllers/stake/restore/post');
+const restorePostController = require('../controllers/project/restore/post');
 
 router.get(
   '/',

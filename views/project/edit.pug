@@ -1,0 +1,83 @@
+extends ../partials/navbar
+block main
+  input.display-none#project-json(type='text' value=JSON.stringify(project))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Project')} - #{project.name}
+      .general-header-subtitle= __('Edit the project information and translate the project.')
+    input.general-header-search-input#project-search-input(autocomplete='search' name='search' placeholder='Search by name or description' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !project.is_completed
+        .general-create-info= __('IMPORTANT! This project is not yet complete. Please complete all the required fields to start using this project in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Name')
+          input.general-input#name(type='text' placeholder=__('Enter the project name.') value=project.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Description')
+          input.general-input#description(type='text' placeholder=__('Describe the project with a few simple sentences.') value=project.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Rating')
+          .general-select-input-wrapper
+            
+          input.general-input#description(type='text' placeholder=__('Describe the project with a few simple sentences.') value=project.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Image')
+          if project.image
+            .general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${project.image})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              .general-image-input-placeholder= __('Upload from your device.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Project')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=project.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Turkish Name')
+          input.general-input#turkish-name(type='text' placeholder=__('Enter the project name.') value=project.translations.tr.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Turkish Description')
+          input.general-input#turkish-description(type='text' placeholder=__('Describe the project with a few simple sentences.') value=project.translations.tr.description)
+        .general-create-input-grid-each-item-wrapper
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Project Turkish')} #{socialAccounts[social]} 
+            input.general-input.social-account-input-turkish(type='text' id='turkish-' + social placeholder=__('URL address') value=project.translations.tr[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Russian Name')
+          input.general-input#russian-name(type='text' placeholder=__('Enter the project name.') value=project.translations.ru.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Russian Description')
+          input.general-input#russian-description(type='text' placeholder=__('Describe the project with a few simple sentences.') value=project.translations.ru.description)
+        .general-create-input-grid-each-item-wrapper
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Project Russianm')} #{socialAccounts[social]} 
+            input.general-input.social-account-input-russian(type='text' id='russian-' + social placeholder=__('URL address') value=project.translations.ru[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

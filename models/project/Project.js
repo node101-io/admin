@@ -498,13 +498,17 @@ ProjectSchema.statics.findProjectByIdAndRestore = function (id, callback) {
     if (err) return callback(err);
     if (!project.is_deleted) return callback(null);
 
-    identifiers = [ toURLString(project.name) ];
+    identifiers = [ toURLString(project.name.replace(project._id.toString(), '')) ];
     const identifierLanguages = {
       [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
     };
 
-    Object.values(project.translations).forEach(lang => {
-      identifiers.push(toURLString(lang.name));
+    Object.values(project.translations).forEach((lang, index) => {
+      const languageIdentifier = toURLString(lang.name);
+      if (!identifiers.includes(languageIdentifier)) {
+        identifiers.push(languageIdentifier);
+        identifierLanguages[languageIdentifier] = Object.keys(project.translations)[index]; 
+      }
     });
 
     async.timesSeries(
@@ -521,10 +525,10 @@ ProjectSchema.statics.findProjectByIdAndRestore = function (id, callback) {
         Project.findProjectCountByFilters({ is_deleted: false }, (err, order) => {
           if (err) return callback(err);
 
-          Project.findByIdAndUpdate({
+          Project.findByIdAndUpdate(project._id, {
             name: project.name.replace(project._id.toString(), ''),
             identifiers,
-            identifierLanguages,
+            identifier_languages: identifierLanguages,
             is_deleted: false,
             order
           }, err => {
