@@ -1,28 +1,28 @@
-const Project = require('../../../models/project/Project');
+const Stake = require('../../../models/stake/Stake');
 
 module.exports = (req, res) => {
   req.query.is_deleted = false;
 
-  Project.findProjectCountByFilters(req.query, (err, count) => {
+  Stake.findStakeCountByFilters(req.query, (err, count) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    Project.findProjectsByFilters(req.query, (err, data) => {
+    Stake.findStakesByFilters(req.query, (err, data) => {
       if (err) return res.redirect('/error?message=' + err);
 
-      return res.render('project/index', {
-        page: 'project/index',
-        title: res.__('Projects'),
+      return res.render('stake/index', {
+        page: 'stake/index',
+        title: res.__('Stakes'),
         includes: {
           external: {
             css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
             js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
           }
         },
-        projects_count: count,
-        projects_search: data.search,
-        projects_limit: data.limit,
-        projects_page: data.page,
-        projects: data.projects
+        stakes_count: count,
+        stakes_search: data.search,
+        stakes_limit: data.limit,
+        stakes_page: data.page,
+        stakes: data.stakes
       });
     });
   });

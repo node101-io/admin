@@ -1,6 +1,8 @@
 const express = require('express');
+const multer = require('multer');
 
 const router = express.Router();
+const upload = multer({ dest: './public/res/uploads/' });
 
 const checkAdminPermission = require('../middleware/checkAdminPermission');
 const createNavbarData = require('../middleware/createNavbarData');
@@ -14,6 +16,8 @@ const createPostController = require('../controllers/writer/create/post');
 const deletePostController = require('../controllers/writer/delete/post');
 const editPostController = require('../controllers/writer/edit/post');
 const imagePostController = require('../controllers/writer/image/post');
+const orderPostController = require('../controllers/writer/order/post');
+const restorePostController = require('../controllers/writer/restore/post');
 
 router.get(
   '/',
@@ -60,10 +64,25 @@ router.post(
 );
 router.post(
   '/image',
+    upload.single('file'),
     isAdmin,
     checkAdminPermission,
     createNavbarData,
     imagePostController
+);
+router.post(
+  '/order',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    orderPostController
+);
+router.post(
+  '/restore',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    restorePostController
 );
 
 module.exports = router;

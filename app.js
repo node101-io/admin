@@ -38,7 +38,9 @@ if (cluster.isMaster) {
   const adminRouteController = require('./routes/adminRoute');
   const authRouteController = require('./routes/authRoute');
   const indexRouteController = require('./routes/indexRoute');
+  const memberRouteController = require('./routes/memberRoute');
   const projectRouteController = require('./routes/projectRoute');
+  const stakeRouteController = require('./routes/stakeRoute');
   const writerRouteController = require('./routes/writerRoute');
 
   app.set('views', path.join(__dirname, 'views'));
@@ -93,7 +95,9 @@ if (cluster.isMaster) {
   app.use('/', indexRouteController);
   app.use('/admin', adminRouteController);
   app.use('/auth', authRouteController);
+  app.use('/member', memberRouteController);
   app.use('/project', projectRouteController);
+  app.use('/stake', stakeRouteController);
   app.use('/writer', writerRouteController);
 
   server.listen(PORT, () => {

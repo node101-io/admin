@@ -79,7 +79,7 @@ MemberSchema.statics.createMember = function (data, callback) {
 
     const newMemberData = {
       name: data.name.trim(),
-      created_at: (new Date()),
+      created_at: new Date(),
       order
     };
   

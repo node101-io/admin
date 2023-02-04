@@ -1,7 +1,7 @@
-const Project = require('../../../models/project/Project');
+const Member = require('../../../models/member/Member');
 
 module.exports = (req, res) => {
-  Project.findProjectByIdAndIncOrderByOne(req.body.id, err => {
+  Member.findMemberByIdAndDelete(req.body.id, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

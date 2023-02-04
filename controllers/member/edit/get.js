@@ -1,4 +1,4 @@
-const Project = require('../../../models/project/Project');
+const Member = require('../../../models/member/Member');
 
 module.exports = (req, res) => {
   const socialAccounts = {
@@ -9,26 +9,22 @@ module.exports = (req, res) => {
     'discord': 'Discord',
     'twitter': 'Twitter',
     'linkedin': 'LinkedIn',
-    'youtube': 'Youtube',
-    'spotify': 'Spotify',
-    'web': 'Website',
-    'gitbook': 'Gitbook',
     'facebook': 'Facebook'
   };
 
-  Project.findProjectByIdAndFormat(req.query.id, (err, project) => {
+  Member.findMemberByIdAndFormat(req.query.id, (err, member) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    return res.render('project/edit', {
-      page: 'project/edit',
-      title: project.name,
+    return res.render('member/edit', {
+      page: 'member/edit',
+      title: member.name,
       includes: {
         external: {
           css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
           js: ['adminListeners', 'ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'page', 'serverRequest']
         }
       },
-      project,
+      member,
       socialAccounts
     });
   });

@@ -1,6 +1,17 @@
 const Writer = require('../../../models/writer/Writer');
 
 module.exports = (req, res) => {
+  const socialAccounts = {
+    'instagram': 'Instagram',
+    'medium': 'Medium',
+    'telegram': 'Telegram',
+    'github': 'Github',
+    'discord': 'Discord',
+    'twitter': 'Twitter',
+    'linkedin': 'LinkedIn',
+    'facebook': 'Facebook'
+  };
+
   Writer.findWriterByIdAndFormat(req.query.id, (err, writer) => {
     if (err) return res.redirect('/error?message=' + err);
 
@@ -9,11 +20,12 @@ module.exports = (req, res) => {
       title: writer.name,
       includes: {
         external: {
-          css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-          js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
+          css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+          js: ['adminListeners', 'ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'page', 'serverRequest']
         }
       },
-      writer
+      writer,
+      socialAccounts
     });
   });
 };

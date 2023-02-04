@@ -1,7 +1,7 @@
-const Project = require('../../../models/project/Project');
+const Stake = require('../../../models/stake/Stake');
 
 module.exports = (req, res) => {
-  Project.findProjectByIdAndIncOrderByOne(req.body.id, err => {
+  Stake.findStakeByIdAndUpdate(req.query.id, req.body, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

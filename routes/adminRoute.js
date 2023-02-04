@@ -1,6 +1,8 @@
 const express = require('express');
+const multer = require('multer');
 
 const router = express.Router();
+const upload = multer({ dest: './public/res/uploads/' });
 
 const isSystemAdmin = require('../middleware/isSystemAdmin');
 
@@ -53,6 +55,7 @@ router.post(
 );
 router.post(
   '/image',
+    upload.single('file'),
     isSystemAdmin,
     imagePostController
 );

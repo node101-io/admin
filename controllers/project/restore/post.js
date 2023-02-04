@@ -1,7 +1,7 @@
 const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
-  Project.findProjectByIdAndIncOrderByOne(req.body.id, err => {
+  Project.findProjectByIdAndRestore(req.body.id, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

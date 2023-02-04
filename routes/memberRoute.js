@@ -8,16 +8,15 @@ const checkAdminPermission = require('../middleware/checkAdminPermission');
 const createNavbarData = require('../middleware/createNavbarData');
 const isAdmin = require('../middleware/isAdmin');
 
-const deleteGetController = require('../controllers/project/delete/get');
-const editGetController = require('../controllers/project/edit/get');
-const indexGetController = require('../controllers/project/index/get');
+const deleteGetController = require('../controllers/member/delete/get');
+const editGetController = require('../controllers/member/edit/get');
+const indexGetController = require('../controllers/member/index/get');
 
-const createPostController = require('../controllers/project/create/post');
-const deletePostController = require('../controllers/project/delete/post');
-const editPostController = require('../controllers/project/edit/post');
-const imagePostController = require('../controllers/project/image/post');
-const orderPostController = require('../controllers/project/order/post');
-const restorePostController = require('../controllers/stake/restore/post');
+const createPostController = require('../controllers/member/create/post');
+const deletePostController = require('../controllers/member/delete/post');
+const editPostController = require('../controllers/member/edit/post');
+const imagePostController = require('../controllers/member/image/post');
+const orderPostController = require('../controllers/member/order/post');
 
 router.get(
   '/',
@@ -76,13 +75,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     orderPostController
-);
-router.post(
-  '/restore',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    restorePostController
 );
 
 module.exports = router;

@@ -297,7 +297,7 @@ StakeSchema.statics.findStakesByFilters = function (data, callback) {
   })
 };
 
-Stake.statics.findStakeCountByFilters = function (data, callback) {
+StakeSchema.statics.findStakeCountByFilters = function (data, callback) {
   const Stake = this;
 
   if (!data || typeof data != 'object')

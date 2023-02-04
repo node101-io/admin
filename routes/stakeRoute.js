@@ -8,16 +8,15 @@ const checkAdminPermission = require('../middleware/checkAdminPermission');
 const createNavbarData = require('../middleware/createNavbarData');
 const isAdmin = require('../middleware/isAdmin');
 
-const deleteGetController = require('../controllers/project/delete/get');
-const editGetController = require('../controllers/project/edit/get');
-const indexGetController = require('../controllers/project/index/get');
+const editGetController = require('../controllers/stake/edit/get');
+const indexGetController = require('../controllers/stake/index/get');
 
-const createPostController = require('../controllers/project/create/post');
-const deletePostController = require('../controllers/project/delete/post');
-const editPostController = require('../controllers/project/edit/post');
-const imagePostController = require('../controllers/project/image/post');
-const orderPostController = require('../controllers/project/order/post');
+const createPostController = require('../controllers/stake/create/post');
+const editPostController = require('../controllers/stake/edit/post');
+const imagePostController = require('../controllers/stake/image/post');
+const orderPostController = require('../controllers/stake/order/post');
 const restorePostController = require('../controllers/stake/restore/post');
+const statusPostController = require('../controllers/stake/status/post');
 
 router.get(
   '/',
@@ -25,13 +24,6 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     indexGetController
-);
-router.get(
-  '/delete',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    deleteGetController
 );
 router.get(
   '/edit',
@@ -47,13 +39,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     createPostController
-);
-router.post(
-  '/delete',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    deletePostController
 );
 router.post(
   '/edit',
@@ -83,6 +68,13 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     restorePostController
+);
+router.post(
+  '/status',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    statusPostController
 );
 
 module.exports = router;
