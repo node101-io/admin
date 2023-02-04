@@ -35,7 +35,7 @@ const WritingSchema = new Schema({
     trim: true
   },
   parent_id: {
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Types.ObjectId, // ID of a Blog, Book, or Guide
     default: null
   },
   created_at: {

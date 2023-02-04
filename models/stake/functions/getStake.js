@@ -16,6 +16,7 @@ module.exports = (stake, callback) => {
       how_to_stake_url: stake.how_to_stake_url,
       not_yet_stakable: stake.not_yet_stakable,
       is_completed: stake.is_completed,
+      translations: stake.translations,
       is_active: stake.is_active
     });
   });
