@@ -25,7 +25,6 @@ const WriterSchema = new Schema({
     type: String,
     required: true,
     trim: true,
-    unique: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
@@ -60,6 +59,10 @@ const WriterSchema = new Schema({
   is_deleted: {
     type: Boolean,
     default: false
+  },
+  order: {
+    type: Number,
+    required: true
   }
 });
 
@@ -80,11 +83,17 @@ WriterSchema.statics.createWriter = function (data, callback) {
   const newWriter = new Writer(newWriterData);
 
   newWriter.save((err, writer) => {
-    if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-      return callback('duplicated_unique_field');
-    if (err) return callback('database_error');
-    
-    return callback(null, writer._id.toString());
+    if (err) return callback('bad_request');
+
+    writer.translations = formatTranslations(writer, 'tr');
+
+    Writer.findByIdAndUpdate(writer._id, {$set: {
+      translations: formatTranslations(writer, 'ru')
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null, writer._id.toString());
+    });
   });
 };
 
@@ -98,14 +107,13 @@ WriterSchema.statics.findWriterById = function (id, callback) {
     if (err) return callback('database_error');
     if (!writer) return callback('document_not_found');
 
-    if (writer.is_completed)
-      return callback(null, writer);
+    const is_completed = isWriterComplete(writer);
 
-    if (!isWriterComplete(writer))
+    if (writer.is_completed == is_completed)
       return callback(null, writer);
 
     Writer.findByIdAndUpdate(writer._id, {$set: {
-      is_completed: true
+      is_completed: is_completed
     }}, { new: true }, (err, writer) => {
       if (err) return callback('database_error');
 
@@ -220,7 +228,7 @@ WriterSchema.statics.findWriterByIdAndUpdateTranslations = function (id, data, c
       return callback('not_authenticated_request');
 
     Writer.findByIdAndUpdate(writer._id, {$set: {
-      translations: formatTranslations(writer, data)
+      translations: formatTranslations(writer, data.language, data)
     }}, err => {
       if (err) return callback('database_error');
 
@@ -237,10 +245,14 @@ WriterSchema.statics.findWritersByFilters = function (data, callback) {
 
   const filters = {};
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
-  const skip = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? limit * parseInt(data.page) : 0;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
+  let search = null;
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+    search = data.search.trim();
+    filters.name = { $regex: search, $options: 'i' };
+  };
 
   Writer
     .find(filters)
@@ -249,11 +261,16 @@ WriterSchema.statics.findWritersByFilters = function (data, callback) {
     .sort({ name: 1 })
     .then(writers => async.timesSeries(
       writers.length,
-      (time, next) => Writer.findWriterByIdAndFormat(writers[time], (err, writer) => next(err, writer)),
+      (time, next) => Writer.findWriterByIdAndFormat(writers[time]._id, (err, writer) => next(err, writer)),
       (err, writers) => {
         if (err) return callback(err);
 
-        return callback(null, writers);
+        return callback(null, {
+          search,
+          limit,
+          page,
+          writers
+        });
       })
     )
     .catch(_ => callback('database_error'));
@@ -267,8 +284,8 @@ WriterSchema.statics.findWriterCountByFilters = function (data, callback) {
 
   const filters = {};
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.name = { $regex: data.search.trim(), $options: 'i' };
 
   Writer
     .find(filters)
@@ -285,8 +302,8 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
     if (writer.is_deleted) return callback(null);
     
     Writer.findByIdAndUpdate(writer._id, {$set: {
-      name: writer.name + writer._id.toString(),
-      is_deleted: true
+      is_deleted: true,
+      order: null
     }}, err => {
       if (err) return callback('database_error');
 
@@ -302,18 +319,50 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
     if (err) return callback(err);
     if (!writer.is_deleted) return callback(null);
 
-    Writer.findByIdAndUpdate(writer._id, {$set: {
-      name: writer.name.replace(writer._id.toString(), ''),
-      is_deleted: false
-    }}, err => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
-      if (err)
-        return callback('database_error');
+    Writer.findWriterCountByFilters({ is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
 
-      return callback(null);
-    })
-  })
-}
+      Writer.findByIdAndUpdate({
+        is_deleted: false,
+        order
+      }, err => {
+        if (err) return callback('database_error');
+
+        return callback(null);
+      });
+    });
+  });
+};
+
+WriterSchema.statics.findWriterByIdAndIncOrderByOne = function (id, callback) {
+  const Writer = this;
+
+  Writer.findWriterById(id, (err, writer) => {
+    if (err) return callback(err);
+    if (writer.is_deleted) return callback('not_authenticated_request');
+
+    Writer.findOne({
+      order: writer.order + 1
+    }, (err, prev_writer) => {
+      if (err) return callback('database_error');
+      if (!prev_writer)
+        return callback(null);
+
+      Writer.findByIdAndUpdate(writer._id, {$inc: {
+        order: 1
+      }}, err => {
+        if (err) return callback('database_error');
+
+        Writer.findByIdAndUpdate(prev_writer._id, {$inc: {
+          order: -1
+        }}, err => {
+          if (err) return  callback('database_error');
+
+          return callback(null);
+        });
+      });
+    });
+  });
+};
 
 module.exports = mongoose.model('Writer', WriterSchema);

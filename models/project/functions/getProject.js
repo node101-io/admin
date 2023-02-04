@@ -10,6 +10,7 @@ module.exports = (project, callback) => {
     rating: project.rating,
     image: project.image,
     is_completed: project.is_completed,
-    social_media_accounts: project.social_media_accounts
+    social_media_accounts: project.social_media_accounts,
+    translations: project.translations
   });
 }

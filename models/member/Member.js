@@ -11,7 +11,6 @@ const getMemberByLanguage = require('./functions/getMemberByLanguage');
 const isMemberComplete = require('./functions/isMemberComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
-const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 300;
 const IMAGE_NAME_PREFIX = 'node101 member ';
@@ -25,7 +24,6 @@ const MemberSchema = new Schema({
     type: String,
     required: true,
     trim: true,
-    unique: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
@@ -60,6 +58,10 @@ const MemberSchema = new Schema({
   is_deleted: {
     type: Boolean,
     default: false
+  },
+  order: {
+    type: Number,
+    required: true
   }
 });
 
@@ -72,19 +74,30 @@ MemberSchema.statics.createMember = function (data, callback) {
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  const newMemberData = {
-    name: data.name.trim(),
-    created_at: (new Date())
-  };
+  Member.findMemberCountByFilters({ is_deleted: false }, (err, order) => {
+    if (err) return callback(err);
 
-  const newMember = new Member(newMemberData);
+    const newMemberData = {
+      name: data.name.trim(),
+      created_at: (new Date()),
+      order
+    };
+  
+    const newMember = new Member(newMemberData);
+  
+    newMember.save((err, member) => {
+      if (err) return callback('bad_request');
 
-  newMember.save((err, member) => {
-    if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-      return callback('duplicated_unique_field');
-    if (err) return callback('bad_request');
-    
-    return callback(null, member._id.toString());
+      member.translations = formatTranslations(member, 'tr');
+
+      Member.findByIdAndUpdate(member._id, {$set: {
+        translations: formatTranslations(member, 'ru')
+      }}, err => {
+        if (err) return callback('database_error');
+
+        return callback(null, member._id.toString());
+      });
+    });
   });
 };
 
@@ -98,14 +111,13 @@ MemberSchema.statics.findMemberById = function (id, callback) {
     if (err) return callback('database_error');
     if (!member) return callback('document_not_found');
 
-    if (member.is_completed)
-      return callback(null, member);
+    const is_completed = isMemberComplete(member);
 
-    if (!isMemberComplete(member))
+    if (member.is_completed == is_completed)
       return callback(null, member);
 
     Member.findByIdAndUpdate(member._id, {$set: {
-      is_completed: true
+      is_completed: is_completed
     }}, { new: true }, (err, member) => {
       if (err) return callback('database_error');
 
@@ -195,8 +207,6 @@ MemberSchema.statics.findMemberByIdAndUpdate = function (id, data, callback) {
       title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : member.title,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
     }}, err => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
       if (err) return callback('database_error');
 
       return callback(null);
@@ -220,7 +230,7 @@ MemberSchema.statics.findMemberByIdAndUpdateTranslations = function (id, data, c
       return callback('not_authenticated_request');
 
     Member.findByIdAndUpdate(member._id, {$set: {
-      translations: formatTranslations(member, data)
+      translations: formatTranslations(member, data.language, data)
     }}, err => {
       if (err) return callback('database_error');
 
@@ -237,10 +247,14 @@ MemberSchema.statics.findMembersByFilters = function (data, callback) {
 
   const filters = {};
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
-  const skip = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? limit * parseInt(data.page) : 0;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
+  let search = null;
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+    search = data.search.trim();
+    filters.name = { $regex: search, $options: 'i' };
+  };
 
   Member
     .find(filters)
@@ -249,11 +263,16 @@ MemberSchema.statics.findMembersByFilters = function (data, callback) {
     .sort({ name: 1 })
     .then(members => async.timesSeries(
       members.length,
-      (time, next) => Member.findMemberByIdAndFormat(members[time], (err, member) => next(err, member)),
+      (time, next) => Member.findMemberByIdAndFormat(members[time]._id, (err, member) => next(err, member)),
       (err, members) => {
         if (err) return callback(err);
 
-        return callback(null, members);
+        return callback(null, {
+          search,
+          limit,
+          page,
+          members
+        });
       })
     )
     .catch(_ => callback('database_error'));
@@ -267,14 +286,85 @@ MemberSchema.statics.findMemberCountByFilters = function (data, callback) {
 
   const filters = {};
 
-  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.name = data.name.trim();
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.name = { $regex: data.search.trim(), $options: 'i' };
 
   Member
     .find(filters)
     .countDocuments()
     .then(number => callback(null, number))
     .catch(_ => callback('database_error'));
+};
+
+MemberSchema.statics.findMemberByIdAndDelete = function (id, callback) {
+  const Member = this;
+
+  Member.findMemberById(id, (err, member) => {
+    if (err) return callback(err);
+    if (member.is_deleted) return callback(null);
+
+    Member.findByIdAndUpdate(member._id, { $set: {
+      is_deleted: true,
+      order: null
+    } }, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+MemberSchema.statics.findMemberByIdAndRestore = function (id, callback) {
+  const Member = this;
+
+  Member.findMemberById(id, (err, member) => {
+    if (err) return callback(err);
+    if (!member.is_deleted) return callback(null);
+
+    Member.findMemberCountByFilters({ is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
+
+      Member.findByIdAndUpdate({
+        is_deleted: false,
+        order
+      }, err => {
+        if (err) return callback('database_error');
+
+        return callback(null);
+      });
+    });
+  });
+};
+
+MemberSchema.statics.findMemberByIdAndIncOrderByOne = function (id, callback) {
+  const Member = this;
+
+  Member.findMemberById(id, (err, member) => {
+    if (err) return callback(err);
+    if (member.is_deleted) return callback('not_authenticated_request');
+
+    Member.findOne({
+      order: member.order + 1
+    }, (err, prev_member) => {
+      if (err) return callback('database_error');
+      if (!prev_member)
+        return callback(null);
+
+      Member.findByIdAndUpdate(member._id, {$inc: {
+        order: 1
+      }}, err => {
+        if (err) return callback('database_error');
+
+        Member.findByIdAndUpdate(prev_member._id, {$inc: {
+          order: -1
+        }}, err => {
+          if (err) return  callback('database_error');
+
+          return callback(null);
+        });
+      });
+    });
+  });
 };
 
 module.exports = mongoose.model('Member', MemberSchema);

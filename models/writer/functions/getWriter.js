@@ -9,6 +9,6 @@ module.exports = (writer, callback) => {
     title: writer.title ? writer.title : '',
     image: writer.image,
     social_media_accounts: writer.social_media_accounts,
-    is_deleted: writer.is_deleted
+    translations: writer.translations
   });
 }

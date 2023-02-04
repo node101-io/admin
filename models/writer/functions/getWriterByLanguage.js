@@ -13,7 +13,6 @@ module.exports = (writer, language, callback) => {
     name: writer.name.replace(writer._id.toString(), ''),
     title: translation.title,
     image: writer.image,
-    social_media_accounts: translation.social_media_accounts,
-    is_deleted: writer.is_deleted
+    social_media_accounts: translation.social_media_accounts
   });
 }  
