@@ -1,7 +1,7 @@
-const Stake = require('../../../models/stake/Stake');
+const Guide = require('../../../models/guide/Guide');
 
 module.exports = (req, res) => {
-  Stake.findStakeByIdAndRestore(req.body.id, err => {
+  Guide.findGuideByIdAndIncOrderByOne(req.body.id, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();
