@@ -275,11 +275,11 @@ StakeSchema.statics.findStakesByFilters = function (data, callback) {
     };
 
     if (!project_data.projects || !project_data.projects.length)
-      return data;
+      return callback(null, data);
     
     Stake
       .find({
-        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
+        project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
       })
       .sort({ order: -1 })
       .then(stakes => async.timesSeries(
@@ -305,8 +305,11 @@ StakeSchema.statics.findStakeCountByFilters = function (data, callback) {
 
   data.is_deleted = false;
 
-  Project.findProjectCountByFilters(data, (err, count) => {
+  Project.findProjectsByFilters(data, (err, project_data) => {
     if (err) return callback(err);
+
+    if (!project_data.projects || !project_data.projects.length)
+      return callback(null, 0);
 
     Stake
       .find({

@@ -236,6 +236,7 @@ ProjectSchema.statics.findProjectByIdAndUpdateImage = function (id, file, callba
 
   Project.findProjectById(id, (err, project) => {
     if (err) return callback(err);
+    if (project.is_deleted) return callback('not_authenticated_request');
 
     Image.createImage({
       file_name: file.filename,
@@ -269,6 +270,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
 
   Project.findProjectById(id, (err, project) => {
     if (err) return callback(err);
+    if (project.is_deleted) return callback('not_authenticated_request');
 
     if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');

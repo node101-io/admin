@@ -1,21 +1,16 @@
-const validator = require('validator');
+const getSocialMediaAccounts = require('./getSocialMediaAccounts');
 
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 
-module.exports = (writer, data) => {
-  if (!data || typeof data != 'object')
-    return writer.translations;
+module.exports = (blog, language, data) => {
+  if (!data)
+    data = {};
 
-  if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
-    return writer.translations;
-
-  const old = writer.translations[data.language.toString().trim()] ? writer.translations[data.language.toString().trim()] : writer;
-
-  writer.translations[data.language.toString().trim()] = {
-    title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : old.title,
-    subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : old.subtitle,
-    cover: old.cover
+  blog.translations[language.toString().trim()] = {
+    title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : blog.title,
+    subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : blog.subtitle,
+    social_media_accounts: data.social_media_accounts && typeof data.social_media_accounts == 'object' ? getSocialMediaAccounts(data.social_media_accounts) : writer.social_media_accounts,
   };
 
-  return writer.translations;
+  return blog.translations;
 };

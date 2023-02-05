@@ -289,11 +289,25 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
   Guide.findGuideById(id, (err, guide) => {
     if (err) return callback(err);
 
+
     Guide.findByIdAndUpdate(guide._id, {$set: {
-      apr: data.apr && !isNaN(parseFloat(data.apr)) ? parseFloat(data.apr) : null,
-      guide_url: data.guide_url && typeof data.guide_url == 'string' && data.guide_url.trim().length && data.guide_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.guide_url.trim() : null,
-      how_to_guide_url: data.how_to_guide_url && typeof data.how_to_guide_url == 'string' && data.how_to_guide_url.trim().length && data.how_to_guide_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.how_to_guide_url.trim() : null,
-      not_yet_stakable: data.not_yet_stakable ? true : false
+      mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : null,
+      testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : null,
+      rewards: data.rewards && typeof data.rewards == 'string' && data.rewards.trim().length && data.rewards.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.rewards.trim() : null,
+      lock_period: data.lock_period && typeof data.lock_period == 'string' && data.lock_period.trim().length && data.lock_period.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.lock_period.trim() : null,
+      cpu: data.cpu && typeof data.cpu == 'string' && data.cpu.trim().length && data.cpu.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.cpu.trim() : null,
+      ram: data.ram && typeof data.ram == 'string' && data.ram.trim().length && data.ram.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.ram.trim() : null,
+      os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
+      network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
+      frequently_asked_questions: data.frequently_asked_questions && Array.isArray(data.frequently_asked_questions) ? data.frequently_asked_questions.filter(each =>
+        each.question && typeof each.question == 'string' && each.question.trim().length && each.question.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH &&
+        each.answer && typeof each.answer == 'string' && each.answer.trim().length && each.answer.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH
+      ).map(each => {
+        return {
+          question: each.question.trim(),
+          answer: each.answer.trim()
+        }
+      }) : []
     }}, err => {
       if (err) return callback('database_error');
 
@@ -333,11 +347,9 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  data.is_deleted = false;
-
   Project.findProjectsByFilters(data, (err, project_data) => {
     if (err) return callback(err);
-    
+
     const data = {
       search: project_data.search,
       limit: project_data.limit,
@@ -345,13 +357,20 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
       guides: []
     };
 
+    const filters = {};
+
     if (!project_data.projects || !project_data.projects.length)
-      return data;
-    
+      return callback(null, data);
+
+    if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+      filters.name = { $regex: data.search.trim(), $options: 'i' };
+    };
+
     Guide
-      .find({
-        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
-      })
+      .find({$and: [
+        filters,
+        { project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) } }
+      ]})
       .sort({ order: -1 })
       .then(guides => async.timesSeries(
         guides.length,
@@ -360,12 +379,12 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
           if (err) return callback(err);
 
           data.guides = guides;
-
+  
           return callback(null, data);
         })
       )
       .catch(_ => callback('database_error'));
-  })
+  });
 };
 
 GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
@@ -374,15 +393,23 @@ GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  data.is_deleted = false;
-
-  Project.findProjectCountByFilters(data, (err, count) => {
+  Project.findProjectsByFilters(data, (err, project_data) => {
     if (err) return callback(err);
 
+    const filters = {};
+
+    if (!project_data.projects || !project_data.projects.length)
+      return callback(null, 0);
+
+    if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+      filters.name = { $regex: data.search.trim(), $options: 'i' };
+    };
+
     Guide
-      .find({
-        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
-      })
+      .find({$and: [
+        filters,
+        { project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) } }
+      ]})
       .countDocuments()
       .then(count => callback(null, count))
       .catch(_ => callback('database_error'));
@@ -410,7 +437,6 @@ GuideSchema.statics.findGuideByIdAndIncOrderByOne = function (id, callback) {
 
   Guide.findGuideById(id, (err, guide) => {
     if (err) return callback(err);
-    if (guide.is_deleted) return callback('not_authenticated_request');
 
     Guide.findOne({
       order: guide.order + 1
