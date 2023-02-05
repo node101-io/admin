@@ -15,7 +15,6 @@ const createPostController = require('../controllers/stake/create/post');
 const editPostController = require('../controllers/stake/edit/post');
 const imagePostController = require('../controllers/stake/image/post');
 const orderPostController = require('../controllers/stake/order/post');
-const restorePostController = require('../controllers/stake/restore/post');
 const statusPostController = require('../controllers/stake/status/post');
 
 router.get(
@@ -61,13 +60,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     orderPostController
-);
-router.post(
-  '/restore',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    restorePostController
 );
 router.post(
   '/status',

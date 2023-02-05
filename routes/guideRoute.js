@@ -8,16 +8,14 @@ const checkAdminPermission = require('../middleware/checkAdminPermission');
 const createNavbarData = require('../middleware/createNavbarData');
 const isAdmin = require('../middleware/isAdmin');
 
-const deleteGetController = require('../controllers/project/delete/get');
-const editGetController = require('../controllers/project/edit/get');
-const indexGetController = require('../controllers/project/index/get');
+const editGetController = require('../controllers/guide/edit/get');
+const indexGetController = require('../controllers/guide/index/get');
 
-const createPostController = require('../controllers/project/create/post');
-const deletePostController = require('../controllers/project/delete/post');
-const editPostController = require('../controllers/project/edit/post');
-const imagePostController = require('../controllers/project/image/post');
-const orderPostController = require('../controllers/project/order/post');
-const restorePostController = require('../controllers/project/restore/post');
+const createPostController = require('../controllers/guide/create/post');
+const editPostController = require('../controllers/guide/edit/post');
+const imagePostController = require('../controllers/guide/image/post');
+const orderPostController = require('../controllers/guide/order/post');
+const statusPostController = require('../controllers/guide/status/post');
 const translatePostController = require('../controllers/guide/translate/post');
 
 router.get(
@@ -26,13 +24,6 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     indexGetController
-);
-router.get(
-  '/delete',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    deleteGetController
 );
 router.get(
   '/edit',
@@ -48,13 +39,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     createPostController
-);
-router.post(
-  '/delete',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    deletePostController
 );
 router.post(
   '/edit',
@@ -79,11 +63,11 @@ router.post(
     orderPostController
 );
 router.post(
-  '/restore',
+  '/status',
     isAdmin,
     checkAdminPermission,
     createNavbarData,
-    restorePostController
+    statusPostController
 );
 router.post(
   '/translate',

@@ -18,6 +18,7 @@ const editPostController = require('../controllers/writer/edit/post');
 const imagePostController = require('../controllers/writer/image/post');
 const orderPostController = require('../controllers/writer/order/post');
 const restorePostController = require('../controllers/writer/restore/post');
+const translatePostController = require('../controllers/guide/translate/post');
 
 router.get(
   '/',
@@ -83,6 +84,13 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     restorePostController
+);
+router.post(
+  '/translate',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    translatePostController
 );
 
 module.exports = router;
