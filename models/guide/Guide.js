@@ -17,6 +17,7 @@ const IMAGE_HEIGHT = 200;
 const IMAGE_WIDTH = 200;
 const IMAGE_NAME_PREFIX = 'node101 guide ';
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
 
 const Schema = mongoose.Schema;
 
@@ -179,9 +180,10 @@ GuideSchema.statics.createGuide = function (data, callback) {
           if (err) return callback('database_error');
 
           guide.translations = formatTranslations(guide, 'tr');
+          guide.translations = formatTranslations(guide, 'ru');
 
           Guide.findByIdAndUpdate(guide._id, {$set: {
-            translations: formatTranslations(guide, 'ru')
+            translations: guide.translations
           }}, err => {
             if (err) return callback('database_error');
 

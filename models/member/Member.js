@@ -89,9 +89,10 @@ MemberSchema.statics.createMember = function (data, callback) {
       if (err) return callback('bad_request');
 
       member.translations = formatTranslations(member, 'tr');
+      member.translations = formatTranslations(member, 'ru');
 
       Member.findByIdAndUpdate(member._id, {$set: {
-        translations: formatTranslations(member, 'ru')
+        translations: member.translations
       }}, err => {
         if (err) return callback('database_error');
 

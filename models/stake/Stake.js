@@ -98,8 +98,17 @@ StakeSchema.statics.createStake = function (data, callback) {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
-    
-          return callback(null, stake._id.toString());
+
+          stake.translations = formatTranslations(stake, 'tr');
+          stake.translations = formatTranslations(stake, 'ru');
+
+          Stake.findByIdAndUpdate(stake._id, {$set: {
+            translations: stake.translations
+          }}, err => {
+            if (err) return callback('database_error');
+
+            return callback(null, stake._id.toString());
+          });
         });
       })
       .catch(_ => callback('database_error'));
@@ -185,27 +194,31 @@ StakeSchema.statics.findStakeByIdAndUpdateImage = function (id, file, callback) 
   Stake.findStakeById(id, (err, stake) => {
     if (err) return callback(err);
 
-    Image.createImage({
-      file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + stake.name,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      is_used: true
-    }, (err, url) => {
+    Project.findProjectById(stake.project_id, (err, project) => {
       if (err) return callback(err);
-  
-      Stake.findByIdAndUpdate(stake._id, { $set: {
-        image: url
-      }}, { new: false }, (err, stake) => {
+
+      Image.createImage({
+        file_name: file.filename,
+        original_name: IMAGE_NAME_PREFIX + project.name,
+        width: IMAGE_WIDTH,
+        height: IMAGE_HEIGHT,
+        is_used: true
+      }, (err, url) => {
         if (err) return callback(err);
-
-        if (!stake.image || stake.image == url)
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(stake.image, err => {
+    
+        Stake.findByIdAndUpdate(stake._id, { $set: {
+          image: url
+        }}, { new: false }, (err, stake) => {
           if (err) return callback(err);
-
-          return callback(null, url);
+  
+          if (!stake.image || stake.image == url)
+            return callback(null, url);
+  
+          Image.findImageByUrlAndDelete(stake.image, err => {
+            if (err) return callback(err);
+  
+            return callback(null, url);
+          });
         });
       });
     });

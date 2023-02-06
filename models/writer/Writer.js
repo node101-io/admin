@@ -86,9 +86,10 @@ WriterSchema.statics.createWriter = function (data, callback) {
     if (err) return callback('bad_request');
 
     writer.translations = formatTranslations(writer, 'tr');
+    writer.translations = formatTranslations(writer, 'ru');
 
     Writer.findByIdAndUpdate(writer._id, {$set: {
-      translations: formatTranslations(writer, 'ru')
+      translations: writer.translations
     }}, err => {
       if (err) return callback('database_error');
 

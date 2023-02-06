@@ -2,6 +2,8 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const toURLString =require('../../utils/toURLString')
+
 const Image = require('../image/Image');
 
 const formatTranslations = require('./functions/formatTranslations');
@@ -89,6 +91,10 @@ const BlogSchema = new Schema({
   writing_count: {
     type: Number,
     default: 0
+  },
+  order: {
+    type: Number,
+    required: true
   }
 });
 
@@ -100,6 +106,17 @@ BlogSchema.statics.createBlog = function (data, callback) {
 
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
+
+  const identifier = toURLString(data.title);
+
+  Blog.findOne({
+    identifiers: identifier
+  }, (err, blog) => {
+    if (err) return callback('database_error');
+    if (blog) return callback('duplicated_unique_field');
+
+    
+  })
 
   const newBlogData = {
     title: data.title.trim()

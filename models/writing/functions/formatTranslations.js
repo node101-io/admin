@@ -1,12 +1,14 @@
+const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 
-module.exports = (stake, data) => {
-  const old = stake.translations[data.language.toString().trim()] ? stake.translations[data.language.toString().trim()] : stake;
+module.exports = (writing, language, data) => {
+  if (!data)
+    data = {};
 
-  stake.translations[data.language.toString().trim()] = {
-    stake_url: data.stake_url && typeof data.stake_url == 'string' && data.stake_url.trim().length && data.stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.stake_url.trim() : old.stake_url,
-    how_to_stake_url: data.how_to_stake_url && typeof data.how_to_stake_url == 'string' && data.how_to_stake_url.trim().length && data.how_to_stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.how_to_stake_url.trim() : old.how_to_stake_url,
+  writing.translations[language.toString().trim()] = {
+    title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writing.title,
+    content: data.content && typeof data.content == 'string' && data.content.trim().length && data.content.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.content.trim() : writing.content
   };
 
-  return stake.translations;
+  return writing.translations;
 };

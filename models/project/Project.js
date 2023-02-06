@@ -126,9 +126,10 @@ ProjectSchema.statics.createProject = function (data, callback) {
         if (err) return callback('database_error');
 
         project.translations = formatTranslations(project, 'tr');
+        project.translations = formatTranslations(project, 'ru');
 
         Project.findByIdAndUpdate(project._id, {$set: {
-          translations: formatTranslations(project, 'ru')
+          translations: project.translations
         }}, err => {
           if (err) return callback('database_error');
 
@@ -141,7 +142,7 @@ ProjectSchema.statics.createProject = function (data, callback) {
               } }
             )
             .then(() => callback(null, project._id.toString()))
-            .catch(err => callback('index_error'));
+            .catch(_ => callback('index_error'));
         });
       });
     });
@@ -276,16 +277,16 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
       return callback('bad_request');
 
     const newIdentifier = toURLString(data.name);
+    const oldIdentifier = toURLString(project.name);
 
     Project.findOne({
       _id: { $ne: project._id },
       identifiers: newIdentifier
     }, (err, duplicate) => {
       if (err) return callback('database_error');
-      if (duplicate && duplicate._id.toString() != project._id.toString())
-        return callback('duplicated_unique_field');
+      if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = project.identifiers.filter(each => each != toURLString(project.name)).concat(newIdentifier);
+      const identifiers = project.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
 
       const identifier_languages = {
         identifier: DEFAULT_IDENTIFIER_LANGUAGE
@@ -351,6 +352,7 @@ ProjectSchema.statics.findProjectByIdAndUpdateTranslations = function (id, data,
     const newIdentifier = toURLString(translations[data.language].name);
 
     Project.findOne({
+      _id: { $ne: project._id },
       identifiers: newIdentifier
     }, (err, project) => {
       if (err) return callback('database_error');
