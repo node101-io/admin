@@ -22,7 +22,7 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Member Image')
           if member.image
-            .general-image-input-wrapper(style='cursor: default')
+            label.general-image-input-wrapper(style='cursor: default')
               .general-image-input-image(style=`background-image: url(${member.image})`)
               svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
                 path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
@@ -52,7 +52,7 @@ block main
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Member Turkish')} #{socialAccounts[social]} 
-            input.general-input.social-account-input-turkish(type='text' id='turkish-' + social placeholder=__('URL address') value=member.translations.tr[social])
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=member.translations.tr.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-turkish-error
         .general-create-button#update-turkish-button= __('Update Turkish')
@@ -67,7 +67,7 @@ block main
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Member Russian')} #{socialAccounts[social]} 
-            input.general-input.social-account-input-russian(type='text' id='russian-' + social placeholder=__('URL address') value=member.translations.ru[social])
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=member.translations.ru.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-russian-error
         .general-create-button#update-russian-button= __('Update Russian')

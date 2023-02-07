@@ -6,11 +6,8 @@ const toURLString = require('../../utils/toURLString');
 const deleteImage = require('./functions/deleteImage');
 const uploadImage = require('./functions/uploadImage');
 
-const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
-const MAX_ITEM_COUNT_PER_CRON_JOB = 1e2;
 const MAX_IMAGE_SIZE = 1e4;
-const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 const Schema = mongoose.Schema;
 

@@ -17,7 +17,7 @@ const deletePostController = require('../controllers/member/delete/post');
 const editPostController = require('../controllers/member/edit/post');
 const imagePostController = require('../controllers/member/image/post');
 const orderPostController = require('../controllers/member/order/post');
-const translatePostController = require('../controllers/guide/translate/post');
+const translatePostController = require('../controllers/member/translate/post');
 
 router.get(
   '/',

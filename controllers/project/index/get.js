@@ -15,7 +15,7 @@ module.exports = (req, res) => {
         includes: {
           external: {
             css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-            js: ['adminListeners', 'createConfirm', 'createFormPopUp', 'page', 'serverRequest']
+            js: ['createConfirm', 'createFormPopUp', 'page', 'serverRequest']
           }
         },
         projects_count: count,

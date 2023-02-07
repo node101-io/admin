@@ -161,39 +161,6 @@ MemberSchema.statics.findMemberByIdAndFormatByLanguage = function (id, language,
   });
 };
 
-MemberSchema.statics.findMemberByIdAndUpdateImage = function (id, file, callback) {
-  const Member = this;
-
-  Member.findMemberById(id, (err, member) => {
-    if (err) return callback(err);
-
-    Image.createImage({
-      file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + member.name,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      is_used: true
-    }, (err, url) => {
-      if (err) return callback(err);
-  
-      Member.findByIdAndUpdate(member._id, { $set: {
-        image: url
-      }}, { new: false }, (err, member) => {
-        if (err) return callback(err);
-
-        if (!member.image || member.image == url)
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(member.image, err => {
-          if (err) return callback(err);
-
-          return callback(null, url);
-        });
-      });
-    });
-  });
-};
-
 MemberSchema.statics.findMemberByIdAndUpdate = function (id, data, callback) {
   const Member = this;
 
@@ -211,6 +178,38 @@ MemberSchema.statics.findMemberByIdAndUpdate = function (id, data, callback) {
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+MemberSchema.statics.findMemberByIdAndUpdateImage = function (id, file, callback) {
+  const Member = this;
+
+  Member.findMemberById(id, (err, member) => {
+    if (err) return callback(err);
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: IMAGE_NAME_PREFIX + member.name,
+      width: IMAGE_WIDTH,
+      height: IMAGE_HEIGHT
+    }, (err, url) => {
+      if (err) return callback(err);
+  
+      Member.findByIdAndUpdate(member._id, { $set: {
+        image: url
+      }}, err => {
+        if (err) return callback(err);
+
+        if (!member.image || member.image.split('/')[member.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          return callback(null, url);
+
+        Image.findImageByUrlAndDelete(member.image, err => {
+          if (err) return callback(err);
+
+          return callback(null, url);
+        });
+      });
     });
   });
 };
@@ -261,7 +260,7 @@ MemberSchema.statics.findMembersByFilters = function (data, callback) {
     .find(filters)
     .limit(limit)
     .skip(skip)
-    .sort({ name: 1 })
+    .sort({ order: -1 })
     .then(members => async.timesSeries(
       members.length,
       (time, next) => Member.findMemberByIdAndFormat(members[time]._id, (err, member) => next(err, member)),
