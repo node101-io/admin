@@ -32,7 +32,7 @@ module.exports = (req, res, next) => {
     ],
     'Writers': [
       { permission: 'writer_view', name: res.__('All Writers'), link: '/writer' },
-      { permission: 'writer_create', name: res.__('New Writers'), link: '/writer/create' },
+      { permission: 'writer_create', name: res.__('New Writer'), link: '/writer/create' },
       { permission: 'writer_delete', name: res.__('Deleted Writers'), link: '/writer/delete' }
     ]
   };

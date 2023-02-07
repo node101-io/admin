@@ -5,7 +5,7 @@ const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 module.exports = (writer, language, data) => {
   if (!data)
     data = {};
-
+    
   const translations = JSON.parse(JSON.stringify(writer.translations));
 
   translations[language.toString().trim()] = {

@@ -11,9 +11,8 @@ const getWriterByLanguage = require('./functions/getWriterByLanguage');
 const isWriterComplete = require('./functions/isWriterComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
-const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const IMAGE_HEIGHT = 60;
-const IMAGE_WIDTH = 60;
+const IMAGE_HEIGHT = 300;
+const IMAGE_WIDTH = 300;
 const IMAGE_NAME_PREFIX = 'node101 writer ';
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
@@ -75,25 +74,30 @@ WriterSchema.statics.createWriter = function (data, callback) {
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  const newWriterData = {
-    name: data.name.trim(),
-    created_at: new Date()
-  };
+  Writer.findWriterCountByFilters({ is_deleted: false }, (err, order) => {
+    if (err) return callback(err);
 
-  const newWriter = new Writer(newWriterData);
+    const newWriterData = {
+      name: data.name.trim(),
+      created_at: new Date(),
+      order
+    };
+  
+    const newWriter = new Writer(newWriterData);
+  
+    newWriter.save((err, writer) => {
+      if (err) return callback('bad_request');
 
-  newWriter.save((err, writer) => {
-    if (err) return callback('bad_request');
+      writer.translations = formatTranslations(writer, 'tr');
+      writer.translations = formatTranslations(writer, 'ru');
 
-    writer.translations = formatTranslations(writer, 'tr');
-    writer.translations = formatTranslations(writer, 'ru');
+      Writer.findByIdAndUpdate(writer._id, {$set: {
+        translations: writer.translations
+      }}, err => {
+        if (err) return callback('database_error');
 
-    Writer.findByIdAndUpdate(writer._id, {$set: {
-      translations: writer.translations
-    }}, err => {
-      if (err) return callback('database_error');
-
-      return callback(null, writer._id.toString());
+        return callback(null, writer._id.toString());
+      });
     });
   });
 };
@@ -157,39 +161,6 @@ WriterSchema.statics.findWriterByIdAndFormatByLanguage = function (id, language,
   });
 };
 
-WriterSchema.statics.findWriterByIdAndUpdateImage = function (id, file, callback) {
-  const Writer = this;
-
-  Writer.findWriterById(id, (err, writer) => {
-    if (err) return callback(err);
-
-    Image.createImage({
-      file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + writer.name,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      is_used: true
-    }, (err, url) => {
-      if (err) return callback(err);
-  
-      Writer.findByIdAndUpdate(writer._id, { $set: {
-        image: url
-      }}, { new: false }, (err, writer) => {
-        if (err) return callback(err);
-
-        if (!writer.image || writer.image == url)
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(writer.image, err => {
-          if (err) return callback(err);
-
-          return callback(null, url);
-        });
-      });
-    });
-  });
-};
-
 WriterSchema.statics.findWriterByIdAndUpdate = function (id, data, callback) {
   const Writer = this;
 
@@ -204,11 +175,41 @@ WriterSchema.statics.findWriterByIdAndUpdate = function (id, data, callback) {
       title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writer.title,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
     }}, err => {
-      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-        return callback('duplicated_unique_field');
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+WriterSchema.statics.findWriterByIdAndUpdateImage = function (id, file, callback) {
+  const Writer = this;
+
+  Writer.findWriterById(id, (err, writer) => {
+    if (err) return callback(err);
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: IMAGE_NAME_PREFIX + writer.name,
+      width: IMAGE_WIDTH,
+      height: IMAGE_HEIGHT
+    }, (err, url) => {
+      if (err) return callback(err);
+  
+      Writer.findByIdAndUpdate(writer._id, { $set: {
+        image: url
+      }}, err => {
+        if (err) return callback(err);
+
+        if (!writer.image || writer.image.split('/')[writer.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          return callback(null, url);
+
+        Image.findImageByUrlAndDelete(writer.image, err => {
+          if (err) return callback(err);
+
+          return callback(null, url);
+        });
+      });
     });
   });
 };
@@ -259,7 +260,7 @@ WriterSchema.statics.findWritersByFilters = function (data, callback) {
     .find(filters)
     .limit(limit)
     .skip(skip)
-    .sort({ name: 1 })
+    .sort({ order: -1 })
     .then(writers => async.timesSeries(
       writers.length,
       (time, next) => Writer.findWriterByIdAndFormat(writers[time]._id, (err, writer) => next(err, writer)),
@@ -301,30 +302,14 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
   Writer.findWriterById(id, (err, writer) => {
     if (err) return callback(err);
     if (writer.is_deleted) return callback(null);
-    
-    Writer.findByIdAndUpdate(writer._id, {$set: {
+
+    Writer.findByIdAndUpdate(writer._id, { $set: {
       is_deleted: true,
       order: null
-    }}, err => {
+    } }, err => {
       if (err) return callback('database_error');
 
-      Writer.find({
-        order: { gt: writer.order }
-      }, (err, writers) => {
-        if (err) return callback('database_error');
-
-        async.timesSeries(
-          writers.length,
-          (time, next) => Writer.findByIdAndUpdate(writers[time]._id, {$inc: {
-            order: -1
-          }}, err => next(err)),
-          err => {
-            if (err) return callback('database_error');
-
-            return callback(null);
-          }
-        );
-      });
+      return callback(null);
     });
   });
 };
@@ -345,7 +330,23 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
       }, err => {
         if (err) return callback('database_error');
 
-        return callback(null);
+        Writer.find({
+          order: { gt: writer.order }
+        }, (err, writers) => {
+          if (err) return callback('database_error');
+  
+          async.timesSeries(
+            writers.length,
+            (time, next) => Writer.findByIdAndUpdate(writers[time]._id, {$inc: {
+              order: -1
+            }}, err => next(err)),
+            err => {
+              if (err) return callback('database_error');
+  
+              return callback(null);
+            }
+          );
+        });
       });
     });
   });
