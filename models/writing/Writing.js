@@ -352,9 +352,9 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
     Writing.findOne({
       _id: { $ne: writing._id },
       identifiers: newIdentifier
-    }, (err, writing) => {
+    }, (err, duplicate) => {
       if (err) return callback('database_error');
-      if (writing) return callback('duplicated_unique_field');
+      if (duplicate) return callback('duplicated_unique_field');
 
       const identifiers = writing.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
       const identifier_languages = {

@@ -18,7 +18,7 @@ const editPostController = require('../controllers/project/edit/post');
 const imagePostController = require('../controllers/project/image/post');
 const orderPostController = require('../controllers/project/order/post');
 const restorePostController = require('../controllers/project/restore/post');
-const translatePostController = require('../controllers/guide/translate/post');
+const translatePostController = require('../controllers/project/translate/post');
 
 router.get(
   '/',

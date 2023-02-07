@@ -63,6 +63,6 @@ function throwError (error) {
   createConfirm({
     title: 'An error occured',
     text: 'An error occured while processing the request. Please try again later. Error Message: ' + error,
-    accept: 'Close'
+    reject: 'Close'
   }, _ => {});
 }

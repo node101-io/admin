@@ -232,40 +232,6 @@ ProjectSchema.statics.findProjectByIdAndFormatByLanguage = function (id, languag
   });
 };
 
-ProjectSchema.statics.findProjectByIdAndUpdateImage = function (id, file, callback) {
-  const Project = this;
-
-  Project.findProjectById(id, (err, project) => {
-    if (err) return callback(err);
-    if (project.is_deleted) return callback('not_authenticated_request');
-
-    Image.createImage({
-      file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + project.name,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
-      is_used: true
-    }, (err, url) => {
-      if (err) return callback(err);
-  
-      Project.findByIdAndUpdate(project._id, { $set: {
-        image: url
-      }}, { new: false }, (err, project) => {
-        if (err) return callback(err);
-
-        if (!project.image || project.image == url)
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(project.image, err => {
-          if (err) return callback(err);
-
-          return callback(null, url);
-        });
-      });
-    });
-  });
-};
-
 ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
   const Project = this;
 
@@ -289,7 +255,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
       const identifiers = project.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
 
       const identifier_languages = {
-        identifier: DEFAULT_IDENTIFIER_LANGUAGE
+        [newIdentifier]: DEFAULT_IDENTIFIER_LANGUAGE
       };
 
       Object.keys(project.identifier_languages).forEach(key => {
@@ -332,6 +298,39 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
   });
 };
 
+ProjectSchema.statics.findProjectByIdAndUpdateImage = function (id, file, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (project.is_deleted) return callback('not_authenticated_request');
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: IMAGE_NAME_PREFIX + project.name,
+      width: IMAGE_WIDTH,
+      height: IMAGE_HEIGHT
+    }, (err, url) => {
+      if (err) return callback(err);
+  
+      Project.findByIdAndUpdate(project._id, { $set: {
+        image: url
+      }}, err => {
+        if (err) return callback(err);
+
+        if (!project.image || project.image.split('/')[project.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          return callback(null, url);
+
+        Image.findImageByUrlAndDelete(project.image, err => {
+          if (err) return callback(err);
+
+          return callback(null, url);
+        });
+      });
+    });
+  });
+};
+
 ProjectSchema.statics.findProjectByIdAndUpdateTranslations = function (id, data, callback) {
   const Project = this;
 
@@ -348,19 +347,24 @@ ProjectSchema.statics.findProjectByIdAndUpdateTranslations = function (id, data,
       return callback('not_authenticated_request');
 
     const translations = formatTranslations(project, data.language, data);
-    const oldIdentifier = toURLString(project.translations[data.language]?.name);
+    let oldIdentifier = toURLString(project.translations[data.language]?.name);
     const newIdentifier = toURLString(translations[data.language].name);
+
+    if (oldIdentifier == toURLString(project.name))
+      oldIdentifier = null;
 
     Project.findOne({
       _id: { $ne: project._id },
       identifiers: newIdentifier
-    }, (err, project) => {
+    }, (err, duplicate) => {
       if (err) return callback('database_error');
-      if (project) return callback('duplicated_unique_field');
+      if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = project.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+      const identifiers = project.identifiers.filter(each => each != oldIdentifier);
+      if (!identifiers.includes(newIdentifier))
+        identifiers.push(newIdentifier);
       const identifier_languages = {
-        newIdentifier: data.language
+        [newIdentifier]: data.language
       };
   
       Object.keys(project.identifier_languages).forEach(key => {

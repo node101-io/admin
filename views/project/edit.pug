@@ -5,7 +5,7 @@ block main
     .general-header-text-wrapper
       .general-header-title #{__('Edit Project')} - #{project.name}
       .general-header-subtitle= __('Edit the project information and translate the project.')
-    input.general-header-search-input#project-search-input(autocomplete='search' name='search' placeholder='Search by name or description' value='')
+    input.general-header-search-input#project-search-input(autocomplete='search' name='new-password' placeholder='Search by name or description' value='')
   .all-content-inner-wrapper
     .general-create-wrapper
       if !project.is_completed
@@ -22,19 +22,21 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Project Rating')
           .general-select-input-wrapper
-            
-          input.general-input#description(type='text' placeholder=__('Describe the project with a few simple sentences.') value=project.description)
+            input.general-select-input-selected-value#rating(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=project.rating)
+            .general-select-input-choices-wrapper
+              - for (let i = 1; i <= 5; i++)
+                .general-select-each-input-choice(id='select-input-' + i)= i
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Project Image')
           if project.image
-            .general-image-input-wrapper(style='cursor: default')
+            label.general-image-input-wrapper(style='cursor: default')
               .general-image-input-image(style=`background-image: url(${project.image})`)
               svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
                 path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
           else
             label.general-image-input-wrapper(style='cursor: pointer')
               input.display-none#image(type='file')
-              .general-image-input-placeholder= __('Upload from your device.')
+              span.general-image-input-placeholder= __('Upload from your device.')
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Project')} #{socialAccounts[social]} 
@@ -59,7 +61,7 @@ block main
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Project Turkish')} #{socialAccounts[social]} 
-            input.general-input.social-account-input-turkish(type='text' id='turkish-' + social placeholder=__('URL address') value=project.translations.tr[social])
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=project.translations.tr.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-turkish-error
         .general-create-button#update-turkish-button= __('Update Turkish')
@@ -75,8 +77,8 @@ block main
         .general-create-input-grid-each-item-wrapper
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
-            span.general-create-subtitle #{__('Project Russianm')} #{socialAccounts[social]} 
-            input.general-input.social-account-input-russian(type='text' id='russian-' + social placeholder=__('URL address') value=project.translations.ru[social])
+            span.general-create-subtitle #{__('Project Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=project.translations.ru.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-russian-error
         .general-create-button#update-russian-button= __('Update Russian')

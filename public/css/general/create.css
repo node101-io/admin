@@ -6,6 +6,8 @@
   min-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .general-create-info {
@@ -25,6 +27,14 @@
   font-size: var(--text-font-size);
   color: var(--text-color);
   margin-bottom: 10px;
+}
+.general-create-text {
+  font-weight: 400;
+  font-size: 14px;
+  line-height: var(--text-line-height);
+  color: var(--text-color-two);
+  margin: 10px 0;
+  max-width: 600px;
 }
 .general-create-required::after {
   content: "*";

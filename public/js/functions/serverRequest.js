@@ -31,10 +31,16 @@ function serverRequest (url, method, data, callback) {
   }
 
   xhr.onreadystatechange = function () {
-    if (xhr.readyState == 4 && xhr.status != 200)
-      return callback({ success: false, error: 'network_error' })
-    else if (xhr.readyState == 4 && xhr.responseText)
-      return callback(JSON.parse(xhr.responseText));
+    try {
+      if (xhr.readyState == 4 && xhr.status != 200)
+        return callback({ success: false, error: 'network_error' })
+      else if (xhr.readyState == 4 && xhr.responseText) {
+        const data = JSON.parse(xhr.responseText);
+        return callback(data);
+      }
+    } catch (_) {
+      return callback({ success: false, error: 'network_error' });
+    }
   };
 }
   

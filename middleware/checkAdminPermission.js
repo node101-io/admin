@@ -7,6 +7,7 @@ module.exports = (req, res, next) => {
     '/blog/image': 'blog_edit',
     '/blog/restore': 'blog_delete',
     '/blog/order': 'blog_edit',
+    '/blog/translate': 'blog_edit',
     '/book': 'book_view',
     '/book/create': 'book_create',
     '/book/delete': 'book_delete',
@@ -14,6 +15,7 @@ module.exports = (req, res, next) => {
     '/book/image': 'book_edit',
     '/book/restore': 'book_delete',
     '/book/order': 'book_edit',
+    '/book/translate': 'book_edit',
     '/guide': 'guide_view',
     '/guide/create': 'guide_create',
     '/guide/delete': 'guide_delete',
@@ -21,6 +23,7 @@ module.exports = (req, res, next) => {
     '/guide/image': 'guide_edit',
     '/guide/restore': 'guide_delete',
     '/guide/order': 'guide_edit',
+    '/guide/translate': 'guide_edit',
     '/member': 'member_view',
     '/member/create': 'member_create',
     '/member/delete': 'member_delete',
@@ -28,6 +31,7 @@ module.exports = (req, res, next) => {
     '/member/image': 'member_edit',
     '/member/restore': 'member_delete',
     '/member/order': 'member_edit',
+    '/member/translate': 'member_edit',
     '/project': 'project_view',
     '/project/create': 'project_create',
     '/project/delete': 'project_delete',
@@ -35,6 +39,7 @@ module.exports = (req, res, next) => {
     '/project/image': 'project_edit',
     '/project/restore': 'project_delete',
     '/project/order': 'project_edit',
+    '/project/translate': 'project_edit',
     '/stake': 'stake_view',
     '/stake/create': 'stake_create',
     '/stake/delete': 'stake_delete',
@@ -42,13 +47,15 @@ module.exports = (req, res, next) => {
     '/stake/image': 'stake_edit',
     '/stake/restore': 'stake_delete',
     '/stake/order': 'stake_edit',
+    '/stake/translate': 'stake_edit',
     '/writer': 'writer_view',
     '/writer/create': 'writer_create',
     '/writer/delete': 'writer_delete',
     '/writer/edit': 'writer_edit',
     '/writer/image': 'writer_edit',
     '/writer/restore': 'writer_delete',
-    '/writer/order': 'writer_edit'
+    '/writer/order': 'writer_edit',
+    '/writer/translate': 'writer_edit'
   };
 
   const route = req.originalUrl.split('?')[0];

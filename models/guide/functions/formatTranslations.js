@@ -4,7 +4,9 @@ module.exports = (guide, language, data) => {
   if (!data)
     data = {};
 
-  guide.translations[language.toString().trim()] = {
+  const translations = JSON.parse(JSON.stringify(guide.translations));
+
+  translations[language.toString().trim()] = {
     mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : guide.mainnet_explorer_url,
     testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : guide.testnet_explorer_url,
     rewards: data.rewards && typeof data.rewards == 'string' && data.rewards.trim().length && data.rewards.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.rewards.trim() : guide.rewards,
@@ -24,5 +26,5 @@ module.exports = (guide, language, data) => {
     }) : guide.frequently_asked_questions
   };
 
-  return guide.translations;
+  return translations;
 };

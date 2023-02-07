@@ -3,5 +3,5 @@ module.exports = blog => {
     blog.type && (blog.type != 'project' || blog.project_id) &&
     blog.writer_id &&
     blog.subtitle &&
-    blog.image
+    blog.image ? true : false
 };

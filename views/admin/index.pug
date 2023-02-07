@@ -32,5 +32,5 @@ block main
             span.general-each-item-title= admin.email
             span.general-each-item-subtitle(style=(admin.is_completed ? '' : 'color: var(--warning-color)')) (#{admin.is_completed ? admin.name : __('not completed')})
           .general-each-item-buttons-wrapper
-            .general-each-item-second-button.delete-each-admin-button Delete
-            a.general-each-item-first-button(href='/admin/edit?id=' + admin._id) Edit
+            .general-each-item-second-button.delete-each-admin-button= __('Delete')
+            a.general-each-item-first-button(href='/admin/edit?id=' + admin._id)= __('Edit')

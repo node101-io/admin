@@ -9,7 +9,7 @@ block main
   .all-content-inner-wrapper
     .general-create-wrapper
       if !admin.is_completed
-        .general-create-info IMPORTANT! This account is not yet complete. Please complete all the required fields to allow the user access his / her account.
+        .general-create-info= __('IMPORTANT! This account is not yet complete. Please complete all the required fields to allow the user access his / her account.')
       span.general-create-title= __('General Information')
       .general-create-seperator
       .general-create-input-grid-wrapper
@@ -18,7 +18,7 @@ block main
           .general-input-not-allowed= admin.email
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Admin Name')
-          input.general-input#name(type='text' placeholder='Improve the UX for your admins' value=admin.name)
+          input.general-input#name(type='text' placeholder=__('Improve the UX for your admins') value=admin.name)
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle= __('Admin Image')
           if admin.image && admin.image != '/res/images/default/admin.webp'
@@ -49,10 +49,10 @@ block main
       .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Reset Password')
-          input.general-input#new-password(type='password' name='new-password' placeholder='Reset the password of the admin' autocomplete='new-password')
+          input.general-input#new-password(type='password' name='new-password' placeholder=__('Reset the password of the admin') autocomplete='new-password')
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Confirm Password')
-          input.general-input#confirm-password(type='password' placeholder='Confirm the new password of the admin' autocomplete='new-password')
+          input.general-input#confirm-password(type='password' placeholder=__('Confirm the new password of the admin') autocomplete='new-password')
       .general-create-button-wrapper
         span.general-create-error#reset-password-error
         .general-create-button#reset-password-button= __('Reset Password')

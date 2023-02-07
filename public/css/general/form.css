@@ -127,6 +127,72 @@
   color: var(--text-color);
 }
 
+.general-select-input-wrapper {
+  width: calc(min(100%, var(--max-input-width)));
+  min-width: calc(min(100%, var(--max-input-width)));
+  height: var(--input-height);
+  min-height: var(--input-height);
+  margin-bottom: 10px;
+  outline: none;
+  border: 1px solid transparent;
+  box-shadow: 0 0 2px var(--shadow-color);
+  background-color: var(--background-color);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 2;
+}
+.general-select-input-selected-value {
+  width: 100%;
+  min-width: 100%;;
+  height: var(--input-height);
+  min-height: var(--input-height);
+  outline: none;
+  border: none;
+  background-color: var(--background-color);
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 0 15px;
+  border-radius: 3px;
+  z-index: 2;
+}
+.general-select-input-selected-value::placeholder {
+  font-weight: 500;
+  color: var(--placeholder-color);
+}
+.general-select-input-choices-wrapper {
+  width: calc(100% + 2px);
+  min-width: calc(100% + 2px);
+  margin-left: -1px;
+  margin-top: -3px;
+  padding-top: 3px;
+  height: 120px;
+  min-height: 120px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+  border: 1px solid var(--main-color);
+  border-top: none;
+  /* margin-top: -2px; */
+}
+.general-select-each-input-choice {
+  font-weight: 600;
+  font-size: var(--text-font-size);
+  color: var(--text-color);
+  padding: 4px 10px;
+  height: fit-content;
+  min-height: fit-content;
+  border-bottom: 1px solid rgba(248, 248, 248, 0.1);
+  cursor: pointer;
+}
+.general-select-each-input-choice:hover {
+  background-color: var(--shadow-color);
+}
+
 .general-button {
   width: calc(min(100%, var(--max-input-width)));
   min-width: calc(min(100%, var(--max-input-width)));
@@ -148,7 +214,7 @@
   justify-content: center;
 }
 .general-button:hover {
-  box-shadow: 0 0 4px var(--shadow-color);
+  border-color: var(--main-color);
 }
 
 .general-error {

@@ -9,6 +9,6 @@ module.exports = stake => {
         stake.stake_url &&
         stake.how_to_stake_url
       )
-    )
+    ) ? true : false
   ;
 };

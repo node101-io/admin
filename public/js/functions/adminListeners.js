@@ -36,5 +36,5 @@ window.addEventListener('load', () => {
     } else if (event.key == 'Enter') {
       window.location = '/admin';
     }
-  })
+  });
 });

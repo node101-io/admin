@@ -1,0 +1,85 @@
+.general-writing-edit-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.general-writing-edit-header {
+  width: 100%;
+  height: 45px;
+  min-height: 45px;
+  padding: 0 30px;
+}
+
+.general-writing-edit-content {
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  outline: none;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.general-writing-title {
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--text-color);
+  margin-bottom: 30px;
+}
+
+.general-writing-subtitle {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-color-two);
+  margin-bottom: 15px;
+}
+
+.general-writing-list-item {
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-color-two);
+  margin-bottom: 15px;
+  margin-left: 15px;
+}
+
+.general-writing-quote {
+  align-self: center;
+  text-align: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-color-two);
+  margin: 45px 0;
+  font-style: italic;
+}
+.general-writing-quote::before {
+  content: "\"";
+  margin-right: 5px;
+}
+.general-writing-quote::after {
+  content: "\"";
+  margin-left: 5px;
+}
+
+.general-writing-text {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-color-two);
+  line-height: 25px;
+  margin-bottom: 5px ;
+}
+
+.general-writing-bullets {
+  align-self: center;
+  text-align: center;
+  font-weight: 700;
+  font-size: 45px;
+  color: var(--text-color);
+  letter-spacing: 8px;
+}
+.general-writing-bullets::after {
+  content: "•••";
+}
