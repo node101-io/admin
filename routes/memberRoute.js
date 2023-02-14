@@ -17,6 +17,7 @@ const deletePostController = require('../controllers/member/delete/post');
 const editPostController = require('../controllers/member/edit/post');
 const imagePostController = require('../controllers/member/image/post');
 const orderPostController = require('../controllers/member/order/post');
+const restorePostController = require('../controllers/member/restore/post');
 const translatePostController = require('../controllers/member/translate/post');
 
 router.get(
@@ -76,6 +77,13 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     orderPostController
+);
+router.post(
+  '/restore',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    restorePostController
 );
 router.post(
   '/translate',

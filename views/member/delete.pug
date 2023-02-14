@@ -1,0 +1,35 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Deleted Members')
+      .general-header-subtitle= __('See and restore deleted members.')
+    input.general-header-search-input#member-search-input(type='text' placeholder='Search by name or description' value=members_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if members_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{members_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if members_page > 0
+            a.general-page-prev-button(href=`/member/delete?page=${members_page-1}${members_search ? '&search=' + members_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(members_count / members_limit) + (members_count % members_limit ? 1 : 0); i += 1)
+            if i != members_page
+              a.general-each-page-button(href=`/member/delete?page=${i}${members_search ? '&search=' + members_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (members_page + 1) * members_limit < members_count
+            a.general-page-next-button(href=`/member/delete?page=${members_page+1}${members_search ? '&search=' + members_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{members_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each member in members
+        .general-each-item-wrapper(id=member._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= member.name
+            span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
+          .general-each-item-buttons-wrapper
+            .general-each-item-first-button.restore-each-member-button= __('Restore')
