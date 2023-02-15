@@ -20,7 +20,8 @@ window.addEventListener('load', () => {
     }
 
     if (event.target.classList.contains('general-select-each-input-choice')) {
-      event.target.parentNode.previousElementSibling.value = event.target.id.replace('select-input-', '');
+      event.target.parentNode.parentNode.querySelector('.general-select-input-real-value').value = event.target.id.replace('select-input-', '');
+      event.target.parentNode.parentNode.querySelector('.general-select-input-selected-value').value = event.target.innerHTML;
       openSelectInput.style.overflow = 'hidden';
       openSelectInput.style.borderColor = 'transparent';
       openSelectInput.style.boxShadow = '0 0 2px var(--shadow-color)';
@@ -45,7 +46,7 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('input', event => {
-    if (event.target.classList.contains('general-select-input-selected-value')) {
+    if (event.target.classList.contains('general-select-input-selected-value') && !event.target.classList.contains('do-not-listen')) {
       const choices = event.target.nextElementSibling?.childNodes;
 
       for (let i = 0; i < choices.length; i++)

@@ -15,32 +15,6 @@ window.addEventListener('load', () => {
   }
 
   document.addEventListener('click', event => {
-    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/project/create')) {
-      event.preventDefault();
-
-      createFormPopUp({
-        title: 'Create a New Project',
-        url: '/project/create',
-        method: 'POST',
-        description: 'You will be asked to complete project details once you create it.',
-        inputs: [
-          {
-            name: 'name',
-            placeholder: 'Name (must be unique)'
-          }
-        ],
-        button: 'Create New Project',
-        errors: {
-          duplicated_unique_field: 'Each project must have a unique name. Please use edit & translations page to change this project\'s details.'
-        }
-      }, (error, res) => {
-        if (error) return alert(error);
-        if (!res) return;
-
-        return window.location = '/project/edit?id=' + res.id;
-      });
-    }
-
     if (ancestorWithClassName(event.target, 'general-image-input-delete-button')) {
       const target = ancestorWithClassName(event.target, 'general-image-input-delete-button');
       const wrapper = target.parentNode;

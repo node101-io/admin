@@ -33,10 +33,11 @@ if (cluster.isMaster) {
   const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/node101';
   const MAX_SERVER_UPLOAD_LIMIT = 52428800;
   const MAX_SERVER_PARAMETER_LIMIT = 50000;
-  const QUERY_LIMIT = 2;
+  const QUERY_LIMIT = 1;
 
   const adminRouteController = require('./routes/adminRoute');
   const authRouteController = require('./routes/authRoute');
+  const blogRouteController = require('./routes/blogRoute');
   const guideRouteController = require('./routes/guideRoute');
   const indexRouteController = require('./routes/indexRoute');
   const memberRouteController = require('./routes/memberRoute');
@@ -96,6 +97,7 @@ if (cluster.isMaster) {
   app.use('/', indexRouteController);
   app.use('/admin', adminRouteController);
   app.use('/auth', authRouteController);
+  app.use('/blog', blogRouteController);
   app.use('/guide', guideRouteController);
   app.use('/member', memberRouteController);
   app.use('/project', projectRouteController);

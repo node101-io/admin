@@ -15,29 +15,6 @@ window.addEventListener('load', () => {
   }
 
   document.addEventListener('click', event => {
-    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/writer/create')) {
-      event.preventDefault();
-
-      createFormPopUp({
-        title: 'Create a New Writer',
-        url: '/writer/create',
-        method: 'POST',
-        title: 'You will be asked to complete writer details once you create it.',
-        inputs: [
-          {
-            name: 'name',
-            placeholder: 'Name'
-          }
-        ],
-        button: 'Create New Writer'
-      }, (error, res) => {
-        if (error) return alert(error);
-        if (!res) return;
-
-        return window.location = '/writer/edit?id=' + res.id;
-      });
-    }
-
     if (ancestorWithClassName(event.target, 'general-image-input-delete-button')) {
       const target = ancestorWithClassName(event.target, 'general-image-input-delete-button');
       const wrapper = target.parentNode;

@@ -15,7 +15,7 @@ module.exports = (req, res) => {
         includes: {
           external: {
             css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-            js: ['createConfirm', 'createFormPopUp', 'page', 'serverRequest']
+            js: ['createConfirm', 'createFormPopUp', 'navbarListeners', 'page', 'serverRequest']
           }
         },
         writers_count: count,

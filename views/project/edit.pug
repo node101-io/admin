@@ -22,7 +22,8 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Project Rating')
           .general-select-input-wrapper
-            input.general-select-input-selected-value#rating(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=project.rating)
+            input.general-select-input-real-value#rating(type='text' value=project.rating)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=project.rating)
             .general-select-input-choices-wrapper
               - for (let i = 1; i <= 5; i++)
                 .general-select-each-input-choice(id='select-input-' + i)= i

@@ -66,7 +66,7 @@
   cursor: pointer;
   box-shadow: 0 0 2px var(--shadow-color);
 }
-.general-each-item-second-button {
+.general-each-item-fourth-button {
   background-color: var(--box-color);
   font-size: 14px;
   font-weight: 600;
@@ -74,6 +74,24 @@
   height: 25px;
   padding: 0 15px;
   border: 1px solid var(--second-color);
+  margin-right: 10px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 0 2px var(--shadow-color);
+}
+.general-each-item-second-button {
+  background-color: var(--box-color);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning-color);
+  height: 25px;
+  padding: 0 15px;
+  border: 1px solid var(--warning-color);
   margin-right: 10px;
   border-radius: 3px;
   display: flex;

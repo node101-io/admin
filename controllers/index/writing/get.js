@@ -7,7 +7,7 @@ module.exports = (req, res) => {
     includes: {
       external: {
         css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text', 'writing'],
-        js: ['createConfirm', 'createFormPopUp', 'page', 'serverRequest']
+        js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'generateRandomHEX', 'page', 'serverRequest']
       }
     },
     admin

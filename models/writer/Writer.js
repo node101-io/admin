@@ -251,6 +251,9 @@ WriterSchema.statics.findWritersByFilters = function (data, callback) {
   const skip = page * limit;
   let search = null;
 
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
+
   if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
     search = data.search.trim();
     filters.name = { $regex: search, $options: 'i' };
@@ -286,6 +289,9 @@ WriterSchema.statics.findWriterCountByFilters = function (data, callback) {
 
   const filters = {};
 
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
+
   if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.search.trim(), $options: 'i' };
 
@@ -309,7 +315,23 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
     } }, err => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      Writer.find({
+        order: { $gt: writer.order }
+      }, (err, writers) => {
+        if (err) return callback('database_error');
+
+        async.timesSeries(
+          writers.length,
+          (time, next) => Writer.findByIdAndUpdate(writers[time]._id, {$inc: {
+            order: -1
+          }}, err => next(err)),
+          err => {
+            if (err) return callback('database_error');
+
+            return callback(null);
+          }
+        );
+      });
     });
   });
 };
@@ -330,23 +352,7 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
       }, err => {
         if (err) return callback('database_error');
 
-        Writer.find({
-          order: { gt: writer.order }
-        }, (err, writers) => {
-          if (err) return callback('database_error');
-  
-          async.timesSeries(
-            writers.length,
-            (time, next) => Writer.findByIdAndUpdate(writers[time]._id, {$inc: {
-              order: -1
-            }}, err => next(err)),
-            err => {
-              if (err) return callback('database_error');
-  
-              return callback(null);
-            }
-          );
-        });
+        return callback(null);
       });
     });
   });

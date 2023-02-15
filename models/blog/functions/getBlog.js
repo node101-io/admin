@@ -5,57 +5,21 @@ module.exports = (blog, callback) => {
   if (!blog || !blog._id)
     return callback('document_not_found');
 
-  if (!blog.is_completed)
-    return callback(null, {
-      _id: blog._id.toString(),
-      title: blog.title,
-      type: blog.type,
-      project_id: blog.project_id,
-      writer_id: blog.writer_id,
-      subtitle: blog.subtitle,
-      cover: blog.cover,
-      is_completed: blog.is_completed,
-      is_active: blog.is_active,
-      writing_count: blog.writing_count
-    });
-
-  if (blog.type == 'project') {
-    Project.findProjectByIdAndFormat(blog.project_id, (err, project) => {
-      if (err) return callback(err);
-
-      Writer.findWriterByIdAndFormat(blog.writer_id, (err, writer) => {
-        if (err) return callback(err);
-
-        return callback(null, {
-          _id: blog._id.toString(),
-          title: blog.title,
-          type: blog.type,
-          project,
-          writer,
-          subtitle: blog.subtitle,
-          cover: blog.cover,
-          is_completed: blog.is_completed,
-          is_active: blog.is_active,
-          writing_count: blog.writing_count
-        });
-      });
-    });
-  } else {
-    Writer.findWriterByIdAndFormat(blog.writer_id, (err, writer) => {
-      if (err) return callback(err);
-
+  Project.findProjectByIdAndFormat(blog.project_id, (project_err, project) => {
+    Writer.findWriterByIdAndFormat(blog.writer_id, (writer_err, writer) => {
       return callback(null, {
         _id: blog._id.toString(),
-        title: blog.title,
+        title: blog.title.replace(blog._id.toString(), ''),
         type: blog.type,
-        project,
-        writer,
+        project: project_err ? null : project,
+        writer: writer_err ? null : writer,
         subtitle: blog.subtitle,
-        cover: blog.cover,
+        image: blog.image,
         is_completed: blog.is_completed,
-        is_active: blog.is_active,
-        writing_count: blog.writing_count
+        social_media_accounts: blog.social_media_accounts,
+        writing_count: blog.writing_count,
+        translations: blog.translations
       });
     });
-  };
+  });
 };

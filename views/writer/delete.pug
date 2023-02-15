@@ -1,0 +1,35 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Deleted Writers')
+      .general-header-subtitle= __('See and restore deleted writers.')
+    input.general-header-search-input#writer-search-input(type='text' placeholder='Search by name or description' value=writers_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if writers_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{writers_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if writers_page > 0
+            a.general-page-prev-button(href=`/writer/delete?page=${writers_page-1}${writers_search ? '&search=' + writers_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(writers_count / writers_limit) + (writers_count % writers_limit ? 1 : 0); i += 1)
+            if i != writers_page
+              a.general-each-page-button(href=`/writer/delete?page=${i}${writers_search ? '&search=' + writers_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (writers_page + 1) * writers_limit < writers_count
+            a.general-page-next-button(href=`/writer/delete?page=${writers_page+1}${writers_search ? '&search=' + writers_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{writers_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each writer in writers
+        .general-each-item-wrapper(id=writer._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= writer.name
+            span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
+          .general-each-item-buttons-wrapper
+            .general-each-item-first-button.restore-each-writer-button= __('Restore')

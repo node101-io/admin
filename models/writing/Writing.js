@@ -1,3 +1,5 @@
+const html2json = require('html2json').html2json;
+const json2html = require('html2json').json2html;
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -9,6 +11,7 @@ const Book = require('../book/Book'); // Used by formatTypeClass, do not delete
 const Guide = require('../guide/Guide'); // Used by formatTypeClass, do not delete
 const Writer = require('../writer/Writer');
 
+const filterTextOfContent = require('./functions/filterTextOfContent');
 const formatTranslations = require('./functions/formatTranslations');
 const formatTypeClass = require('./functions/formatTypeClass');
 const getWriting = require('./functions/getWriting');
@@ -17,6 +20,8 @@ const isWritingComplete = require('./functions/isWritingComplete');
 
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const COVER_HEIGHT = 300;
+const COVER_WIDTH = 900;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 500;
 const IMAGE_NAME_PREFIX = 'node101 writing cover ';
@@ -76,6 +81,20 @@ const WritingSchema = new Schema({
   translations: {
     type: Object,
     default: {}
+  },
+  search_title: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
+  },
+  search_content: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   order: {
     type: Number,

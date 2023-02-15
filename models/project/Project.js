@@ -54,6 +54,19 @@ const ProjectSchema = new Schema({
     type: String,
     default: null,
     trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  search_name: { // Shadow search fields used for search queries. Includes translated values as well as real field, seperated by a space.
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
+  },
+  search_description: { // Shadow search fields used for search queries. Includes translated values as well as real field, seperated by a space.
+    type: String,
+    default: null,
+    trim: true,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   rating: {
@@ -112,6 +125,7 @@ ProjectSchema.statics.createProject = function (data, callback) {
 
       const newProjectData = {
         name: data.name.trim(),
+        search_name: data.name.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
         created_at: new Date(),
@@ -135,10 +149,10 @@ ProjectSchema.statics.createProject = function (data, callback) {
 
           Project.collection
             .createIndex(
-              { name: 'text', description: 'text' },
+              { search_name: 'text', search_description: 'text' },
               { weights: {
-                name: 10,
-                description: 1
+                search_name: 10,
+                search_description: 1
               } }
             )
             .then(() => callback(null, project._id.toString()))
@@ -165,7 +179,7 @@ ProjectSchema.statics.findProjectById = function (id, callback) {
       return callback(null, project);
 
     Project.findByIdAndUpdate(project._id, {$set: {
-      is_completed: is_completed
+      is_completed
     }}, { new: true }, (err, project) => {
       if (err) return callback('database_error');
 
@@ -259,7 +273,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
       };
 
       Object.keys(project.identifier_languages).forEach(key => {
-        if (key != toURLString(project.name))
+        if (key != oldIdentifier)
           identifier_languages[key] = project.identifier_languages[key]
       });
 
@@ -267,7 +281,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
         name: data.name.trim(),
         identifiers,
         identifier_languages,
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.description.trim() : project.description,
+        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : project.description,
         rating: data.rating && data.rating >= PROJECT_RATING_MIN_VALUE && data.rating <= PROJECT_RATING_MAX_VALUE ? data.rating : project.rating,
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
       }}, { new: true }, (err, project) => {
@@ -276,22 +290,40 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
         if (err) return callback('database_error');
 
         project.translations = formatTranslations(project, 'tr', project.translations.tr);
+        project.translations = formatTranslations(project, 'ru', project.translations.ru);
   
         Project.findByIdAndUpdate(project._id, {$set: {
-          translations: formatTranslations(project, 'ru', project.translations.ru)
-        }}, err => {
+          translations: project.translations
+        }}, { new: true }, (err, project) => {
           if (err) return callback('database_error');
 
-          Project.collection
-            .createIndex(
-              { name: 'text', description: 'text' },
-              { weights: {
-                name: 10,
-                description: 1
-              } }
-            )
-            .then(() => callback(null))
-            .catch(err => callback('index_error'));
+          const searchName = new Set();
+          const searchDescription = new Set();
+
+          project.name.split(' ').forEach(word => searchName.add(word));
+          project.translations.tr.name.split(' ').forEach(word => searchName.add(word));
+          project.translations.ru.name.split(' ').forEach(word => searchName.add(word));
+          project.description.split(' ').forEach(word => searchDescription.add(word));
+          project.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
+          project.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
+
+          Project.findByIdAndUpdate(project._id, {$set: {
+            search_name: Array.from(searchName).join(' '),
+            search_description: Array.from(searchDescription).join(' ')
+          }}, err => {
+            if (err) return callback('database_error');
+
+            Project.collection
+              .createIndex(
+                { search_name: 'text', search_description: 'text' },
+                { weights: {
+                  search_name: 10,
+                  search_description: 1
+                } }
+              )
+              .then(() => callback(null))
+              .catch(_ => callback('index_error'));
+          });
         });
       });
     });
@@ -376,10 +408,36 @@ ProjectSchema.statics.findProjectByIdAndUpdateTranslations = function (id, data,
         identifiers,
         identifier_languages,
         translations
-      }}, err => {
+      }}, { new: true }, (err, project) => {
         if (err) return callback('database_error');
   
-        return callback(null);
+        const searchName = new Set();
+        const searchDescription = new Set();
+
+        project.name.split(' ').forEach(word => searchName.add(word));
+        project.translations.tr.name.split(' ').forEach(word => searchName.add(word));
+        project.translations.ru.name.split(' ').forEach(word => searchName.add(word));
+        project.description.split(' ').forEach(word => searchDescription.add(word));
+        project.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
+        project.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
+
+        Project.findByIdAndUpdate(project._id, {$set: {
+          search_name: Array.from(searchName).join(' '),
+          search_description: Array.from(searchDescription).join(' ')
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Project.collection
+            .createIndex(
+              { search_name: 'text', search_description: 'text' },
+              { weights: {
+                search_name: 10,
+                search_description: 1
+              } }
+            )
+            .then(() => callback(null))
+            .catch(_ => callback('index_error'));
+        });
       });
     });
   });
@@ -399,6 +457,9 @@ ProjectSchema.statics.findProjectsByFilters = function (data, callback) {
 
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
+
+  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.name = { $regex: data.name.trim(), $options: 'i' };
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Project
@@ -461,6 +522,9 @@ ProjectSchema.statics.findProjectCountByFilters = function (data, callback) {
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
 
+  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.name = { $regex: data.name.trim(), $options: 'i' };
+
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Project
       .find(filters)
@@ -495,7 +559,7 @@ ProjectSchema.statics.findProjectByIdAndDelete = function (id, callback) {
       if (err) return callback('database_error');
 
       Project.find({
-        order: { gt: project.order }
+        order: { $gt: project.order }
       }, (err, projects) => {
         if (err) return callback('database_error');
 

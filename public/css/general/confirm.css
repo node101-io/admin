@@ -63,12 +63,12 @@
   opacity: 1;
 }
 .general-confirm-yes-button {
-  border: 1px solid var(--second-color);
+  border: 1px solid var(--confirm-color);
   border-radius: 7px;
   padding: 10px 15px;
   cursor: pointer;
   margin-left: 15px;
-  color: var(--second-color);
+  color: var(--confirm-color);
   font-weight: 500;
   font-size: 14px;
   opacity: 0.8;

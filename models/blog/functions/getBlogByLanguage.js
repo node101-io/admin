@@ -6,9 +6,9 @@ module.exports = (blog, language, callback) => {
 
   if (!translation)
     translation = {
-      title: blog.title,
+      title: blog.title.replace(blog._id.toString(), ''),
       subtitle: blog.subtitle,
-      cover: blog.cover
+      social_media_accounts: blog.social_media_accounts
     };
 
   if (blog.type == 'project') {
@@ -20,14 +20,14 @@ module.exports = (blog, language, callback) => {
 
         return callback(null, {
           _id: blog._id.toString(),
-          title: translations.title,
+          title: translation.title,
           type: blog.type,
           project,
           writer,
-          subtitle: translations.subtitle,
-          cover: translations.cover,
-          is_completed: blog.is_completed,
-          is_active: blog.is_active
+          subtitle: translation.subtitle,
+          image: blog.image,
+          social_media_accounts: translation.social_media_accounts,
+          is_completed: blog.is_completed
         });
       });
     });
@@ -37,14 +37,14 @@ module.exports = (blog, language, callback) => {
 
       return callback(null, {
         _id: blog._id.toString(),
-        title: translations.title,
+        title: translation.title,
         type: blog.type,
         project,
         writer,
-        subtitle: translations.subtitle,
-        cover: translations.cover,
-        is_completed: blog.is_completed,
-        is_active: blog.is_active
+        subtitle: translation.subtitle,
+        image: blog.image,
+        social_media_accounts: translation.social_media_accounts,
+        is_completed: blog.is_completed
       });
     });
   };

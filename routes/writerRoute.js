@@ -10,6 +10,7 @@ const isAdmin = require('../middleware/isAdmin');
 
 const deleteGetController = require('../controllers/writer/delete/get');
 const editGetController = require('../controllers/writer/edit/get');
+const filterGetController = require('../controllers/writer/filter/get');
 const indexGetController = require('../controllers/writer/index/get');
 
 const createPostController = require('../controllers/writer/create/post');
@@ -40,6 +41,13 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     editGetController
+);
+router.get(
+  '/filter',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    filterGetController
 );
 
 router.post(

@@ -251,6 +251,9 @@ MemberSchema.statics.findMembersByFilters = function (data, callback) {
   const skip = page * limit;
   let search = null;
 
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
+
   if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
     search = data.search.trim();
     filters.name = { $regex: search, $options: 'i' };
@@ -286,6 +289,9 @@ MemberSchema.statics.findMemberCountByFilters = function (data, callback) {
 
   const filters = {};
 
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
+
   if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.search.trim(), $options: 'i' };
 
@@ -306,10 +312,27 @@ MemberSchema.statics.findMemberByIdAndDelete = function (id, callback) {
     Member.findByIdAndUpdate(member._id, { $set: {
       is_deleted: true,
       order: null
-    } }, err => {
+    } }, { new: false }, (err, member) => {
+      console.log(err);
       if (err) return callback('database_error');
 
-      return callback(null);
+      Member.find({
+        order: { $gt: member.order }
+      }, (err, members) => {
+        if (err) return callback('database_error');
+
+        async.timesSeries(
+          members.length,
+          (time, next) => Member.findByIdAndUpdate(members[time]._id, {$inc: {
+            order: -1
+          }}, err => next(err)),
+          err => {
+            if (err) return callback('database_error');
+
+            return callback(null);
+          }
+        );
+      });
     });
   });
 };
@@ -330,23 +353,7 @@ MemberSchema.statics.findMemberByIdAndRestore = function (id, callback) {
       }, err => {
         if (err) return callback('database_error');
 
-        Member.find({
-          order: { gt: member.order }
-        }, (err, members) => {
-          if (err) return callback('database_error');
-  
-          async.timesSeries(
-            members.length,
-            (time, next) => Member.findByIdAndUpdate(members[time]._id, {$inc: {
-              order: -1
-            }}, err => next(err)),
-            err => {
-              if (err) return callback('database_error');
-  
-              return callback(null);
-            }
-          );
-        });
+        return callback(null);
       });
     });
   });

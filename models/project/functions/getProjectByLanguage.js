@@ -5,7 +5,7 @@ module.exports = (project, language, callback) => {
     translation = {
       name: project.name.replace(project._id.toString(), ''),
       description: project.description,
-      social_media_accounts: project.social_media_accounts,
+      social_media_accounts: project.social_media_accounts
     };
 
   return callback(null, {

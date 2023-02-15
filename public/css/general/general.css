@@ -65,18 +65,21 @@ input[type=number] {
   --subtitle-line-height: 24px;
   --text-line-height: 22px;
 
-  --main-color: rgba(96, 104, 219, 1);
-  --second-color: rgba(62, 206, 150, 1);
+  --main-color: rgb(62, 87, 225, 1);
+  --second-color: rgb(225, 225, 62, 1);
   --third-color: rgba(142, 221, 249, 1);
+  --confirm-color: rgba(62, 206, 150, 1);
   --warning-color: rgba(214, 38, 32, 1);
 
   --placeholder-color: rgba(218, 218, 218, 0.3);
+  --placeholder-color-two: rgba(218, 218, 218, 0.8);
   --text-color: rgba(254, 254, 254, 1);
-  --text-color-two: rgba(248, 248, 248, 1);
+  --text-color-two: rgba(242, 242, 242, 1);
   --border-color: rgba(236, 236, 236, 1);
 
   --background-color: rgba(15, 15, 15, 1);
   --box-color: rgba(20, 20, 20, 1);
+  --inner-box-color: rgba(12, 12, 12, 1);
   --border-color: rgba(7, 7, 7, 1);
   --shadow-color: rgba(160, 160, 160, 0.2);
 

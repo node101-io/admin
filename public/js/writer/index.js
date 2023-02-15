@@ -13,29 +13,6 @@ window.addEventListener('load', () => {
   }
 
   document.addEventListener('click', event => {
-    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/writer/create')) {
-      event.preventDefault();
-
-      createFormPopUp({
-        title: 'Create a New Writer',
-        url: '/writer/create',
-        method: 'POST',
-        description: 'You will be asked to complete writer details once you create it.',
-        inputs: [
-          {
-            name: 'name',
-            placeholder: 'Name'
-          }
-        ],
-        button: 'Create New Writer'
-      }, (error, res) => {
-        if (error) return alert(error);
-        if (!res) return;
-
-        return window.location = '/writer/edit?id=' + res.id;
-      });
-    }
-
     if (event.target.classList.contains('order-each-writer-button')) {
       createConfirm({
         title: 'Are you sure you want to increase the order of this writer?',
