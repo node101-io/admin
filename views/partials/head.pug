@@ -13,12 +13,16 @@ html(lang='tr')
           each file_name in includes.external.css
             if file_name == 'page'
               link(rel='stylesheet' href=`/css/${page}.css`)
+            else if file_name == 'highlight.js'
+              link(rel='stylesheet' href='https://unpkg.com/@highlightjs/cdn-assets@11.7.0/styles/default.min.css')
             else
               link(rel='stylesheet' href=`/css/general/${file_name}.css`)
         if includes.external.js
           each file_name in includes.external.js
             if file_name == 'page'
               script(src=`/js/${page}.js`)
+            else if file_name == 'highlight.js'
+              script(src='https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.min.js')
             else
               script(src=`/js/functions/${file_name}.js`)
     body

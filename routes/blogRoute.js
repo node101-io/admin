@@ -11,6 +11,9 @@ const isAdmin = require('../middleware/isAdmin');
 const deleteGetController = require('../controllers/blog/delete/get');
 const editGetController = require('../controllers/blog/edit/get');
 const indexGetController = require('../controllers/blog/index/get');
+const writingDeleteGetController = require('../controllers/blog/writing/delete/get');
+const writingEditGetController = require('../controllers/blog/writing/edit/get');
+const writingIndexGetController = require('../controllers/blog/writing/index/get');
 
 const createPostController = require('../controllers/blog/create/post');
 const deletePostController = require('../controllers/blog/delete/post');
@@ -19,6 +22,14 @@ const imagePostController = require('../controllers/blog/image/post');
 const orderPostController = require('../controllers/blog/order/post');
 const restorePostController = require('../controllers/blog/restore/post');
 const translatePostController = require('../controllers/blog/translate/post');
+
+const writingCoverPostController = require('../controllers/blog/writing/cover/post');
+const writingCreatePostController = require('../controllers/blog/writing/create/post');
+const writingDeletePostController = require('../controllers/blog/writing/delete/post');
+const writingEditPostController = require('../controllers/blog/writing/edit/post');
+const writingOrderPostController = require('../controllers/blog/writing/order/post');
+const writingRestorePostController = require('../controllers/blog/writing/restore/post');
+const writingTranslatePostController = require('../controllers/blog/writing/translate/post');
 
 router.get(
   '/',
@@ -40,6 +51,27 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     editGetController
+);
+router.get(
+  '/writing',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingIndexGetController
+);
+router.get(
+  '/writing/delete',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingDeleteGetController
+);
+router.get(
+  '/writing/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingEditGetController
 );
 
 router.post(
@@ -91,6 +123,56 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     translatePostController
+);
+router.post(
+  '/writing/cover',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCoverPostController
+);
+router.post(
+  '/writing/create',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCreatePostController
+);
+router.post(
+  '/writing/delete',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingDeletePostController
+);
+router.post(
+  '/writing/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingEditPostController
+);
+router.post(
+  '/writing/order',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingOrderPostController
+);
+router.post(
+  '/writing/restore',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingRestorePostController
+);
+router.post(
+  '/writing/translate',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingTranslatePostController
 );
 
 module.exports = router;

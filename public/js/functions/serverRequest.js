@@ -38,7 +38,8 @@ function serverRequest (url, method, data, callback) {
         const data = JSON.parse(xhr.responseText);
         return callback(data);
       }
-    } catch (_) {
+    } catch (err) {
+      console.log(err);
       return callback({ success: false, error: 'network_error' });
     }
   };

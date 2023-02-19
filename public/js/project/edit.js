@@ -169,27 +169,18 @@ window.addEventListener('load', () => {
       wrapper.style.cursor = 'progress';
       wrapper.childNodes[1].innerHTML = 'Loading...';
       wrapper.childNodes[0].type = 'text';
-  
-      const formdata = new FormData();
-      formdata.append('file', file);
+
+      serverRequest('/project/image?id=' + project._id, 'FILE', {
+        file
+      }, res => {
+        if (!res.success) return throwError(res.error);
     
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/project/image?id=' + project._id);
-      xhr.send(formdata);
-    
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.responseText) {
-          const res = JSON.parse(xhr.responseText);
-    
-          if (!res.success) return throwError(res.error);
-    
-          return createConfirm({
-            title: 'Project Image is Updated',
-            text: 'Project image is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
-        }
-      };
+        return createConfirm({
+          title: 'Project Image is Updated',
+          text: 'Project image is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
+      });
     }
   });
 });

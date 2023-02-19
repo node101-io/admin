@@ -7,6 +7,7 @@ const toURLString =require('../../utils/toURLString')
 const Image = require('../image/Image');
 const Project = require('../project/Project');
 const Writer = require('../writer/Writer');
+const Writing = require('../writing/Writing')
 
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts')
@@ -639,6 +640,173 @@ BlogSchema.statics.findBlogByIdAndIncOrderByOne = function (id, callback) {
         });
       });
     });
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndCreateWriting = function (id, data, callback) {
+  const Blog = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+    if (!blog.is_completed)
+      return callback('not_authenticated_request');
+
+    Writing.createWritingByParentId(blog._id, {
+      type: 'blog',
+      parent_id: blog._id,
+      title: data.title,
+      writer_id: blog.writer_id
+    }, (err, writing_id) => {
+      if (err) return callback(err);
+
+      return callback(null, writing_id);
+    });
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingById = function (id, writing_id, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentId(
+      writing_id,
+      blog._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndFormat = function (id, writing_id, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormat(
+      writing_id,
+      blog._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdate = function (id, writing_id, data, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdate(
+      writing_id,
+      blog._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateTranslations = function (id, writing_id, data, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateTranslations(
+      writing_id,
+      blog._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateCover = function (id, writing_id, file, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndAndParentIdUpdateCover(
+      writing_id,
+      blog._id,
+      file,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingsByFilters = function (id, data, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingsByParentIdAndFilters(
+      blog._id,
+      data,
+      (err, data) => callback(err, data)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingCountByFilters = function (id, data, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingCountByParentIdAndFilters(
+      blog._id,
+      data,
+      (err, count) => callback(err, count)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndDelete = function (id, writing_id, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndDelete(
+      writing_id,
+      blog._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndRestore = function (id, writing_id, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndRestore(
+      writing_id,
+      blog._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndIncOrderByOne = function (id, writing_id, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndIncOrderByOne(
+      writing_id,
+      blog._id,
+      (err, writing) => callback(err, writing)
+    );
   });
 };
 

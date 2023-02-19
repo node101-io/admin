@@ -1,5 +1,4 @@
 const Blog = require('../../../models/blog/Blog');
-const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
   const types = {

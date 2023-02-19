@@ -3,7 +3,7 @@ const CHARSET = [
 ];
 const DEFAULT_LENGTH = 32;
 
-module.exports = length => {
+function generateRandomHEX(length) {
   if (!length || isNaN(parseInt(length)))
     length = DEFAULT_LENGTH;
   else

@@ -1,10 +1,10 @@
 const validator = require('validator');
 
 module.exports = data => {
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
   const accounts = {};
+
+  if (!data || typeof data != 'object')
+    return accounts;
 
   if (data.instagram && validator.isURL(data.instagram.toString()))
     accounts.instagram = data.instagram.toString().trim();

@@ -44,6 +44,7 @@ if (cluster.isMaster) {
   const projectRouteController = require('./routes/projectRoute');
   const stakeRouteController = require('./routes/stakeRoute');
   const writerRouteController = require('./routes/writerRoute');
+  const writingRouteController = require('./routes/writingRoute');
 
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug');
@@ -103,6 +104,7 @@ if (cluster.isMaster) {
   app.use('/project', projectRouteController);
   app.use('/stake', stakeRouteController);
   app.use('/writer', writerRouteController);
+  app.use('/writing', writingRouteController);
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);

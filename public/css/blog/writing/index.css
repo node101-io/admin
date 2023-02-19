@@ -1,0 +1,15 @@
+.deleted-writings-button {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--second-color);
+  text-decoration: none;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 30px;
+  margin-bottom: 15px;
+  margin-top: -5px;
+}
+.deleted-writings-button:hover {
+  border-bottom: 2px solid var(--second-color);
+  margin-bottom: 13px;
+}

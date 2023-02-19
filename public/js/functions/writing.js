@@ -1,6 +1,9 @@
-let isAddContentChoicesOpen = false;
+let writing = null; // GLOBAL
+let isSaved = true; // GLOBAL
+let clickedCreateHeaderNode = null;
 let hoveredContentItem = null;
 let selectionIndex = -1;
+let selectionAbsoluteIndex = -1;
 let selectionNode = null;
 let focusNode = null;
 let anchorNode = null;
@@ -10,7 +13,7 @@ function changeAddContentState(wrapper) {
   const button = wrapper.childNodes[0];
   const choicesWraper = wrapper.childNodes[1];
 
-  if (isAddContentChoicesOpen) {
+  if (button.classList.contains('general-writing-each-content-item-add-button-icon-open-animation-class')) {
     button.classList.remove('general-writing-each-content-item-add-button-icon-open-animation-class');
     button.classList.add('general-writing-each-content-item-add-button-icon-close-animation-class');
     choicesWraper.classList.remove('general-writing-each-content-item-add-button-choices-open-animation-class');
@@ -21,7 +24,6 @@ function changeAddContentState(wrapper) {
     choicesWraper.classList.remove('general-writing-each-content-item-add-button-choices-close-animation-class');
     choicesWraper.classList.add('general-writing-each-content-item-add-button-choices-open-animation-class');
   }
-  isAddContentChoicesOpen = !isAddContentChoicesOpen;
 };
 
 function createEachContentItemWrapper() {
@@ -29,10 +31,10 @@ function createEachContentItemWrapper() {
   wrapper.classList.add('general-writing-each-content-item-wrapper');
   
   const leftOptions = document.createElement('div');
-  leftOptions.classList.add('general-writing-each-content-item-left-tag-wrapper');
+  leftOptions.classList.add('general-writing-each-content-item-left-options-wrapper');
   
   const leftLine = document.createElement('div');
-  leftLine.classList.add('general-writing-each-content-item-tag-line');
+  leftLine.classList.add('general-writing-each-content-item-options-line');
 
   const deleteButton = document.createElement('div');
   deleteButton.classList.add('general-writing-each-content-item-delete-button');
@@ -135,15 +137,13 @@ function createEachContentItemWrapper() {
 
   const innerWrapper = document.createElement('div');
   innerWrapper.classList.add('general-writing-each-content-item-inner-wrapper');
-  const innerWrapperSpan = document.createElement('span');
-  innerWrapper.appendChild(innerWrapperSpan);
   wrapper.appendChild(innerWrapper);
 
   const rightOptions = document.createElement('div');
-  rightOptions.classList.add('general-writing-each-content-item-right-tag-wrapper');
+  rightOptions.classList.add('general-writing-each-content-item-right-options-wrapper');
 
   const rightLine = document.createElement('div');
-  rightLine.classList.add('general-writing-each-content-item-tag-line');
+  rightLine.classList.add('general-writing-each-content-item-options-line');
 
   const orderUpButton = document.createElement('div');
   orderUpButton.classList.add('general-writing-each-content-item-order-up-button');
@@ -177,8 +177,78 @@ function createEachContentItemWrapper() {
   return wrapper;
 };
 
-function createEllipsis() {
-  const wrapper = document.querySelector('.general-writing-content-items-wrapper');
+function createHeaderContentItem(content, classList) {
+  const newItem = createEachContentItemWrapper();
+
+  const headerWrapper = document.createElement('div');
+  headerWrapper.classList.add('general-writing-item');
+  headerWrapper.classList.add('general-writing-header');
+  if (classList.contains('general-writing-header-choice-1'))
+    headerWrapper.classList.add('general-writing-header-1');
+  else if (classList.contains('general-writing-header-choice-2'))
+    headerWrapper.classList.add('general-writing-header-2');
+  else if (classList.contains('general-writing-header-choice-3'))
+    headerWrapper.classList.add('general-writing-header-3');
+  else if (classList.contains('general-writing-header-choice-4'))
+    headerWrapper.classList.add('general-writing-header-4');
+  else if (classList.contains('general-writing-header-choice-5'))
+    headerWrapper.classList.add('general-writing-header-5');
+  else if (classList.contains('general-writing-header-choice-6'))
+    headerWrapper.classList.add('general-writing-header-6');
+  headerWrapper.contentEditable = true;
+  headerWrapper.spellcheck = false;
+  headerWrapper.innerHTML = content;
+
+  newItem.childNodes[1].appendChild(headerWrapper);
+  return newItem;
+};
+
+function createTextContentItem(content) {
+  const newItem = createEachContentItemWrapper();
+
+  const textWrapper = document.createElement('div');
+  textWrapper.classList.add('general-writing-item');
+  textWrapper.classList.add('general-writing-text');
+  textWrapper.contentEditable = true;
+  textWrapper.spellcheck = false;
+  textWrapper.innerHTML = content;
+
+  newItem.childNodes[1].appendChild(textWrapper);
+  return newItem;
+};
+
+function createImageContentItem(url, text, alt) {
+  const newItem = createEachContentItemWrapper();
+};
+
+function createVideoContentItem(url, text, alt) {
+  const newItem = createEachContentItemWrapper();
+};
+
+function createListContentItem(content) {
+  const newItem = createEachContentItemWrapper();
+
+  const listWrapper = document.createElement('div');
+  listWrapper.classList.add('general-writing-item');
+  listWrapper.classList.add('general-writing-list');
+  listWrapper.contentEditable = true;
+  listWrapper.spellcheck = false;
+  listWrapper.innerHTML = '<span>' + content + '</span>';
+
+  newItem.childNodes[1].appendChild(listWrapper);
+  return newItem
+};
+
+function createCodeContentItem(content) {
+  const newItem = createEachContentItemWrapper();
+};
+
+function createQuoteContentItem(content) {
+  const newItem = createEachContentItemWrapper();
+};
+
+function createEllipsisContentItem() {
+  const newItem = createEachContentItemWrapper();
 };
 
 function formatHTML(contentInnerHTML, index, options) {
@@ -224,31 +294,102 @@ function formatHTML(contentInnerHTML, index, options) {
   } else {
     return tag + newContentInnerHTML + '</span>';
   }
-}
+};
+
+function formatHlJSCode(wrapper) {
+  let content = wrapper.innerHTML;
+
+  console.log(content)
+
+  // content = content.split('{').join('{\n');
+  // content = content.split(';').join(';\n');
+  // content = content.split('}').join('\n}');
+  // content = content.split('\n').map(each => each.trim()).filter(each => each.length).join('\n');
+
+  wrapper.innerHTML = content;
+};
+
+function generateWritingData() {
+  const contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper');
+  const content = [];
+
+  for (let i = 0; i < contentNodes.length; i++)
+    if (contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-header'))
+      content.push(contentNodes[i].innerHTML);
+    else if (contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text'))
+      content.push(contentNodes[i].innerHTML);
+
+  return {
+    title: document.querySelector('.general-writing-title').value,
+    subtitle: document.querySelector('.general-writing-subtitle').value,
+    content
+  }
+};
+
+function setIsSavedFalse() {
+  if (!isSaved) return;
+
+  isSaved = false;
+  document.querySelector('.general-writing-unsaved-changes-text').style.visibility = 'visible';
+};
 
 window.addEventListener('load', () => {
+  writing = JSON.parse(document.getElementById('writing-json').value);
+  hljs.highlightAll();
+
   const selectionMenu = document.querySelector('.general-writing-selection-menu');
+  const headerChoicesWrapper = document.querySelector('.general-writing-each-content-item-add-header-choices-wrapper');
+  const imageInput = document.getElementById('general-writing-select-file-input');
+  const imageLoadingPrompt = document.querySelector('.general-writing-loading-image-prompt');
 
   document.addEventListener('click', event => {
     if (ancestorWithClassName(event.target, 'general-writing-each-content-item-add-button')) {
       changeAddContentState(ancestorWithClassName(event.target, 'general-writing-each-content-item-add-button').parentNode);
     }
 
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-header')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-choice-header');
+      headerChoicesWrapper.style.display = 'flex';
+      headerChoicesWrapper.style.left = target.getBoundingClientRect().left + 'px';
+      headerChoicesWrapper.style.top = target.getBoundingClientRect().top + 'px';
+      clickedCreateHeaderNode = target;
+    } else if (clickedCreateHeaderNode && ancestorWithClassName(event.target, 'general-writing-each-content-item-add-button-each-header-choice')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-add-button-each-header-choice');
+      const wrapper = ancestorWithClassName(clickedCreateHeaderNode, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createHeaderContentItem('', target.classList);
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, wrapper);
+      headerChoicesWrapper.style.display = 'none';
+      clickedCreateHeaderNode = null;
+      changeAddContentState(wrapper.childNodes[0].childNodes[0].childNodes[0]);
+      newItem.childNodes[1].childNodes[0].focus();
+    } else if (clickedCreateHeaderNode && !ancestorWithClassName(event.target, 'general-writing-each-content-item-add-header-choices-wrapper')) {
+      headerChoicesWrapper.style.display = 'none';
+      clickedCreateHeaderNode = null;
+    }
+
     if (ancestorWithClassName(event.target, 'general-writing-each-choice-text')) {
-      const target = ancestorWithClassName(event.target, 'general-writing-each-choice-text').parentNode.parentNode.parentNode.parentNode;
-      const newItem = createEachContentItemWrapper();
-
-      const textWrapper = document.createElement('div');
-      textWrapper.classList.add('general-writing-text');
-      textWrapper.contentEditable = true;
-      textWrapper.spellcheck = false;
-
-      newItem.childNodes[1].appendChild(textWrapper);
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createTextContentItem('');
 
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
       newItem.childNodes[1].childNodes[0].focus();
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
+      setIsSavedFalse();
+    }
 
-      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1])
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-image')) {
+      imageInput.click();
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-list')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createListContentItem('');
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
+      newItem.childNodes[1].childNodes[0].focus();
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
+      setIsSavedFalse();
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-each-content-item-delete-button')) {
@@ -259,7 +400,10 @@ window.addEventListener('load', () => {
         reject: 'Cancel',
         accept: 'Delete'
       }, res => {
-        if (res) target.remove();
+        if (res) {
+          target.remove();
+          setIsSavedFalse();
+        }
       });
     }
 
@@ -267,13 +411,15 @@ window.addEventListener('load', () => {
       const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-order-up-button').parentNode.parentNode.parentNode;
       if (target.previousElementSibling) {
         target.parentNode.insertBefore(target, target.previousElementSibling);
+        setIsSavedFalse();
       }
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-each-content-item-order-down-button')) {
       const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-order-down-button').parentNode.parentNode.parentNode;
-      if (target.nextElementSibling) {
+      if (target.nextElementSibling && !target.nextElementSibling.classList.contains('general-writing-each-content-item-wrapper-empty')) {
         target.parentNode.insertBefore(target.nextElementSibling, target);
+        setIsSavedFalse();
       }
     }
 
@@ -920,6 +1066,17 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('keydown', event => {
+    if (ancestorWithClassName(event.target, 'general-writing-header')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-header');
+
+      if (event.key == 'Enter') {
+        event.preventDefault();
+      } else if (event.key == 'Backspace' && !target.innerText.length) {
+        target.parentNode.parentNode.remove();
+        setIsSavedFalse();
+      }
+    }
+
     if (ancestorWithClassName(event.target, 'general-writing-text')) {
       const target = ancestorWithClassName(event.target, 'general-writing-text');
 
@@ -988,6 +1145,7 @@ window.addEventListener('load', () => {
         const newItem = createEachContentItemWrapper();
 
         const textWrapper = document.createElement('div');
+        textWrapper.classList.add('general-writing-item');
         textWrapper.classList.add('general-writing-text');
         textWrapper.contentEditable = true;
         textWrapper.spellcheck = false;
@@ -1016,6 +1174,88 @@ window.addEventListener('load', () => {
       if (event.key == 'Enter') {
         event.preventDefault();
         event.target.blur();
+      }
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-list')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-list');
+
+      if (event.key == 'Enter') {
+        event.preventDefault();
+
+        const wrapper = target;
+        const contentInnerHTML = wrapper.innerHTML.substring(0, wrapper.innerHTML.length - 7);
+        const openTags = [];
+        let i = 6;
+        let contentInnerText = '';
+        let firstContentInnerHTML = '';
+        let secondContentInnerHTML = '';
+    
+        if (contentInnerHTML.substring(0, 6) != '<span>')
+          return;
+    
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            firstContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>') {
+              tag += contentInnerHTML[i++];
+            }
+            tag += contentInnerHTML[i++];
+    
+            openTags.push(tag);
+            firstContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            firstContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          firstContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          secondContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            secondContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>') {
+              tag += contentInnerHTML[i++];
+            }
+            tag += contentInnerHTML[i++];
+    
+            openTags.push(tag);
+            secondContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            secondContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        wrapper.innerHTML = '<span>' + firstContentInnerHTML + '</span>';
+      
+        const newItem = createEachContentItemWrapper();
+
+        const textWrapper = document.createElement('div');
+        textWrapper.classList.add('general-writing-item');
+        textWrapper.classList.add('general-writing-list');
+        textWrapper.contentEditable = true;
+        textWrapper.spellcheck = false;
+        textWrapper.innerHTML = '<span>' + secondContentInnerHTML + '</span>';
+
+        newItem.childNodes[1].appendChild(textWrapper);
+
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target.parentNode.parentNode);
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(target.parentNode.parentNode, newItem);
+        newItem.childNodes[1].childNodes[0].focus();
       }
     }
   });
@@ -1091,41 +1331,33 @@ window.addEventListener('load', () => {
       document.querySelector('.general-writing-underline-button').classList.remove('general-writing-selection-menu-icon-selected');
   });
 
-  document.addEventListener('keyup', event => {
+  document.addEventListener('keydown', event => {
     const selection = document.getSelection();
-    const target = ancestorWithClassName(selection?.focusNode?.parentNode, 'general-writing-text');
-
-    if (!target) {
-      selectionMenu.style.display = 'none';
-      selectionIndex = -1;
-      focusNode = null;
-      selectionString = null;
-      return;
-    }
-
+  
+    let selectionAbsoluteIndex = selection.anchorIndex;
     let anchorIndex = selection.anchorOffset;
     let focusIndex = selection.focusOffset;
-
+  
     let anchorPrev = selection?.anchorNode;
-    while (anchorPrev && !anchorPrev.classList?.contains('general-writing-text')) {
+    while (anchorPrev && !anchorPrev.classList?.contains('general-writing-item')) {
       while (anchorPrev.previousSibling) {
         anchorPrev = anchorPrev.previousSibling;
         anchorIndex += anchorPrev.innerText?.length || anchorPrev.nodeValue?.length || 0;
       }
-
+  
       anchorPrev = anchorPrev.parentNode;
     }
-
+  
     let focusPrev = selection?.focusNode;
-    while (focusPrev && !focusPrev.classList?.contains('general-writing-text')) {
+    while (focusPrev && !focusPrev.classList?.contains('general-writing-item')) {
       while (focusPrev.previousSibling) {
         focusPrev = focusPrev.previousSibling;
         focusIndex += focusPrev.innerText?.length || focusPrev.nodeValue?.length || 0;
       }
-
+  
       focusPrev = focusPrev.parentNode;
     }
-
+  
     if (anchorIndex < focusIndex) {
       anchorNode = selection?.anchorNode?.parentNode;
       focusNode = selection?.focusNode?.parentNode;
@@ -1136,30 +1368,51 @@ window.addEventListener('load', () => {
       selectionIndex = focusIndex;
     }
 
+    const target = ancestorWithClassName(selection?.focusNode?.parentNode, 'general-writing-text');
+
     selectionNode = target;
     selectionString = selection.toString();
 
+    if (!target) return;
+  
     selectionMenu.style.display = 'flex';
     selectionMenu.style.left = target.getBoundingClientRect().left + 'px';
     selectionMenu.style.top = target.getBoundingClientRect().top + 'px';
-
+  
     if (ancestorWithClassName(focusNode, 'general-writing-text-bold') && ancestorWithClassName(anchorNode, 'general-writing-text-bold'))
       document.querySelector('.general-writing-bold-button').classList.add('general-writing-selection-menu-icon-selected');
     else
       document.querySelector('.general-writing-bold-button').classList.remove('general-writing-selection-menu-icon-selected');
-
+  
     if (ancestorWithClassName(focusNode, 'general-writing-text-italic') && ancestorWithClassName(anchorNode, 'general-writing-text-italic'))
       document.querySelector('.general-writing-italic-button').classList.add('general-writing-selection-menu-icon-selected');
     else
       document.querySelector('.general-writing-italic-button').classList.remove('general-writing-selection-menu-icon-selected');
-
+  
     if (ancestorWithClassName(focusNode, 'general-writing-text-underline') && ancestorWithClassName(anchorNode, 'general-writing-text-underline'))
       document.querySelector('.general-writing-underline-button').classList.add('general-writing-selection-menu-icon-selected');
     else
       document.querySelector('.general-writing-underline-button').classList.remove('general-writing-selection-menu-icon-selected');
+  }, true);
+
+  document.addEventListener('keydown', event => {
+    if (ancestorWithClassName(event.target, 'general-writing-code')) {
+      if (event.key == 'Tab') {
+        event.preventDefault();
+        const content = event.target.innerHTML;
+        console.log((selectionIndex ? content.substring(0, selectionIndex - 1) : '') + '   ' + content.substring(selectionIndex))
+        event.target.innerHTML = (selectionIndex ? content.substring(0, selectionIndex - 1) : '') + '   ' + content.substring(selectionIndex);
+      }
+    }
   });
 
   document.addEventListener('focusin', event => {
+    if (ancestorWithClassName(event.target, 'general-writing-header')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-header');
+      target.spellcheck = false;
+      target.focus();
+    }
+
     if (ancestorWithClassName(event.target, 'general-writing-text')) {
       const target = ancestorWithClassName(event.target, 'general-writing-text');
       target.spellcheck = false;
@@ -1172,10 +1425,43 @@ window.addEventListener('load', () => {
     }
   });
 
+  document.addEventListener('focusout', event => {
+    if (event.target.classList.contains('general-writing-code')) {
+      event.target.innerHTML = event.target.innerHTML.split('<div>').join('\n');
+      hljs.highlightElement(event.target);
+    }
+  });
+
   document.addEventListener('input', event => {
+    setIsSavedFalse();
+
     if (event.target.classList.contains('general-writing-title') || event.target.classList.contains('general-writing-subtitle')) {
       event.target.style.height = (event.target.scrollHeight) + 'px';
       event.target.style.minHeight = (event.target.scrollHeight) + 'px';
     }
   });
+
+  imageInput.addEventListener('change', event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    imageLoadingPrompt.style.display = 'flex';
+
+    serverRequest('/writing/image?id=' + writing._id, 'FILE', {
+      file
+    }, res => {
+      if (!res.success) {
+        imageLoadingPrompt.style.display = 'none';
+        return throwError(res.error);
+      }
+
+      console.log(res.image);
+    });
+  });
 });
+
+// window.addEventListener('beforeunload', event => {
+//   if (!isSaved) {
+//     event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
+//     return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
+//   };
+// });

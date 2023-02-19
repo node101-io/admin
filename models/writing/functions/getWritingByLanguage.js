@@ -1,35 +1,30 @@
-const Blog = require('../blog/Blog');
-const Book = require('../book/Book');
-const Guide = require('../guide/Guide');
 const Writer = require('../../writer/Writer');
-
-const formatTypeClass = require('./formatTypeClass');
 
 module.exports = (writing, language, callback) => {
   let translation = writing.translations[language];
 
-  const typeClass = formatTypeClass(data.type);
-
   if (!translation)
     translation = {
-      content: writing.content
+      title: writing.title.replace(writing._id.toString(), ''),
+      subtitle: writing.subtitle,
+      content: writing.content,
+      social_media_accounts: writing.social_media_accounts
     };
 
-  [typeClass][`find${typeClass}ByIdAndFormatByLanguage`](writing.parent_id, language, (err, parent) => {
+  Writer.findWriterByIdAndFormatByLanguage(writing.writer_id, language, (err, writer) => {
     if (err) return callback(err);
 
-    Writer.findWriterByIdAndFormatByLanguage(writing.writer_id, language, (err, writer) => {
-      if (err) return callback(err);
-
-      return callback(null, {
-        _id: writing._id.toString(),
-        title: translation.title,
-        identifier: writing.identifiers.find(each => writing.identifier_languages[each] == language) || writing.identifiers[0],
-        [typeClass]: parent,
-        writer,
-        cover: writing.cover,
-        content: translation.content
-      });
+    return callback(null, {
+      _id: writing._id.toString(),
+      title: translation.title.replace(writing._id.toString(), ''),
+      identifier: writing.identifiers.find(each => writing.identifier_languages[each] == language) || writing.identifiers[0],
+      parent_id: writing.parent_id,
+      writer,
+      cover: writing.cover,
+      subtitle: translation.subtitle,
+      content: translation.content,
+      is_completed: writing.is_completed,
+      social_media_accounts: translation.social_media_accounts
     });
   });
 };

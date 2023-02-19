@@ -1,0 +1,15 @@
+.all-writings-button {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--confirm-color);
+  text-decoration: none;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 30px;
+  margin-bottom: 15px;
+  margin-top: -5px;
+}
+.all-writings-button:hover {
+  border-bottom: 2px solid var(--confirm-color);
+  margin-bottom: 13px;
+}

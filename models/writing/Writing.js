@@ -1,19 +1,17 @@
+const async = require('async');
 const html2json = require('html2json').html2json;
 const json2html = require('html2json').json2html;
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const generateRandomHEX = require('../../utils/generateRandomHEX');
 const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
-const Blog = require('../blog/Blog'); // Used by formatTypeClass, do not delete
-const Book = require('../book/Book'); // Used by formatTypeClass, do not delete
-const Guide = require('../guide/Guide'); // Used by formatTypeClass, do not delete
 const Writer = require('../writer/Writer');
 
-const filterTextOfContent = require('./functions/filterTextOfContent');
 const formatTranslations = require('./functions/formatTranslations');
-const formatTypeClass = require('./functions/formatTypeClass');
+const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const getWriting = require('./functions/getWriting');
 const getWritingByLanguage = require('./functions/getWritingByLanguage');
 const isWritingComplete = require('./functions/isWritingComplete');
@@ -24,9 +22,12 @@ const COVER_HEIGHT = 300;
 const COVER_WIDTH = 900;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 500;
+const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
 const IMAGE_NAME_PREFIX = 'node101 writing cover ';
+const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
+const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const TYPE_VALUES = ['blog', 'book', 'guide'];
 
 const Schema = mongoose.Schema;
@@ -65,7 +66,14 @@ const WritingSchema = new Schema({
   },
   writer_id: {
     type: mongoose.Types.ObjectId,
-    default: null
+    required: true
+  },
+  subtitle: {
+    type: String,
+    default: null,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   cover: {
     type: String,
@@ -73,10 +81,18 @@ const WritingSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
+  is_completed: {
+    type: Boolean,
+    default: false
+  },
+  social_media_accounts: {
+    type: Object,
+    default: {}
+  },
   content: {
-    type: String,
-    default: '',
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
+    type: Array,
+    default: [],
+    maxlength: MAX_DATABASE_ARRAY_FIELD_LENGTH
   },
   translations: {
     type: Object,
@@ -89,11 +105,11 @@ const WritingSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
-  search_content: {
+  search_subtitle: {
     type: String,
-    required: true,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   order: {
@@ -106,8 +122,11 @@ const WritingSchema = new Schema({
   }
 });
 
-WritingSchema.statics.createWriting = function (data, callback) {
+WritingSchema.statics.createWritingByParentId = function (_parent_id, data, callback) {
   const Writing = this;
+
+  if (!_parent_id || !validator.isMongoId(_parent_id.toString()))
+    return callback('bad_request');
 
   if (!data || typeof data != 'object')
     return callback('bad_request');
@@ -119,60 +138,58 @@ WritingSchema.statics.createWriting = function (data, callback) {
     return callback('bad_request');
 
   const identifier = toURLString(data.title);
+  const parent_id = mongoose.Types.ObjectId(_parent_id.toString());
 
-  [formatTypeClass(data.type)][`find${formatTypeClass(data.type)}ById`](data.parent_id, (err, parent) => {
-    if (err) return callback(err);
+  Writing.findOne({
+    parent_id,
+    identifiers: identifier
+  }, (err, writing) => {
+    if (err) return callback('database_error');
+    if (writing) return callback('duplicated_unique_field');
 
-    Writing.findOne({
-      parent_id: parent._id,
-      identifiers: identifier
-    }, (err, writing) => {
-      if (err) return callback('database_error');
-      if (writing) return callback('duplicated_unique_field');
+    Writer.findWriterById(data.writer_id, (err, writer) => {
+      if (err) return callback(err);
 
-      Writing.findWritingCountByParentIdAndFilters(parent._id, { is_deleted: false }, (err, order) => {
+      Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
         if (err) return callback(err);
   
-        Writer.findWriterByIdAndFormat(data.writer_id, (err, writer) => {
-          if (err) return callback(err);
-
-          const newWritingData = {
-            title: data.title.trim(),
-            identifiers: [ identifier ],
-            identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-            type: data.type,
-            parent_id: parent._id,
-            writer_id: writer._id,
-            created_at: new Date(),
-            order
-          };
-      
-          const newWriting = new Writing(newWritingData);
-      
-          newWriting.save((err, writing) => {
-            if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-              return callback('duplicated_unique_field');
+        const newWritingData = {
+          title: data.title.trim(),
+          search_title: data.title.trim(),
+          identifiers: [ identifier ],
+          identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+          type: data.type,
+          parent_id,
+          writer_id: writer._id,
+          created_at: new Date(),
+          order
+        };
+    
+        const newWriting = new Writing(newWritingData);
+    
+        newWriting.save((err, writing) => {
+          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+            return callback('duplicated_unique_field');
+          if (err) return callback('database_error');
+  
+          writing.translations = formatTranslations(writing, 'tr');
+          writing.translations = formatTranslations(writing, 'ru');
+  
+          Writing.findByIdAndUpdate(writing._id, {$set: {
+            translations: writing.translations
+          }}, err => {
             if (err) return callback('database_error');
-    
-            writing.translations = formatTranslations(writing, 'tr');
-            writing.translations = formatTranslations(writing, 'ru');
-    
-            Writing.findByIdAndUpdate(writing._id, {$set: {
-              translations: writing.translations
-            }}, err => {
-              if (err) return callback('database_error');
-    
-              Writing.collection
-                .createIndex(
-                  { title: 'text', content: 'text' },
-                  { weights: {
-                    title: 10,
-                    content: 1
-                  } }
-                )
-                .then(() => callback(null, writing._id.toString()))
-                .catch(_ => callback('index_error'));
-            });
+  
+            Writing.collection
+              .createIndex(
+                { search_title: 'text', search_subtitle: 'text' },
+                { weights: {
+                  search_title: 10,
+                  search_subtitle: 1
+                } }
+              )
+              .then(() => callback(null, writing._id.toString()))
+              .catch(_ => callback('index_error'));
           });
         });
       });
@@ -192,7 +209,7 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
   Writing.findById(mongoose.Types.ObjectId(id.toString()), (err, writing) => {
     if (err) return callback('database_error');
     if (!writing) return callback('document_not_found');
-    if (writing.parent_id != mongoose.Types.ObjectId(parent_id.toString()))
+    if (writing.parent_id.toString() != parent_id.toString())
       return callback('not_authenticated_request');
 
     if (writing.is_completed == isWritingComplete(writing))
@@ -268,7 +285,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (
   });
 };
 
-WritingSchema.statics.findWritingByIdAndAndParentIdUpdateImage = function (id, parent_id, file, callback) {
+WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, parent_id, file, callback) {
   const Writing = this;
 
   Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
@@ -277,21 +294,21 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateImage = function (id, p
     Image.createImage({
       file_name: file.filename,
       original_name: IMAGE_NAME_PREFIX + writing.title,
-      width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT,
+      width: COVER_WIDTH,
+      height: COVER_HEIGHT,
       is_used: true
     }, (err, url) => {
       if (err) return callback(err);
   
       Writing.findByIdAndUpdate(writing._id, { $set: {
-        image: url
+        cover: url
       }}, { new: false }, (err, writing) => {
         if (err) return callback(err);
 
-        if (!writing.image || writing.image == url)
+        if (!writing.cover || writing.cover.split('/')[writing.cover.split('/').length-1] == url.split('/')[url.split('/').length-1])
           return callback(null, url);
 
-        Image.findImageByUrlAndDelete(writing.image, err => {
+        Image.findImageByUrlAndDelete(writing.cover, err => {
           if (err) return callback(err);
 
           return callback(null, url);
@@ -331,19 +348,58 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
         if (key != toURLString(writing.name))
           identifier_languages[key] = writing.identifier_languages[key]
       });
-    })
 
-    Writer.findWriterByIdAndFormat(data.writer_id, (err, writer) => {
-      Writing.findByIdAndUpdate(writing._id, {$set: {
-        title: data.title.trim(),
-        identifiers,
-        identifier_languages,
-        writer_id: !err && writer ? writer._id : writing._id,
-        content: data.content && typeof data.content == 'string' && data.content.trim().length && data.content.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.content.trim() : writing.content
-      }}, err => {
-        if (err) return callback('database_error');
+      Writer.findWriterByIdAndFormat(data.writer_id, (writer_err, writer) => {
+        Writing.findByIdAndUpdate(writing._id, {$set: {
+          title: data.title.trim(),
+          identifiers,
+          identifier_languages,
+          writer_id: !writer_err && writer ? writer._id : writing.writer_id,
+          subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
+          social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
+          content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content
+        }}, { new: true }, (err, writing) => {
+          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+            return callback('duplicated_unique_field');
+          if (err) return callback('database_error');
+    
+          writing.translations = formatTranslations(writing, 'tr', writing.translations.tr);
+          writing.translations = formatTranslations(writing, 'ru', writing.translations.ru);
+
+          Writing.findByIdAndUpdate(writing._id, {$set: {
+            translations: writing.translations
+          }}, { new: true }, (err, writing) => {
+            if (err) return callback('database_error');
   
-        return callback(null);
+            const searchTitle = new Set();
+            const searchSubtitle = new Set();
+  
+            writing.title.split(' ').forEach(word => searchTitle.add(word));
+            writing.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
+            writing.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
+            writing.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+            writing.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+            writing.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+  
+            Writing.findByIdAndUpdate(writing._id, {$set: {
+              search_title: Array.from(searchTitle).join(' '),
+              search_subtitle: Array.from(searchSubtitle).join(' ')
+            }}, err => {
+              if (err) return callback('database_error');
+  
+              Writing.collection
+                .createIndex(
+                  { search_title: 'text', search_subtitle: 'text' },
+                  { weights: {
+                    search_title: 10,
+                    search_subtitle: 1
+                  } }
+                )
+                .then(() => callback(null))
+                .catch(_ => callback('index_error'));
+            });
+          });
+        });
       });
     });
   });
@@ -365,8 +421,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
       return callback('not_authenticated_request');
 
     const translations = formatTranslations(writing, data.language, data);
-    const oldIdentifier = toURLString(writing.translations[data.language]?.title);
+    let oldIdentifier = toURLString(writing.translations[data.language]?.title);
     const newIdentifier = toURLString(translations[data.language].title);
+
+    if (oldIdentifier == toURLString(writing.title))
+      oldIdentifier = null;
 
     Writing.findOne({
       _id: { $ne: writing._id },
@@ -375,9 +434,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
       if (err) return callback('database_error');
       if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = writing.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+      const identifiers = writing.identifiers.filter(each => each != oldIdentifier);
+      if (!identifiers.includes(newIdentifier))
+        identifiers.push(newIdentifier);
       const identifier_languages = {
-        newIdentifier: data.language
+        [newIdentifier]: data.language
       };
   
       Object.keys(writing.identifier_languages).forEach(key => {
@@ -389,10 +450,36 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
         identifiers,
         identifier_languages,
         translations
-      }}, err => {
+      }}, { new: true }, (err, writing) => {
         if (err) return callback('database_error');
   
-        return callback(null);
+        const searchTitle = new Set();
+        const searchSubtitle = new Set();
+
+        writing.name.split(' ').forEach(word => searchTitle.add(word));
+        writing.translations.tr.name.split(' ').forEach(word => searchTitle.add(word));
+        writing.translations.ru.name.split(' ').forEach(word => searchTitle.add(word));
+        writing.description.split(' ').forEach(word => searchSubtitle.add(word));
+        writing.translations.tr.description.split(' ').forEach(word => searchSubtitle.add(word));
+        writing.translations.ru.description.split(' ').forEach(word => searchSubtitle.add(word));
+
+        Writing.findByIdAndUpdate(writing._id, {$set: {
+          search_title: Array.from(searchTitle).join(' '),
+          search_subtitle: Array.from(searchSubtitle).join(' ')
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Writing.collection
+            .createIndex(
+              { search_title: 'text', search_subtitle: 'text' },
+              { weights: {
+                search_title: 10,
+                search_subtitle: 1
+              } }
+            )
+            .then(() => callback(null))
+            .catch(_ => callback('index_error'));
+        });
       });
     });
   });
@@ -418,6 +505,9 @@ WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, da
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
 
+  if (data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.title = { $regex: data.title.trim(), $options: 'i' };
+
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Writing
       .find(filters)
@@ -426,7 +516,7 @@ WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, da
       .skip(skip)
       .then(writings => async.timesSeries(
         writings.length,
-        (time, next) => Writing.findWritingByIdAndFormat(writings[time]._id, (err, writing) => next(err, writing)),
+        (time, next) => Writing.findWritingByIdAndParentIdAndFormat(writings[time]._id, parent_id, (err, writing) => next(err, writing)),
         (err, writings) => {
           if (err) return callback(err);
 
@@ -452,7 +542,7 @@ WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, da
       .skip(skip)
       .then(writings => async.timesSeries(
         writings.length,
-        (time, next) => Writing.findWritingByIdAndFormat(writings[time]._id, (err, writing) => next(err, writing)),
+        (time, next) => Writing.findWritingByIdAndParentIdAndFormat(writings[time]._id, parent_id, (err, writing) => next(err, writing)),
         (err, writings) => {
           if (err) return callback(err);
 
@@ -483,6 +573,9 @@ WritingSchema.statics.findWritingCountByParentIdAndFilters = function (parent_id
 
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
+
+  if (data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.title = { $regex: data.title.trim(), $options: 'i' };
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Writing
@@ -519,7 +612,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
 
       Writing.find({
         parent_id: writing.parent_id,
-        order: { gt: writing.order }
+        order: { $gt: writing.order }
       }, (err, writings) => {
         if (err) return callback('database_error');
 
@@ -570,7 +663,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
       err => {
         if (err) return callback(err);
 
-        Writing.findWritingCountByParentIdAndFilters(parent._id, { is_deleted: false }, (err, order) => {
+        Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
           if (err) return callback(err);
 
           Writing.findByIdAndUpdate(writing._id, {
@@ -590,19 +683,19 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
   });
 };
 
-WritingSchema.statics.findWritingByIdAndIncOrderByOne = function (id, callback) {
+WritingSchema.statics.findWritingByIdAndParentIdAndIncOrderByOne = function (id, parent_id, callback) {
   const Writing = this;
 
-  Writing.findWritingByIdAndParentId(id, (err, writing) => {
+  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
     if (err) return callback(err);
     if (writing.is_deleted) return callback('not_authenticated_request');
 
     Writing.findOne({
+      parent_id: writing.parent_id,
       order: writing.order + 1
     }, (err, prev_writing) => {
       if (err) return callback('database_error');
-      if (!prev_writing)
-        return callback(null);
+      if (!prev_writing) return callback(null);
 
       Writing.findByIdAndUpdate(writing._id, {$inc: {
         order: 1
@@ -619,6 +712,16 @@ WritingSchema.statics.findWritingByIdAndIncOrderByOne = function (id, callback) 
       });
     });
   });
+};
+
+WritingSchema.statics.uploadWritingContentImage = function (file, callback) {
+  Image.createImage({
+    file_name: file.filename,
+    original_name: generateRandomHEX(DEFAULT_IMAGE_RANDOM_NAME_LENGTH),
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+    is_used: false
+  }, (err, url) => callback(err, url));
 };
 
 module.exports = mongoose.model('Writing', WritingSchema);
