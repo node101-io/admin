@@ -4,6 +4,7 @@
   --writing-content-item-min-height: 35px;
   --writing-content-item-button-size: 35px;
   --writing-add-item-animation-duration: 0.25s;
+  --writing-image-width: 500px;
 }
 
 .general-writing-unsaved-changes-text {
@@ -355,6 +356,7 @@
   background-color: var(--inner-box-color);
   padding-left: 8px;
   border-radius: 4px;
+  margin-left: 3px;
 }
 .general-writing-each-content-item-add-button-choices-open-animation-class {
   animation: var(--writing-add-item-animation-duration) forwards ease-in general-writing-each-content-item-add-button-choices-open-animation;
@@ -567,6 +569,63 @@
 }
 .general-writing-text-underline {
   text-decoration: underline;
+}
+
+.general-writing-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+.general-writing-alt-text {
+  position: absolute;
+  left: calc((100% - var(--writing-image-width)) / 2);
+  top: 15px;
+  background-color: var(--box-color);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 4px 8px;
+  outline: none;
+  opacity: 0.8;
+  border-top-left-radius: 2px;
+  min-width: 150px;
+}
+.general-writing-alt-text::before {
+  content: 'Alt Text: ';
+  font-weight: 600;
+}
+.general-writing-alt-text:empty:not(:focus):before {
+  content: 'Enter the alt text.';
+  color: var(--placeholder-color);
+}
+.general-writing-image {
+  width: var(--writing-image-width);
+  min-width: var(--writing-image-width);
+  height: auto;
+  min-height: auto;
+  border-radius: 2px;
+}
+.general-writing-image-description {
+  max-width: var(--writing-image-width);
+  width: auto;
+  height: fit-content;
+  min-height: fit-content;
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 15px;
+  margin-top: 10px;
+  outline: none;
+  text-align: center;
+}
+.general-writing-image-description:empty:not(:focus):before {
+  content: 'Enter the image description.';
+  color: var(--placeholder-color);
 }
 
 .general-writing-list {

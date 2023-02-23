@@ -329,7 +329,8 @@ BlogSchema.statics.findBlogByIdAndUpdateImage = function (id, file, callback) {
       file_name: file.filename,
       original_name: IMAGE_NAME_PREFIX + blog.title,
       width: IMAGE_WIDTH,
-      height: IMAGE_HEIGHT
+      height: IMAGE_HEIGHT,
+      is_used: true
     }, (err, url) => {
       if (err) return callback(err);
   
