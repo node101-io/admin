@@ -24,7 +24,7 @@
   height: var(--writing-selection-menu-height);
   min-height: var(--writing-selection-menu-height);
   background-color: var(--box-color);
-  border-radius: 7px;
+  border-radius: 2px;
   position: fixed;
   left: 100vw;
   transform: translate(-5px, calc(-100% + 13px));
@@ -47,6 +47,21 @@
 }
 .general-writing-selection-menu-icon-selected {
   fill: var(--main-color);
+}
+.general-writing-selection-menu-url-input {
+  position: absolute;
+  top: -28px;
+  left: calc(100% - 40px);
+  width: auto;
+  height: 30px;
+  background-color: var(--box-color);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+  outline: none;
+  border: none;
+  padding: 0 10px;
+  border-radius: 2px;
 }
 
 .general-writing-loading-image-prompt, .general-writing-saving-prompt {
@@ -568,6 +583,14 @@
   font-style: italic;
 }
 .general-writing-text-underline {
+  text-decoration: underline;
+}
+.general-writing-text-url {
+  color: var(--main-color) !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+.general-writing-text-url:hover {
   text-decoration: underline;
 }
 

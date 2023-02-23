@@ -19,7 +19,7 @@ module.exports = (req, res) => {
         includes: {
           external: {
             css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'highlight.js', 'items', 'navbar', 'navigation', 'text', 'writing'],
-            js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'highlight.js', 'navbarListeners', 'page', 'serverRequest', 'writing']
+            js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'highlight.js', 'generateRandomHEX', 'navbarListeners', 'page', 'serverRequest', 'writing']
           }
         },
         translations,

@@ -1,3 +1,5 @@
+const RANDOM_NODE_ID_LENGTH = 16;
+
 let writing = null; // GLOBAL
 let isSaved = true; // GLOBAL
 let clickedCreateHeaderNode = null;
@@ -6,9 +8,11 @@ let isSelectionMenuOpen = false;
 let selectionIndex = -1;
 let selectionAbsoluteIndex = -1;
 let selectionNode = null;
+let activeLinkNodeId = null;
 let focusNode = null;
 let anchorNode = null;
 let selectionString = null;
+
 const editableContentItemsList = [
   'general-writing-text',
   'general-writing-list'
@@ -1145,6 +1149,144 @@ window.addEventListener('load', () => {
         target.classList.add('general-writing-selection-menu-icon-selected');
       }
     }
+
+    if (ancestorWithClassName(event.target, 'general-writing-url-button')) {
+      event.preventDefault();
+
+      const target = ancestorWithClassName(event.target, 'general-writing-url-button');
+
+      if (selectionIndex < 0 || !anchorNode || !focusNode) {
+        target.parentNode.style.display = 'none';
+        return;
+      }
+
+      setIsSavedFalse();
+
+      const wrapper = ancestorWithClassName(anchorNode, 'general-writing-item');
+
+      if (target.classList.contains('general-writing-selection-menu-icon-selected')) { // Case 1
+        if (!activeLinkNodeId) return;
+
+        const urlContent = document.getElementById(activeLinkNodeId).innerHTML;
+        const beforeUrlArray = wrapper.innerHTML.split(activeLinkNodeId)[0].split('<');
+        beforeUrlArray.pop();
+        const beforeUrl = beforeUrlArray.join('');
+        const afterUrl = wrapper.innerHTML.split(activeLinkNodeId)[1].split('>').filter((_, i) => i > 0).join('');
+
+        wrapper.innerHTML = beforeUrl + urlContent + afterUrl;
+        target.classList.remove('general-writing-selection-menu-icon-selected');  
+        document.querySelector('.general-writing-selection-menu-url-input').style.display = 'none';
+      } else { // Case 2
+        if (!selectionString?.trim().length)
+          return;
+
+        activeLinkNodeId = generateRandomHEX(RANDOM_NODE_ID_LENGTH);
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
+  
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        // openTags = openTags.filter(each => !each.includes('general-writing-text-url')); // We already know that the selection is not in any url tag
+
+        newContentInnerHTML += `<span class='general-writing-text-url-new' link="empty-" id="${activeLinkNodeId}" >`;
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        openTags.unshift('<span class=\'general-writing-text-url-new\'>');
+        
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-url'))
+              newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            if (!tag.includes('general-writing-text-url'))
+              newContentInnerHTML += tag;
+
+            openTags.push(tag);
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        const tempOpenTags = [];
+
+        while (openTags.length > 1) {
+          newContentInnerHTML += '</span>';
+          tempOpenTags.push(openTags.pop());
+        }
+
+        openTags.pop();
+        newContentInnerHTML += '</span>';
+
+        while (tempOpenTags.length)
+          if (tempOpenTags[0].includes('general-writing-text-url')) {
+            tempOpenTags.pop();
+          } else {
+            newContentInnerHTML += tempOpenTags[0];
+            openTags.push(tempOpenTags.pop());
+          }
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML.split('general-writing-text-url-new').join('general-writing-text-url');
+        target.classList.add('general-writing-selection-menu-icon-selected');
+        document.querySelector('.general-writing-selection-menu-url-input').style.display = 'flex';
+        document.querySelector('.general-writing-selection-menu-url-input').value = '';
+        document.querySelector('.general-writing-selection-menu-url-input').focus();
+      }
+    }
   }, true);
 
   document.addEventListener('mouseover', event => {
@@ -1242,6 +1384,22 @@ window.addEventListener('load', () => {
         document.querySelector('.general-writing-underline-button').classList.add('general-writing-selection-menu-icon-selected');
       else
         document.querySelector('.general-writing-underline-button').classList.remove('general-writing-selection-menu-icon-selected');
+
+      if (ancestorWithClassName(focusNode, 'general-writing-text-url') || ancestorWithClassName(anchorNode, 'general-writing-text-url')) {
+        document.querySelector('.general-writing-url-button').classList.add('general-writing-selection-menu-icon-selected');
+        document.querySelector('.general-writing-selection-menu-url-input').style.display = 'flex';
+        
+        if (ancestorWithClassName(focusNode, 'general-writing-text-url'))
+          activeLinkNodeId = ancestorWithClassName(focusNode, 'general-writing-text-url').id;
+        else
+          activeLinkNodeId = ancestorWithClassName(anchorNode, 'general-writing-text-url').id;
+        let url = document.getElementById(activeLinkNodeId).getAttribute('link');
+        document.querySelector('.general-writing-selection-menu-url-input').value = url.substring(6, url.length);
+      } else {
+        activeLinkNode = null;
+        document.querySelector('.general-writing-url-button').classList.remove('general-writing-selection-menu-icon-selected');
+        document.querySelector('.general-writing-selection-menu-url-input').style.display = 'none';
+      }
     } else if (isSelectionMenuOpen && !ancestorWithClassName(event.target, 'general-writing-selection-menu')) {
       selectionMenu.style.display = 'none';
       isSelectionMenuOpen = false;
@@ -1535,6 +1693,11 @@ window.addEventListener('load', () => {
       event.target.style.height = (event.target.scrollHeight) + 'px';
       event.target.style.minHeight = (event.target.scrollHeight) + 'px';
     }
+
+    if (event.target.classList.contains('general-writing-selection-menu-url-input')) {
+      if (!activeLinkNodeId) return;
+      document.getElementById(activeLinkNodeId).setAttribute('link', 'empty-' + event.target.value.trim());
+    }
   });
 
   imageInput.addEventListener('change', event => {
@@ -1555,9 +1718,9 @@ window.addEventListener('load', () => {
   });
 });
 
-// window.addEventListener('beforeunload', event => {
-//   if (!isSaved) {
-//     event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
-//     return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
-//   };
-// });
+window.addEventListener('beforeunload', event => {
+  if (!isSaved) {
+    event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
+    return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
+  };
+});
