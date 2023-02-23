@@ -270,6 +270,16 @@ function createListContentItem(content) {
 
 function createCodeContentItem(content) {
   const newItem = createEachContentItemWrapper();
+
+  const codeWrapper = document.createElement('div');
+  codeWrapper.classList.add('general-writing-item');
+  codeWrapper.classList.add('general-writing-code');
+  codeWrapper.contentEditable = true;
+  codeWrapper.spellcheck = false;
+  codeWrapper.innerHTML = content;
+
+  newItem.childNodes[1].appendChild(codeWrapper);
+  return newItem;
 };
 
 function createQuoteContentItem(content) {
@@ -288,6 +298,13 @@ function createQuoteContentItem(content) {
 
 function createEllipsisContentItem() {
   const newItem = createEachContentItemWrapper();
+
+  const ellipsisWrapper = document.createElement('div');
+  ellipsisWrapper.classList.add('general-writing-ellipsis');
+  ellipsisWrapper.innerHTML = '•••';
+
+  newItem.childNodes[1].appendChild(ellipsisWrapper);
+  return newItem;
 };
 
 function formatHTML(contentInnerHTML, index, options) {
@@ -357,7 +374,8 @@ function generateWritingData() {
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-header') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
-      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote')
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
     ) && contentNodes[i].innerText?.trim().length)
       content.push(contentNodes[i].innerHTML);
 
@@ -437,6 +455,17 @@ window.addEventListener('load', () => {
       setIsSavedFalse();
     }
 
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-code')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createCodeContentItem('');
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
+      newItem.childNodes[1].childNodes[0].focus();
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
+      setIsSavedFalse();
+    }
+
     if (ancestorWithClassName(event.target, 'general-writing-each-choice-quote')) {
       const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
       const newItem = createQuoteContentItem('');
@@ -444,6 +473,17 @@ window.addEventListener('load', () => {
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
       newItem.childNodes[1].childNodes[0].focus();
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
+      setIsSavedFalse();
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-ellipsis')) {
+      console.log("here")
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createEllipsisContentItem();
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
       changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
       setIsSavedFalse();
     }
@@ -484,22 +524,23 @@ window.addEventListener('load', () => {
 
       const target = ancestorWithClassName(event.target, 'general-writing-bold-button');
 
-      if (selectionIndex < 0 || !selectionNode) {
+      if (selectionIndex < 0 || !anchorNode || !focusNode) {
         target.parentNode.style.display = 'none';
         return;
       } else if (!selectionString?.trim().length) {
         return;
       }
 
+      setIsSavedFalse();
+
+      const wrapper = ancestorWithClassName(anchorNode, 'general-writing-item');
+
       if (target.classList.contains('general-writing-selection-menu-icon-selected')) { // Case 1
-        const contentInnerHTML = wrapper.innerHTML.substring(0, wrapper.innerHTML.length - 7);
+        const contentInnerHTML = wrapper.innerHTML;
         let openTags = [];
-        let i = 6;
+        let i = 0;
         let contentInnerText = '';
         let newContentInnerHTML = '';
-
-        if (contentInnerHTML.substring(0, 6) != '<span>')
-          return;
 
         while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
           if (contentInnerHTML.substring(i, i + 7) == '</span>') {
@@ -524,15 +565,14 @@ window.addEventListener('load', () => {
           newContentInnerHTML += '</span>';
 
         for (let i = 0; i < openTags.length; i++)
-          newContentInnerHTML += openTags[i].replace('general-writing-text-bold', 'general-writing-text-empty');
+          if (!openTags[i].includes('general-writing-text-bold'))
+            newContentInnerHTML += openTags[i];
 
         while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
           if (contentInnerHTML.substring(i, i + 7) == '</span>') {
-            newContentInnerHTML += '</span>';
+            if (!openTags[openTags.length - 1].includes('general-writing-text-bold'))
+              newContentInnerHTML += '</span>';
             openTags.pop();
-            openTags.pop();
-            openTags.push('<span class=\'general-writing-text-bold-new\'>');
-            newContentInnerHTML += '<span class=\'general-writing-text-bold-new\'>';
             i += 7;
           } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
             let tag = '';
@@ -540,10 +580,10 @@ window.addEventListener('load', () => {
               tag += contentInnerHTML[i++];
             tag += contentInnerHTML[i++];
 
-            tag.replace('general-writing-text-bold', 'general-writing-text-empty');
+            if (!tag.includes('general-writing-text-bold'))
+              newContentInnerHTML += tag;
 
             openTags.push(tag);
-            newContentInnerHTML += tag;
           } else {
             contentInnerText += contentInnerHTML[i];
             newContentInnerHTML += contentInnerHTML[i++];
@@ -551,9 +591,8 @@ window.addEventListener('load', () => {
         }
 
         for (let i = 0; i < openTags.length; i++)
-          newContentInnerHTML += '</span>';
-
-        openTags = openTags.filter(each => each.replace('general-writing-text-empty', 'general-writing-text-bold'));
+          if (!openTags[i].includes('general-writing-text-bold'))
+            newContentInnerHTML += '</span>';
 
         for (let i = 0; i < openTags.length; i++)
           newContentInnerHTML += openTags[i];
@@ -580,10 +619,10 @@ window.addEventListener('load', () => {
         for (let i = 0; i < openTags.length; i++)
           newContentInnerHTML += '</span>';
 
-        wrapper.innerHTML = formatHTML('<span>' + newContentInnerHTML + '</span>');
+        wrapper.innerHTML = newContentInnerHTML;
         target.classList.remove('general-writing-selection-menu-icon-selected');        
       } else { // Case 2
-        const contentInnerHTML = selectionNode.innerHTML;
+        const contentInnerHTML = wrapper.innerHTML;
         let openTags = [];
         let i = 0;
         let contentInnerText = '';
@@ -625,6 +664,7 @@ window.addEventListener('load', () => {
               newContentInnerHTML += '</span>';
               openTags.pop();
             } else {
+              newContentInnerHTML += '</span>';
               newContentInnerHTML += '</span>';
               openTags.pop();
               openTags.pop();
@@ -683,11 +723,429 @@ window.addEventListener('load', () => {
         for (let i = 0; i < openTags.length; i++)
           newContentInnerHTML += '</span>';
 
-        wrapper.innerHTML = formatHTML('<span>' + newContentInnerHTML.split('general-writing-text-bold-new').join('general-writing-text-bold') + '</span>');
+        wrapper.innerHTML = newContentInnerHTML.split('general-writing-text-bold-new').join('general-writing-text-bold');
         target.classList.add('general-writing-selection-menu-icon-selected');
       }
     }
-  });
+
+    if (ancestorWithClassName(event.target, 'general-writing-italic-button')) {
+      event.preventDefault();
+
+      const target = ancestorWithClassName(event.target, 'general-writing-italic-button');
+
+      if (selectionIndex < 0 || !anchorNode || !focusNode) {
+        target.parentNode.style.display = 'none';
+        return;
+      } else if (!selectionString?.trim().length) {
+        return;
+      }
+
+      setIsSavedFalse();
+
+      const wrapper = ancestorWithClassName(anchorNode, 'general-writing-item');
+
+      if (target.classList.contains('general-writing-selection-menu-icon-selected')) { // Case 1
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-italic'))
+            newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-italic'))
+              newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            if (!tag.includes('general-writing-text-italic'))
+              newContentInnerHTML += tag;
+
+            openTags.push(tag);
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-italic'))
+            newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML;
+        target.classList.remove('general-writing-selection-menu-icon-selected');        
+      } else { // Case 2
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
+  
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        openTags = openTags.filter(each => !each.includes('general-writing-text-italic')); // If any of these tags finish before new tag, then it would fall into case 1
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        openTags.push('<span class=\'general-writing-text-italic-new\'>');
+        newContentInnerHTML += '<span class=\'general-writing-text-italic-new\'>';
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-italic-new')) {
+              newContentInnerHTML += '</span>';
+              openTags.pop();
+            } else {
+              newContentInnerHTML += '</span>';
+              newContentInnerHTML += '</span>';
+              openTags.pop();
+              openTags.pop();
+              openTags.push('<span class=\'general-writing-text-italic-new\'>');
+              newContentInnerHTML += '<span class=\'general-writing-text-italic-new\'>';
+            }
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        const tempOpenTags = [];
+
+        while (!openTags[openTags.length - 1].includes('general-writing-text-italic-new')) {
+          tempOpenTags.push(openTags.pop());
+          newContentInnerHTML += '</span>';
+        }
+
+        openTags.pop();
+        newContentInnerHTML += '</span>';
+
+        while (tempOpenTags.length) {
+          newContentInnerHTML += tempOpenTags[0];
+          openTags.push(tempOpenTags.pop());
+        }
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML.split('general-writing-text-italic-new').join('general-writing-text-italic');
+        target.classList.add('general-writing-selection-menu-icon-selected');
+      }
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-underline-button')) {
+      event.preventDefault();
+
+      const target = ancestorWithClassName(event.target, 'general-writing-underline-button');
+
+      if (selectionIndex < 0 || !anchorNode || !focusNode) {
+        target.parentNode.style.display = 'none';
+        return;
+      } else if (!selectionString?.trim().length) {
+        return;
+      }
+
+      setIsSavedFalse();
+
+      const wrapper = ancestorWithClassName(anchorNode, 'general-writing-item');
+
+      if (target.classList.contains('general-writing-selection-menu-icon-selected')) { // Case 1
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-underline'))
+            newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-underline'))
+              newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            if (!tag.includes('general-writing-text-underline'))
+              newContentInnerHTML += tag;
+
+            openTags.push(tag);
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-underline'))
+            newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML;
+        target.classList.remove('general-writing-selection-menu-icon-selected');        
+      } else { // Case 2
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
+  
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        openTags = openTags.filter(each => !each.includes('general-writing-text-underline')); // If any of these tags finish before new tag, then it would fall into case 1
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        openTags.push('<span class=\'general-writing-text-underline-new\'>');
+        newContentInnerHTML += '<span class=\'general-writing-text-underline-new\'>';
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-underline-new')) {
+              newContentInnerHTML += '</span>';
+              openTags.pop();
+            } else {
+              newContentInnerHTML += '</span>';
+              newContentInnerHTML += '</span>';
+              openTags.pop();
+              openTags.pop();
+              openTags.push('<span class=\'general-writing-text-underline-new\'>');
+              newContentInnerHTML += '<span class=\'general-writing-text-underline-new\'>';
+            }
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        const tempOpenTags = [];
+
+        while (!openTags[openTags.length - 1].includes('general-writing-text-underline-new')) {
+          tempOpenTags.push(openTags.pop());
+          newContentInnerHTML += '</span>';
+        }
+
+        openTags.pop();
+        newContentInnerHTML += '</span>';
+
+        while (tempOpenTags.length) {
+          newContentInnerHTML += tempOpenTags[0];
+          openTags.push(tempOpenTags.pop());
+        }
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML.split('general-writing-text-underline-new').join('general-writing-text-underline');
+        target.classList.add('general-writing-selection-menu-icon-selected');
+      }
+    }
+  }, true);
 
   document.addEventListener('mouseover', event => {
     if (ancestorWithClassName(event.target, 'general-writing-each-content-item-wrapper')) {
@@ -719,8 +1177,6 @@ window.addEventListener('load', () => {
   document.addEventListener('mouseup', event => {
     if (ancestorWithClassName(event.target, 'general-writing-item')) {
       const selection = document.getSelection();
-      const target = ancestorWithClassName(event.target, 'general-writing-item');
-
       let anchorIndex = selection.anchorOffset;
       let focusIndex = selection.focusOffset;
   
@@ -731,7 +1187,7 @@ window.addEventListener('load', () => {
           if (anchorPrev.innerText?.length)
             anchorIndex += anchorPrev.innerText.length;
           else if (anchorPrev.nodeValue?.length)
-            anchorIndex += anchorPrev.nodeValue.length - 1;
+            anchorIndex += anchorPrev.nodeValue.length;
         }
   
         anchorPrev = anchorPrev.parentNode;
@@ -744,7 +1200,7 @@ window.addEventListener('load', () => {
           if (focusPrev.innerText?.length)
             focusIndex += focusPrev.innerText.length;
           else if (focusPrev.nodeValue?.length)
-            focusIndex += focusPrev.nodeValue.length - 1;
+            focusIndex += focusPrev.nodeValue.length;
         }
   
         focusPrev = focusPrev.parentNode;
@@ -759,6 +1215,8 @@ window.addEventListener('load', () => {
         focusNode = selection?.anchorNode?.parentNode;
         selectionIndex = focusIndex;
       }
+
+      selectionString = selection.toString();
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-item') && editableContentItemsList.find(each => ancestorWithClassName(event.target, each))) {
@@ -800,8 +1258,6 @@ window.addEventListener('load', () => {
 
     if (ancestorWithClassName(event.target, 'general-writing-item')) {
       const selection = document.getSelection();
-      const target = ancestorWithClassName(event.target, 'general-writing-item');
-
       let anchorIndex = selection.anchorOffset;
       let focusIndex = selection.focusOffset;
   
@@ -812,7 +1268,7 @@ window.addEventListener('load', () => {
           if (anchorPrev.innerText?.length)
             anchorIndex += anchorPrev.innerText.length;
           else if (anchorPrev.nodeValue?.length)
-            anchorIndex += anchorPrev.nodeValue.length - 1;
+            anchorIndex += anchorPrev.nodeValue.length;
         }
   
         anchorPrev = anchorPrev.parentNode;
@@ -825,7 +1281,7 @@ window.addEventListener('load', () => {
           if (focusPrev.innerText?.length)
             focusIndex += focusPrev.innerText.length;
           else if (focusPrev.nodeValue?.length)
-            focusIndex += focusPrev.nodeValue.length - 1;
+            focusIndex += focusPrev.nodeValue.length;
         }
   
         focusPrev = focusPrev.parentNode;
@@ -840,6 +1296,8 @@ window.addEventListener('load', () => {
         focusNode = selection?.anchorNode?.parentNode;
         selectionIndex = focusIndex;
       }
+
+      selectionString = selection.toString();
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-header')) {
@@ -1055,7 +1513,17 @@ window.addEventListener('load', () => {
 
   document.addEventListener('focusout', event => {
     if (event.target.classList.contains('general-writing-code')) {
-      event.target.innerHTML = event.target.innerHTML.split('<div>').join('\n');
+      // const children = event.target.children;
+      // let newInnerContent = '';
+      // for (let i = 0; i < children.length; i++){
+      //   console.log(children[i])
+      //   newInnerContent += (i > 0 ? '\n' : '') + (children[i].nodeValue || children[i].innerText)}
+      // // const newInnerContent = event.target.children.map(each => each.nodeValue || each.innerText).join('\n');
+      // console.log(newInnerContent)
+      // const content = event.target.innerHTML.split('</div>').join('\n').split(/<[^>]+>/g).join('');
+      // console.log(content);
+      // console.log(JSON.stringify(content));
+      // event.target.innerHTML = hljs.highlightElement('json', JSON.stringify(content)).value;
       hljs.highlightElement(event.target);
     }
   });

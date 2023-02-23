@@ -37,6 +37,7 @@ block main
       svg.general-writing-each-content-item-add-button-each-header-choice-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
         path(d='M0 64C0 46.3 14.3 32 32 32H80h48c17.7 0 32 14.3 32 32s-14.3 32-32 32H112V208H336V96H320c-17.7 0-32-14.3-32-32s14.3-32 32-32h48 48c17.7 0 32 14.3 32 32s-14.3 32-32 32H400V240 416h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H368 320c-17.7 0-32-14.3-32-32s14.3-32 32-32h16V272H112V416h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H80 32c-17.7 0-32-14.3-32-32s14.3-32 32-32H48V240 96H32C14.3 96 0 81.7 0 64z')
       .general-writing-each-content-item-add-button-each-header-choice-size 6
+  .general-writing-each-content-item-add-video-url-input(contenteditable='true' spellcheck='false')
   input.display-none#general-writing-select-file-input(type='file')
   .general-writing-loading-image-prompt(style='display: none') #{__('Loading Image')}...
   .general-writing-saving-prompt(style='display: none') #{__('Saving')}...
@@ -65,6 +66,7 @@ block main
           .general-writing-each-content-item-wrapper-empty
             .general-writing-each-content-item-left-options-wrapper(style='visibility: visible')
               .general-writing-each-content-item-options-line
+                .display-none
                 .general-writing-each-content-item-add-button-wrapper
                   .general-writing-each-content-item-add-button
                     svg.general-writing-each-content-item-add-button-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
@@ -129,7 +131,7 @@ block main
                       .general-writing-each-content-item-add-button-each-choice.general-writing-each-choice-quote
                         svg.general-writing-each-content-item-add-button-each-choice-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
                           path(d='M0 216C0 149.7 53.7 96 120 96h8c17.7 0 32 14.3 32 32s-14.3 32-32 32h-8c-30.9 0-56 25.1-56 56v8h64c35.3 0 64 28.7 64 64v64c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V320 288 216zm256 0c0-66.3 53.7-120 120-120h8c17.7 0 32 14.3 32 32s-14.3 32-32 32h-8c-30.9 0-56 25.1-56 56v8h64c35.3 0 64 28.7 64 64v64c0 35.3-28.7 64-64 64H320c-35.3 0-64-28.7-64-64V320 288 216z')
-                      .general-writing-each-content-item-add-button-each-choice#general-writing-each-choice-ellipsis
+                      .general-writing-each-content-item-add-button-each-choice.general-writing-each-choice-ellipsis
                         svg.general-writing-each-content-item-add-button-each-choice-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
                           path(d='M0 256a56 56 0 1 1 112 0A56 56 0 1 1 0 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z')
               .general-writing-each-content-item-inner-wrapper !{item}

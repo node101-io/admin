@@ -654,12 +654,15 @@
   outline: none;
   background-color: var(--box-color) !important;
   font-weight: 600 !important;
+  padding: 15px 30px;
+  color: var(--text-color);
 }
 
 .general-writing-quote {
   padding: 15px 0;
-  width: calc(100% - 200px) !important;
-  min-width: calc(100% - 200px) !important;
+  max-width: calc(100% - 300px) !important;
+  min-width: auto !important;
+  width: auto !important;
   justify-self: center;
   font-size: 17px;
   font-weight: 300;
@@ -689,7 +692,7 @@
   color: var(--placeholder-color);
 }
 
-.general-writing-bullets {
+.general-writing-ellipsis {
   display: flex;
   align-items: center;
   justify-content: center;
