@@ -71,7 +71,7 @@ const WritingSchema = new Schema({
   },
   subtitle: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
@@ -390,8 +390,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
             }}, err => {
               if (err) return callback('database_error');
 
-              const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
-              const newImages = writing.content.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+              const oldImages = oldContent?.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+              const newImages = writing?.content?.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
 
               async.timesSeries(
                 oldImages.length,

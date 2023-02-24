@@ -405,6 +405,13 @@ function formatHlJSCode(wrapper) {
   wrapper.innerHTML = content;
 };
 
+function formatTitleAndSubtitleHeight() {
+  document.querySelector('.general-writing-title').style.height = (document.querySelector('.general-writing-title').scrollHeight) + 'px';
+  document.querySelector('.general-writing-title').style.minHeight = (document.querySelector('.general-writing-title').scrollHeight) + 'px';
+  document.querySelector('.general-writing-subtitle').style.height = (document.querySelector('.general-writing-subtitle').scrollHeight) + 'px';
+  document.querySelector('.general-writing-subtitle').style.minHeight = (document.querySelector('.general-writing-subtitle').scrollHeight) + 'px';
+}
+
 function generateWritingData() {
   const contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper');
   const content = [];
@@ -413,12 +420,13 @@ function generateWritingData() {
     if ((
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-header') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text') ||
-      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-image-wrapper') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-video-wrapper') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
     ) && contentNodes[i].innerText?.trim().length)
+      content.push(contentNodes[i].innerHTML);
+    else if (contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-image-wrapper'))
       content.push(contentNodes[i].innerHTML);
 
   return {
@@ -438,6 +446,7 @@ function setIsSavedFalse() {
 window.addEventListener('load', () => {
   writing = JSON.parse(document.getElementById('writing-json').value);
   hljs.highlightAll();
+  formatTitleAndSubtitleHeight();
 
   const selectionMenu = document.querySelector('.general-writing-selection-menu');
   const headerChoicesWrapper = document.querySelector('.general-writing-each-content-item-add-header-choices-wrapper');
