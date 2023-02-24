@@ -1,11 +1,13 @@
 const RANDOM_NODE_ID_LENGTH = 16;
+const VIDEO_WIDTH = 500;
+const VIDEO_HEIGHT = 300;
 
 let writing = null; // GLOBAL
 let isSaved = true; // GLOBAL
 let clickedCreateHeaderNode = null;
 let hoveredContentItem = null;
 let isSelectionMenuOpen = false;
-let clickedImageButtonNode = null;
+let clickedAddItemButtonNode = null;
 let selectionIndex = -1;
 let selectionAbsoluteIndex = -1;
 let selectionNode = null;
@@ -255,8 +257,41 @@ function createImageContentItem(url, text) {
   return newItem;
 };
 
-function createVideoContentItem(url, text, alt) {
+function createVideoContentItem(url, text) {
   const newItem = createEachContentItemWrapper();
+
+  const videoWrapper = document.createElement('div');
+  videoWrapper.classList.add('general-writing-video-wrapper');
+
+  const urlText = document.createElement('div');
+  urlText.classList.add('general-writing-video-url');
+  urlText.contentEditable = 'true';
+  urlText.spellcheck = 'false';
+  urlText.innerHTML = url;
+  videoWrapper.appendChild(urlText);
+
+  const altText = document.createElement('div');
+  altText.classList.add('general-writing-video-alt-text');
+  altText.contentEditable = 'true';
+  altText.spellcheck = 'false';
+  videoWrapper.appendChild(altText);
+
+  const video = document.createElement('iframe');
+  video.classList.add('general-writing-video');
+  video.src = url;
+  video.height = VIDEO_HEIGHT + 'px';
+  video.width = VIDEO_WIDTH + 'px';
+  videoWrapper.appendChild(video);
+
+  const videoDescription = document.createElement('div');
+  videoDescription.classList.add('general-writing-video-description');
+  videoDescription.innerHTML = text ? text : '';
+  videoDescription.contentEditable = 'true';
+  videoDescription.spellcheck = 'false';
+  videoWrapper.appendChild(videoDescription);
+
+  newItem.childNodes[1].appendChild(videoWrapper);
+  return newItem;
 };
 
 function createListContentItem(content) {
@@ -379,6 +414,7 @@ function generateWritingData() {
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-header') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-image-wrapper') ||
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-video-wrapper') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
@@ -447,8 +483,18 @@ window.addEventListener('load', () => {
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-each-choice-image')) {
-      clickedImageButtonNode = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      clickedAddItemButtonNode = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
       imageInput.click();
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-video')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createVideoContentItem('', '');
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
+      newItem.childNodes[1].childNodes[0].childNodes[0].focus();
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-each-choice-list')) {
@@ -1315,7 +1361,7 @@ window.addEventListener('load', () => {
       hoveredContentItem.classList.remove('general-writing-each-content-item-wrapper-hovered');
       hoveredContentItem.childNodes[0].style = 'visibility: hidden';
       hoveredContentItem.childNodes[2].style = 'visibility: hidden';
-      hoveredContentItem = null
+      hoveredContentItem = null;
     }
   });
 
@@ -1704,28 +1750,34 @@ window.addEventListener('load', () => {
       if (!activeLinkNodeId) return;
       document.getElementById(activeLinkNodeId).setAttribute('link', 'empty-' + event.target.value.trim());
     }
+
+    if (event.target.classList.contains('general-writing-video-url')) {
+      event.target.nextElementSibling.nextElementSibling.src = event.target.innerHTML;
+    }
   });
 
-  imageInput.addEventListener('change', event => {
-    const file = event.target.files[0];
-    if (!file || !clickedImageButtonNode) return;
-    imageLoadingPrompt.style.display = 'flex';
-
-    serverRequest('/writing/image?id=' + writing._id, 'FILE', {
-      file
-    }, res => {
-      if (!res.success) {
+  document.addEventListener('change', event => {
+    if (event.target.id == 'general-writing-select-file-input') {
+      const file = event.target.files[0];
+      if (!file || !clickedAddItemButtonNode) return;
+      imageLoadingPrompt.style.display = 'flex';
+  
+      serverRequest('/writing/image?id=' + writing._id, 'FILE', {
+        file
+      }, res => {
+        if (!res.success) {
+          imageLoadingPrompt.style.display = 'none';
+          return throwError(res.error);
+        }
+  
+        const newItem = createImageContentItem(res.url, '');
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, clickedAddItemButtonNode);
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(clickedAddItemButtonNode, newItem);
+        changeAddContentState(clickedAddItemButtonNode.childNodes[0].childNodes[0].childNodes[1]);
         imageLoadingPrompt.style.display = 'none';
-        return throwError(res.error);
-      }
-
-      const newItem = createImageContentItem(res.url, '');
-      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, clickedImageButtonNode);
-      document.querySelector('.general-writing-content-items-wrapper').insertBefore(clickedImageButtonNode, newItem);
-      changeAddContentState(clickedImageButtonNode.childNodes[0].childNodes[0].childNodes[1]);
-      imageLoadingPrompt.style.display = 'none';
-      setIsSavedFalse();
-    });
+        setIsSavedFalse();
+      });
+    }    
   });
 });
 

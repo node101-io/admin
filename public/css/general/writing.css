@@ -6,6 +6,8 @@
   --writing-content-item-button-size: 35px;
   --writing-add-item-animation-duration: 0.25s;
   --writing-image-width: 500px;
+  --writing-video-width: 500px;
+  --writing-video-height: 300px;
 }
 
 .general-writing-unsaved-changes-text {
@@ -536,7 +538,7 @@
   padding: 15px 0;
   font-weight: 800;
 }
-.general-writing-header:empty:not(:focus):before {
+.general-writing-header:empty:before {
   content: "This is a header";
   color: var(--placeholder-color);
 }
@@ -573,7 +575,7 @@
   outline: none;
   padding: 15px 0;
 }
-.general-writing-text:empty:not(:focus):before {
+.general-writing-text:empty:before {
   content: "This is a text.";
   color: var(--placeholder-color);
 }
@@ -623,7 +625,7 @@
   content: 'Alt Text: ';
   font-weight: 600;
 }
-.general-writing-alt-text:empty:not(:focus):before {
+.general-writing-alt-text:empty:before {
   content: 'Enter the alt text.';
   color: var(--placeholder-color);
 }
@@ -646,8 +648,82 @@
   outline: none;
   text-align: center;
 }
-.general-writing-image-description:empty:not(:focus):before {
+.general-writing-image-description:empty:before {
   content: 'Enter the image description.';
+  color: var(--placeholder-color);
+}
+
+.general-writing-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+.general-writing-video-url {
+  position: absolute;
+  left: calc((100% - var(--writing-image-width)) / 2);
+  top: 15px;
+  background-color: var(--box-color);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 5px 8px;
+  min-width: 300px;
+  outline: none;
+  overflow-x: auto;
+}
+.general-writing-video-url::before {
+  content: 'Video Url: ';
+  font-weight: 600;
+}
+.general-writing-video-url:empty:before {
+  content: 'Enter the video url.';
+  color: var(--placeholder-color);
+}
+.general-writing-video-alt-text {
+  position: absolute;
+  left: calc((100% - var(--writing-image-width)) / 2);
+  top: 41px;
+  background-color: var(--box-color);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 5px 8px;
+  outline: none;
+  min-width: 150px;
+}
+.general-writing-video-alt-text::before {
+  content: 'Alt Text: ';
+  font-weight: 600;
+}
+.general-writing-video-alt-text:empty:before {
+  content: 'Enter the video alt text.';
+  color: var(--placeholder-color);
+}
+.general-writing-video {
+  border-radius: 2px;
+  background-color: var(--box-color);
+  border: none;
+}
+.general-writing-video-description {
+  max-width: var(--writing-image-width);
+  width: auto;
+  height: fit-content;
+  min-height: fit-content;
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 15px;
+  margin-top: 10px;
+  outline: none;
+  text-align: center;
+}
+.general-writing-video-description:empty:before {
+  content: 'Enter the video description.';
   color: var(--placeholder-color);
 }
 
