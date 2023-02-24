@@ -5,6 +5,7 @@ let isSaved = true; // GLOBAL
 let clickedCreateHeaderNode = null;
 let hoveredContentItem = null;
 let isSelectionMenuOpen = false;
+let clickedImageButtonNode = null;
 let selectionIndex = -1;
 let selectionAbsoluteIndex = -1;
 let selectionNode = null;
@@ -377,6 +378,7 @@ function generateWritingData() {
     if ((
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-header') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text') ||
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-image-wrapper') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
@@ -445,6 +447,7 @@ window.addEventListener('load', () => {
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-each-choice-image')) {
+      clickedImageButtonNode = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
       imageInput.click();
     }
 
@@ -1631,7 +1634,10 @@ window.addEventListener('load', () => {
         if (!target.innerText.length) {
           if (target.previousElementSibling)
             target.previousElementSibling.focus();
-          target.remove();
+          if (target.parentNode.childNodes.length == 1)
+            target.parentNode.parentNode.remove();
+          else
+            target.remove();
         } else if (selectionIndex == 0 && target.previousElementSibling?.classList?.contains('general-writing-list')) {
           const prevElement = target.previousElementSibling;
           prevElement.innerHTML = prevElement.innerHTML + target.innerHTML;
@@ -1702,7 +1708,7 @@ window.addEventListener('load', () => {
 
   imageInput.addEventListener('change', event => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file || !clickedImageButtonNode) return;
     imageLoadingPrompt.style.display = 'flex';
 
     serverRequest('/writing/image?id=' + writing._id, 'FILE', {
@@ -1713,7 +1719,12 @@ window.addEventListener('load', () => {
         return throwError(res.error);
       }
 
-      console.log(res.image);
+      const newItem = createImageContentItem(res.url, '');
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, clickedImageButtonNode);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(clickedImageButtonNode, newItem);
+      changeAddContentState(clickedImageButtonNode.childNodes[0].childNodes[0].childNodes[1]);
+      imageLoadingPrompt.style.display = 'none';
+      setIsSavedFalse();
     });
   });
 });

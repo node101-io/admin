@@ -38,7 +38,7 @@ block main
       svg.general-writing-each-content-item-add-button-each-header-choice-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
         path(d='M0 64C0 46.3 14.3 32 32 32H80h48c17.7 0 32 14.3 32 32s-14.3 32-32 32H112V208H336V96H320c-17.7 0-32-14.3-32-32s14.3-32 32-32h48 48c17.7 0 32 14.3 32 32s-14.3 32-32 32H400V240 416h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H368 320c-17.7 0-32-14.3-32-32s14.3-32 32-32h16V272H112V416h16c17.7 0 32 14.3 32 32s-14.3 32-32 32H80 32c-17.7 0-32-14.3-32-32s14.3-32 32-32H48V240 96H32C14.3 96 0 81.7 0 64z')
       .general-writing-each-content-item-add-button-each-header-choice-size 6
-  .general-writing-each-content-item-add-video-url-input(contenteditable='true' spellcheck='false')
+  //- .general-writing-each-content-item-add-video-url-input(contenteditable='true' spellcheck='false')
   input.display-none#general-writing-select-file-input(type='file')
   .general-writing-loading-image-prompt(style='display: none') #{__('Loading Image')}...
   .general-writing-saving-prompt(style='display: none') #{__('Saving')}...
@@ -59,7 +59,7 @@ block main
       .general-writing-content
         label.general-writing-cover-wrapper(style='cursor: pointer')
           input.display-none.general-writing-cover-input(type='file')
-          span.general-writing-cover-placeholder= __('Click to load a cover image to the writing. (4:1)')
+          span.general-writing-cover-placeholder= __('Click to load a cover image to the writing. (752:414)')
           img.general-writing-cover-image(alt=writing.title src=writing.cover style=`display: ${writing.cover ? 'flex' : 'none'}`)
         textarea.general-writing-title(contecontenteditable=true spellcheck=false placeholder=__('Writing Title'))= writing.title
         textarea.general-writing-subtitle(contenteditable=true spellcheck=false placeholder=__('Writing Subtitle'))= writing.subtitle

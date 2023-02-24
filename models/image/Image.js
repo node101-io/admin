@@ -196,22 +196,4 @@ ImageSchema.statics.findImageByUrlAndSetAsUsed = function (url, callback) {
   });
 };
 
-ImageSchema.statics.findImageByUrlAndRename = function (url, data, callback) {
-  const Image = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
-
-  Image.findImageByUrl(url, (err, image) => {
-    if (err) return callback(err);
-
-    Image.findOne({
-      url
-    })
-  })
-}
-
 module.exports = mongoose.model('Image', ImageSchema);

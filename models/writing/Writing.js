@@ -18,12 +18,13 @@ const isWritingComplete = require('./functions/isWritingComplete');
 
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const COVER_HEIGHT = 300;
-const COVER_WIDTH = 900;
+const COVER_HEIGHT = 414;
+const COVER_WIDTH = 752;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 500;
 const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
 const IMAGE_NAME_PREFIX = 'node101 writing cover ';
+const IMAGE_IDENTIFIER_CLASS_NAME = 'general-writing-image';
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
@@ -325,6 +326,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
     if (err) return callback(err);
     if (writing.is_deleted) return callback('not_authenticated_request');
 
+    const oldContent = writing.content;
+
      if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
@@ -386,17 +389,33 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
               search_subtitle: Array.from(searchSubtitle).join(' ')
             }}, err => {
               if (err) return callback('database_error');
-  
-              Writing.collection
-                .createIndex(
-                  { search_title: 'text', search_subtitle: 'text' },
-                  { weights: {
-                    search_title: 10,
-                    search_subtitle: 1
-                  } }
-                )
-                .then(() => callback(null))
-                .catch(_ => callback('index_error'));
+
+              const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+              const newImages = writing.content.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+
+              async.timesSeries(
+                oldImages.length,
+                (time, next) => {
+                  if (newImages.includes(oldImages[time]))
+                    return next(null);
+
+                  return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
+                },
+                err => {
+                  if (err) return callback(err);
+
+                  Writing.collection
+                    .createIndex(
+                      { search_title: 'text', search_subtitle: 'text' },
+                      { weights: {
+                        search_title: 10,
+                        search_subtitle: 1
+                      } }
+                    )
+                    .then(() => callback(null))
+                    .catch(_ => callback('index_error'));
+                }
+              );
             });
           });
         });
@@ -720,7 +739,7 @@ WritingSchema.statics.uploadWritingContentImage = function (file, callback) {
     original_name: generateRandomHEX(DEFAULT_IMAGE_RANDOM_NAME_LENGTH),
     width: IMAGE_WIDTH,
     height: IMAGE_HEIGHT,
-    is_used: false
+    is_used: true
   }, (err, url) => callback(err, url));
 };
 

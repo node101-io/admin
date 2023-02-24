@@ -1,5 +1,6 @@
 :root {
   --writing-width: 900px;
+  --writing-cover-ratio: 414 / 752;
   --writing-selection-menu-height: 35px;
   --writing-content-item-min-height: 35px;
   --writing-content-item-button-size: 35px;
@@ -132,8 +133,8 @@
   width: var(--writing-width);
   min-width: var(--writing-width);
   background-color: var(--inner-box-color);
-  height: calc(var(--writing-width) / 4);
-  min-height: calc(var(--writing-width) / 4);
+  height: calc(var(--writing-width) * var(--writing-cover-ratio));
+  min-height: calc(var(--writing-width) * var(--writing-cover-ratio));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -616,7 +617,6 @@
   padding: 4px 8px;
   outline: none;
   opacity: 0.8;
-  border-top-left-radius: 2px;
   min-width: 150px;
 }
 .general-writing-alt-text::before {
