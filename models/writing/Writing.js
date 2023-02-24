@@ -73,7 +73,7 @@ const WritingSchema = new Schema({
     type: String,
     default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   cover: {
@@ -126,8 +126,6 @@ const WritingSchema = new Schema({
 WritingSchema.statics.createWritingByParentId = function (_parent_id, data, callback) {
   const Writing = this;
 
-  console.log(data);
-
   if (!_parent_id || !validator.isMongoId(_parent_id.toString()))
     return callback('bad_request');
 
@@ -172,6 +170,7 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
         const newWriting = new Writing(newWritingData);
     
         newWriting.save((err, writing) => {
+          console.log(err);
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
