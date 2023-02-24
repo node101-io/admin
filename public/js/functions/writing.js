@@ -1730,22 +1730,22 @@ window.addEventListener('load', () => {
     }
   });
 
-  document.addEventListener('focusout', event => {
-    if (event.target.classList.contains('general-writing-code')) {
-      // const children = event.target.children;
-      // let newInnerContent = '';
-      // for (let i = 0; i < children.length; i++){
-      //   console.log(children[i])
-      //   newInnerContent += (i > 0 ? '\n' : '') + (children[i].nodeValue || children[i].innerText)}
-      // // const newInnerContent = event.target.children.map(each => each.nodeValue || each.innerText).join('\n');
-      // console.log(newInnerContent)
-      // const content = event.target.innerHTML.split('</div>').join('\n').split(/<[^>]+>/g).join('');
-      // console.log(content);
-      // console.log(JSON.stringify(content));
-      // event.target.innerHTML = hljs.highlightElement('json', JSON.stringify(content)).value;
-      hljs.highlightElement(event.target);
-    }
-  });
+  // document.addEventListener('focusout', event => {
+  //   if (event.target.classList.contains('general-writing-code')) {
+  //     // const children = event.target.children;
+  //     // let newInnerContent = '';
+  //     // for (let i = 0; i < children.length; i++){
+  //     //   console.log(children[i])
+  //     //   newInnerContent += (i > 0 ? '\n' : '') + (children[i].nodeValue || children[i].innerText)}
+  //     // // const newInnerContent = event.target.children.map(each => each.nodeValue || each.innerText).join('\n');
+  //     // console.log(newInnerContent)
+  //     // const content = event.target.innerHTML.split('</div>').join('\n').split(/<[^>]+>/g).join('');
+  //     // console.log(content);
+  //     // console.log(JSON.stringify(content));
+  //     // event.target.innerHTML = hljs.highlightElement('json', JSON.stringify(content)).value;
+  //     hljs.highlightElement(event.target);
+  //   }
+  // });
 
   document.addEventListener('input', event => {
     setIsSavedFalse();
@@ -1787,6 +1787,11 @@ window.addEventListener('load', () => {
         setIsSavedFalse();
       });
     }    
+  });
+
+  document.addEventListener('paste', function (event) {
+    event.preventDefault();
+    document.execCommand('inserttext', false, event.clipboardData.getData('text/plain'));
   });
 });
 
