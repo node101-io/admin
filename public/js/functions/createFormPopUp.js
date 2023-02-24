@@ -152,6 +152,7 @@ function createFormPopUp(data, callback) {
     });
 
     serverRequest(url, method, req, res => {
+      console.log(res);
       if (!res.success && res.error && DEFAULT_ERRORS[res.error])
         return popUpError.innerHTML = errors[res.error] || DEFAULT_ERRORS[res.error];
       if (!res.success)

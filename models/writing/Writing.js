@@ -79,7 +79,7 @@ const WritingSchema = new Schema({
   cover: {
     type: String,
     default: null,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   is_completed: {
@@ -103,7 +103,7 @@ const WritingSchema = new Schema({
     type: String,
     required: true,
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   search_subtitle: {
@@ -125,6 +125,8 @@ const WritingSchema = new Schema({
 
 WritingSchema.statics.createWritingByParentId = function (_parent_id, data, callback) {
   const Writing = this;
+
+  console.log(data);
 
   if (!_parent_id || !validator.isMongoId(_parent_id.toString()))
     return callback('bad_request');
@@ -149,6 +151,7 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
     if (writing) return callback('duplicated_unique_field');
 
     Writer.findWriterById(data.writer_id, (err, writer) => {
+      console.log(err);
       if (err) return callback(err);
 
       Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
