@@ -37,4 +37,5 @@ block main
           .general-each-item-buttons-wrapper
             .general-each-item-third-button.order-each-writing-button= __('Move Up')
             .general-each-item-second-button.delete-each-writing-button= __('Delete')
-            a.general-each-item-first-button(href=`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`)= __('Edit & Translate')
+            a.general-each-item-fourth-button(href=`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`)= __('Informations')
+            a.general-each-item-first-button(href=`/blog/writing/content?id=${blog._id}&writing_id=${writing._id}`)= __('Edit Content')

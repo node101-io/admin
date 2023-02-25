@@ -11,6 +11,8 @@ const isAdmin = require('../middleware/isAdmin');
 const deleteGetController = require('../controllers/blog/delete/get');
 const editGetController = require('../controllers/blog/edit/get');
 const indexGetController = require('../controllers/blog/index/get');
+
+const writingContentGetController = require('../controllers/blog/writing/content/get');
 const writingDeleteGetController = require('../controllers/blog/writing/delete/get');
 const writingEditGetController = require('../controllers/blog/writing/edit/get');
 const writingIndexGetController = require('../controllers/blog/writing/index/get');
@@ -58,6 +60,13 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     writingIndexGetController
+);
+router.get(
+  '/writing/content',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingContentGetController
 );
 router.get(
   '/writing/delete',

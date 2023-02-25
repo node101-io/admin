@@ -249,5 +249,21 @@
 	"You have unsaved changes.": "You have unsaved changes.",
 	"Paste the link and click enter.": "Paste the link and click enter.",
 	"Paste the link.": "Paste the link.",
-	"Click to load a cover image to the writing. (752:414)": "Click to load a cover image to the writing. (752:414)"
+	"Click to load a cover image to the writing. (752:414)": "Click to load a cover image to the writing. (752:414)",
+	"Informations": "Informations",
+	"Edit Content": "Edit Content",
+	"Edit the writing information and translate the writing. Please use edit content page to change the content of the writing": "Edit the writing information and translate the writing. Please use edit content page to change the content of the writing",
+	"Enter the writing title. Must be unique.": "Enter the writing title. Must be unique.",
+	"Enter a short subtitle to show on writing preview.": "Enter a short subtitle to show on writing preview.",
+	"Writing": "Writing",
+	"Writing Turkish Title": "Writing Turkish Title",
+	"Enter the Turkish translation of the writing title. Must be unique.": "Enter the Turkish translation of the writing title. Must be unique.",
+	"Writing Turkish Subtitle": "Writing Turkish Subtitle",
+	"Enter the Turkish translation of the writing subtitle.": "Enter the Turkish translation of the writing subtitle.",
+	"Writing Turkish": "Writing Turkish",
+	"Writing Russian Title": "Writing Russian Title",
+	"Enter the Russian translation of the writing title. Must be unique.": "Enter the Russian translation of the writing title. Must be unique.",
+	"Writing Russian Subtitle": "Writing Russian Subtitle",
+	"Enter the Russian translation of the writing subtitle.": "Enter the Russian translation of the writing subtitle.",
+	"Writing Russian": "Writing Russian"
 }

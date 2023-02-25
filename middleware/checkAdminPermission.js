@@ -9,6 +9,7 @@ module.exports = (req, res, next) => {
     '/blog/order': 'blog_edit',
     '/blog/translate': 'blog_edit',
     '/blog/writing': 'blog_view',
+    '/blog/writing/content': 'blog_edit',
     '/blog/writing/cover': 'blog_create',
     '/blog/writing/create': 'blog_create',
     '/blog/writing/delete': 'blog_delete',
