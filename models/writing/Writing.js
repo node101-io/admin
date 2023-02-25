@@ -328,7 +328,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
     if (err) return callback(err);
     if (writing.is_deleted) return callback('not_authenticated_request');
 
-    const oldContent = writing.content;
+    const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
 
      if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
@@ -350,7 +350,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
       };
 
       Object.keys(writing.identifier_languages).forEach(key => {
-        if (key != toURLString(writing.name))
+        if (key != toURLString(writing.title))
           identifier_languages[key] = writing.identifier_languages[key]
       });
 
@@ -392,8 +392,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
             }}, err => {
               if (err) return callback('database_error');
 
-              const oldImages = oldContent?.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
-              const newImages = writing?.content?.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+              const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+              const newImages = writing.content
+                .concat(writing.translations.tr.content)
+                .concat(writing.translations.ru.content)
+                .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
 
               async.timesSeries(
                 oldImages.length,
@@ -441,6 +444,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
     if (!writing.is_completed)
       return callback('not_authenticated_request');
 
+    const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
+      
     const translations = formatTranslations(writing, data.language, data);
     let oldIdentifier = toURLString(writing.translations[data.language]?.title);
     const newIdentifier = toURLString(translations[data.language].title);
@@ -477,12 +482,12 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
         const searchTitle = new Set();
         const searchSubtitle = new Set();
 
-        writing.name.split(' ').forEach(word => searchTitle.add(word));
-        writing.translations.tr.name.split(' ').forEach(word => searchTitle.add(word));
-        writing.translations.ru.name.split(' ').forEach(word => searchTitle.add(word));
-        writing.description.split(' ').forEach(word => searchSubtitle.add(word));
-        writing.translations.tr.description.split(' ').forEach(word => searchSubtitle.add(word));
-        writing.translations.ru.description.split(' ').forEach(word => searchSubtitle.add(word));
+        writing.title.split(' ').forEach(word => searchTitle.add(word));
+        writing.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
+        writing.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
+        writing.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+        writing.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+        writing.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
 
         Writing.findByIdAndUpdate(writing._id, {$set: {
           search_title: Array.from(searchTitle).join(' '),
@@ -490,16 +495,35 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
         }}, err => {
           if (err) return callback('database_error');
 
-          Writing.collection
-            .createIndex(
-              { search_title: 'text', search_subtitle: 'text' },
-              { weights: {
-                search_title: 10,
-                search_subtitle: 1
-              } }
-            )
-            .then(() => callback(null))
-            .catch(_ => callback('index_error'));
+          const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+          const newImages = writing.content
+            .concat(writing.translations.tr.content)
+            .concat(writing.translations.ru.content)
+            .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+
+          async.timesSeries(
+            oldImages.length,
+            (time, next) => {
+              if (newImages.includes(oldImages[time]))
+                return next(null);
+
+              return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
+            },
+            err => {
+              if (err) return callback(err);
+
+              Writing.collection
+                .createIndex(
+                  { search_title: 'text', search_subtitle: 'text' },
+                  { weights: {
+                    search_title: 10,
+                    search_subtitle: 1
+                  } }
+                )
+                .then(() => callback(null))
+                .catch(_ => callback('index_error'));
+            }
+          );
         });
       });
     });
@@ -660,13 +684,13 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
     if (err) return callback(err);
     if (!writing.is_deleted) return callback(null);
 
-    identifiers = [ toURLString(writing.name.replace(writing._id.toString(), '')) ];
+    identifiers = [ toURLString(writing.title.replace(writing._id.toString(), '')) ];
     const identifierLanguages = {
       [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
     };
 
     Object.values(writing.translations).forEach((lang, index) => {
-      const languageIdentifier = toURLString(lang.name);
+      const languageIdentifier = toURLString(lang.title);
       if (!identifiers.includes(languageIdentifier)) {
         identifiers.push(languageIdentifier);
         identifierLanguages[languageIdentifier] = Object.keys(writing.translations)[index]; 
@@ -688,7 +712,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
           if (err) return callback(err);
 
           Writing.findByIdAndUpdate(writing._id, {
-            name: writing.name.replace(writing._id.toString(), ''),
+            title: writing.title.replace(writing._id.toString(), ''),
             identifiers,
             identifier_languages: identifierLanguages,
             is_deleted: false,

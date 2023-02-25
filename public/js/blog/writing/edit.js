@@ -12,7 +12,10 @@ function saveContent(callback) {
       'POST',
       generateWritingData(),
       res => {
-        if (!res.success) return callback(res.error || 'unknown_error');
+        if (!res.success) {
+          document.querySelector('.general-writing-saving-prompt').style.display = 'none';
+          return callback(res.error || 'unknown_error');
+        }
 
         isSaved = true;
         document.querySelector('.general-writing-saving-prompt').style.display = 'none';
@@ -29,7 +32,10 @@ function saveContent(callback) {
       'POST',
       data,
       res => {
-        if (!res.success) return callback(res.error || 'unknown_error');
+        if (!res.success) {
+          document.querySelector('.general-writing-saving-prompt').style.display = 'none';
+          return callback(res.error || 'unknown_error');
+        }
 
         isSaved = true;
         document.querySelector('.general-writing-saving-prompt').style.display = 'none';
