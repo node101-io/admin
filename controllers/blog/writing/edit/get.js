@@ -3,6 +3,7 @@ const Blog = require('../../../../models/blog/Blog');
 module.exports = (req, res) => {
   const labels = {
     'none': res.__('None'),
+    'slider': res.__('Slider'),
     'editors_pick': res.__('Editors Pick'),
     'exclusive': res.__('Exclusive')
   };
