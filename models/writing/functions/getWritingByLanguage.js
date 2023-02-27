@@ -20,6 +20,7 @@ module.exports = (writing, language, callback) => {
       identifier: writing.identifiers.find(each => writing.identifier_languages[each] == language) || writing.identifiers[0],
       parent_id: writing.parent_id,
       writer,
+      created_at: writing.created_at,
       cover: writing.cover,
       subtitle: translation.subtitle,
       content: translation.content,

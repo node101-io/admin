@@ -46,6 +46,8 @@ if (cluster.isMaster) {
   const writerRouteController = require('./routes/writerRoute');
   const writingRouteController = require('./routes/writingRoute');
 
+  const fromDateToHTMLInputString = require('./utils/fromDateToHTMLInputString');
+
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug');
 
@@ -90,6 +92,7 @@ if (cluster.isMaster) {
       req.body = {};
 
     res.locals.QUERY_LIMIT = QUERY_LIMIT;
+    res.locals.fromDateToHTMLInputString = fromDateToHTMLInputString;
     req.query.limit = QUERY_LIMIT;
 
     next();

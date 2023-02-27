@@ -26,6 +26,9 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Writing Subtitle')
           input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on writing preview.') value=writing.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Created At')
+          input.general-input#date(type='date' placeholder=__('The date the writing is created') value=fromDateToHTMLInputString(writing.created_at))
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing')} #{socialAccounts[social]} 

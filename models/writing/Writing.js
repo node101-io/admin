@@ -359,6 +359,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           title: data.title.trim(),
           identifiers,
           identifier_languages,
+          created_at: data.created_at && !isNaN(new Date(data.created_at)) ? new Date(data.created_at) : writing.created_at,
           writer_id: !writer_err && writer ? writer._id : writing.writer_id,
           subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
           social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),

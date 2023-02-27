@@ -9,6 +9,7 @@ module.exports = (writing, callback) => {
       title: writing.title.replace(writing._id.toString(), ''),
       identifier: writing.identifiers[0],
       parent_id: writer.parent_id,
+      created_at: writing.created_at,
       writer,
       subtitle: writing.subtitle,
       cover: writing.cover,

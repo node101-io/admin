@@ -3,7 +3,6 @@ const DEFAULT_WRITING_LANGUAGE = 'en';
 const Blog = require('../../../../models/blog/Blog');
 
 module.exports = (req, res) => {
-  console.log(req.query)
   const translations = {
     en: res.__('English'),
     tr: res.__('Turkish'),
