@@ -29,6 +29,17 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Created At')
           input.general-input#date(type='date' placeholder=__('The date the writing is created') value=fromDateToHTMLInputString(writing.created_at))
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Label')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#label(value=writing.label)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=labels[writing.label || 'none'])
+            .general-select-input-choices-wrapper
+              each label in Object.keys(labels)
+                .general-select-each-input-choice(id='select-input-' + label)= labels[label]
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Flag')
+          input.general-input#flag(type='text' placeholder=__('Add a custom flag to writing') value=writing.flag)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing')} #{socialAccounts[social]} 
@@ -49,6 +60,9 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Writing Turkish Subtitle')
           input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the writing subtitle.') value=writing.translations.tr.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Turkish Flag')
+          input.general-input#turkish-flag(type='text' placeholder=__('Translate the custom flag to turkish') value=writing.translations.tr.flag)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing Turkish')} #{socialAccounts[social]} 
@@ -65,6 +79,9 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Writing Russian Subtitle')
           input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the writing subtitle.') value=writing.translations.ru.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Russian Flag')
+          input.general-input#russian-flag(type='text' placeholder=__('Translate the custom flag to russian') value=writing.translations.ru.flag)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing Russian')} #{socialAccounts[social]} 

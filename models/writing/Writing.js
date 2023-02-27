@@ -22,6 +22,7 @@ const IMAGE_WIDTH = 500;
 const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
 const IMAGE_NAME_PREFIX = 'node101 writing cover ';
 const IMAGE_IDENTIFIER_CLASS_NAME = 'general-writing-image';
+const LABEL_VALUES = ['editors_pick', 'exclusive'];
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
@@ -83,6 +84,18 @@ const WritingSchema = new Schema({
     type: Boolean,
     default: false
   },
+  label: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  flag: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
   social_media_accounts: {
     type: Object,
     default: {}
@@ -117,6 +130,10 @@ const WritingSchema = new Schema({
   is_deleted: {
     type: Boolean,
     default: false
+  },
+  view_count: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -203,7 +220,7 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
   if (!id || !validator.isMongoId(id.toString()))
     return callback('bad_request');
 
-  if (!id || !validator.isMongoId(parent_id.toString()))
+  if (!parent_id || !validator.isMongoId(parent_id.toString()))
     return callback('bad_request');
 
   Writing.findById(mongoose.Types.ObjectId(id.toString()), (err, writing) => {
@@ -219,32 +236,6 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
       is_completed: isWritingComplete(writing)
     }}, { new: true }, (err, writing) => {
       if (err) return callback('database_error');
-
-      return callback(null, writing);
-    });
-  });
-};
-
-WritingSchema.statics.findWritingByIdentifierAndFormatByLanguage = function (identifier, language, callback) {
-  const Writing = this;
-
-  if (!id || !validator.isMongoId(parent_id.toString()))
-    return callback('bad_request');
-
-  Writing.findOne({
-    identifiers: identifier
-  }, (err, writing) => {
-    if (err) return callback('database_error');
-    if (!writing) return callback('document_not_found');
-
-    if (!writing.is_completed)
-      return callback('not_authenticated_request');
-
-    if (!language || !validator.isISO31661Alpha2(language.toString()))
-      language = writing.identifier_languages[identifier];
-
-    getWritingByLanguage(writing, language, (err, writing) => {
-      if (err) return callback(err);
 
       return callback(null, writing);
     });
@@ -359,6 +350,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           created_at: data.created_at && !isNaN(new Date(data.created_at)) ? new Date(data.created_at) : writing.created_at,
           writer_id: !writer_err && writer ? writer._id : writing.writer_id,
           subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
+          label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : writing.label,
+          flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
           social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
           content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content
         }}, { new: true }, (err, writing) => {

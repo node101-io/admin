@@ -8,6 +8,7 @@ module.exports = (writing, language, callback) => {
       title: writing.title.replace(writing._id.toString(), ''),
       subtitle: writing.subtitle,
       content: writing.content,
+      flag: writing.flag,
       social_media_accounts: writing.social_media_accounts
     };
 
@@ -25,6 +26,8 @@ module.exports = (writing, language, callback) => {
       subtitle: translation.subtitle,
       content: translation.content,
       is_completed: writing.is_completed,
+      label: writing.label,
+      flag: translation.flag,
       social_media_accounts: translation.social_media_accounts
     });
   });

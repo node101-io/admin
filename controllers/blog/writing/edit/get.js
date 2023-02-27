@@ -1,6 +1,11 @@
 const Blog = require('../../../../models/blog/Blog');
 
 module.exports = (req, res) => {
+  const labels = {
+    'none': res.__('None'),
+    'editors_pick': res.__('Editors Pick'),
+    'exclusive': res.__('Exclusive')
+  };
   const socialAccounts = {
     'medium': 'Medium',
     'youtube': 'Youtube',
@@ -24,6 +29,7 @@ module.exports = (req, res) => {
         },
         blog,
         writing,
+        labels,
         socialAccounts
       });
     });

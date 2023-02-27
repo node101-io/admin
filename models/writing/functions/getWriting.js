@@ -8,13 +8,15 @@ module.exports = (writing, callback) => {
       _id: writing._id.toString(),
       title: writing.title.replace(writing._id.toString(), ''),
       identifier: writing.identifiers[0],
-      parent_id: writer.parent_id,
+      parent_id: writing.parent_id,
       created_at: writing.created_at,
       writer,
       subtitle: writing.subtitle,
       cover: writing.cover,
       content: writing.content,
       is_completed: writing.is_completed,
+      label: writing.label,
+      flag: writing.flag,
       social_media_accounts: writing.social_media_accounts,
       translations: writing.translations
     });

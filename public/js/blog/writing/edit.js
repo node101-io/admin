@@ -32,6 +32,8 @@ window.addEventListener('load', () => {
       const writerId = document.getElementById('writer-id').value;
       const subtitle = document.getElementById('subtitle').value;
       const createdAt = document.getElementById('date').valueAsDate;
+      const label = document.getElementById('label').value;
+      const flag = document.getElementById('flag').value;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
@@ -57,6 +59,8 @@ window.addEventListener('load', () => {
         writer_id: writerId,
         subtitle,
         created_at: createdAt,
+        label,
+        flag,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
@@ -81,6 +85,7 @@ window.addEventListener('load', () => {
 
       const title = document.getElementById('turkish-title').value;
       const subtitle = document.getElementById('turkish-subtitle').value;
+      const flag = document.getElementById('turkish-flag').value;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.turkish-social-account-input');
@@ -95,10 +100,11 @@ window.addEventListener('load', () => {
       if (!subtitle || !subtitle.trim().length)
         return error.innerHTML = 'Please enter a subtitle for the writing.';
 
-      serverRequest(`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`, 'POST', {
+      serverRequest(`/blog/writing/translate?id=${blog._id}&writing_id=${writing._id}`, 'POST', {
         language: 'tr',
         title,
         subtitle,
+        flag,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
@@ -123,6 +129,7 @@ window.addEventListener('load', () => {
 
       const title = document.getElementById('russian-title').value;
       const subtitle = document.getElementById('russian-subtitle').value;
+      const flag = document.getElementById('russian-flag').value;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.russian-social-account-input');
@@ -137,10 +144,11 @@ window.addEventListener('load', () => {
       if (!subtitle || !subtitle.trim().length)
         return error.innerHTML = 'Please enter a subtitle for the writing.';
 
-      serverRequest(`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`, 'POST', {
+      serverRequest(`/blog/writing/translate?id=${blog._id}&writing_id=${writing._id}`, 'POST', {
         language: 'ru',
         title,
         subtitle,
+        flag,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
