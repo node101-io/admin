@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 
 const toURLString = require('../../utils/toURLString');
 
+const copyImage = require('./functions/copyImage');
 const deleteImage = require('./functions/deleteImage');
 const renameImage = require('./functions/renameImage');
 const uploadImage = require('./functions/uploadImage');
@@ -33,13 +34,13 @@ const ImageSchema = new Schema({
   },
   width: {
     type: Number,
-    required: true,
+    default: null,
     min: 1,
     max: MAX_IMAGE_SIZE
   },
   height: {
     type: Number,
-    required: true,
+    default: null,
     min: 1,
     max: MAX_IMAGE_SIZE
   },
@@ -65,13 +66,17 @@ ImageSchema.statics.createImage = function (data, callback) {
     data.original_name = data.file_name;
 
   if (!data.width || isNaN(parseInt(data.width)) || parseInt(data.width) <= 0 || parseInt(data.width) > MAX_IMAGE_SIZE)
-    return callback('bad_request')
+    data.width = null;
+  else
+    data.width = parseInt(data.width);
 
   if (!data.height || isNaN(parseInt(data.height)) || parseInt(data.height) <= 0 || parseInt(data.height) > MAX_IMAGE_SIZE)
-    return callback('bad_request');
+    data.height = null;
+  else
+    data.height = parseInt(data.height);
 
-  data.width = parseInt(data.width);
-  data.height = parseInt(data.height);
+  if (!data.width && !data.height)
+    return callback('bad_request');
 
   uploadImage(data, (err, url) => {
     if (err) return callback('aws_database_error');
@@ -192,6 +197,45 @@ ImageSchema.statics.findImageByUrlAndSetAsUsed = function (url, callback) {
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+ImageSchema.statics.copyImageFromURLToDifferentName = function (old_url, new_name, callback) {
+  const Image = this;
+
+  Image.findImageByUrl(old_url, (err, image) => {
+    if (err) return callback(err);
+
+    copyImage({
+      url: image.url,
+      original_name: toURLString(new_name)
+    }, (err, url) => {
+      console.log(url);
+      if (err) return callback('aws_upload_error');
+
+      Image.findImageByUrl(url, (err, duplicate) => {
+        if (err && err != 'document_not_found')
+          return callback(err);
+
+        if (duplicate) return callback(null, duplicate.url);
+
+        const newImageData = {
+          name: new_name,
+          url,
+          width: image.width,
+          height: image.height,
+          is_used: true
+        };
+
+        const newImage = new Image(newImageData);
+
+        newImage.save((err, image) => {
+          if (err) return callback('database_error');
+
+          return callback(null, image.url);
+        });
+      });
     });
   });
 };

@@ -84,7 +84,7 @@ window.addEventListener('load', () => {
         if (err) return throwError(err);
   
         savingPrompt.style.display = 'none';
-        window.location = `/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}&translate=${translate}`
+        window.location = `/blog/writing/content?id=${blog._id}&writing_id=${writing._id}&translate=${translate}`
       });
     };
 

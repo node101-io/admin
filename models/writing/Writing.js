@@ -1,6 +1,4 @@
 const async = require('async');
-const html2json = require('html2json').html2json;
-const json2html = require('html2json').json2html;
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -20,7 +18,6 @@ const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const COVER_HEIGHT = 414;
 const COVER_WIDTH = 752;
-const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 500;
 const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
 const IMAGE_NAME_PREFIX = 'node101 writing cover ';
@@ -765,7 +762,6 @@ WritingSchema.statics.uploadWritingContentImage = function (file, callback) {
     file_name: file.filename,
     original_name: generateRandomHEX(DEFAULT_IMAGE_RANDOM_NAME_LENGTH),
     width: IMAGE_WIDTH,
-    height: IMAGE_HEIGHT,
     is_used: true
   }, (err, url) => callback(err, url));
 };

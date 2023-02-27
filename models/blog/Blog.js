@@ -136,7 +136,6 @@ BlogSchema.statics.createBlog = function (data, callback) {
         search_title: data.title.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-        created_at: new Date(),
         order
       };
     

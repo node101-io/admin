@@ -1,3 +1,4 @@
+const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -81,13 +82,15 @@ StakeSchema.statics.createStake = function (data, callback) {
 
   Project.findProjectById(data.project_id, (err, project) => {
     if (err) return callback(err);
+    if (!project.is_completed)
+      return callback('not_authenticated_request');
 
-    Stake
+      Stake
       .find()
       .countDocuments()
       .then(order => {
         const newStakeData = {
-          projet_id: project._id,
+          project_id: project._id,
           created_at: new Date(),
           order
         };
@@ -95,6 +98,7 @@ StakeSchema.statics.createStake = function (data, callback) {
         const newStake = new Stake(newStakeData);
     
         newStake.save((err, stake) => {
+          console.log(err)
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
@@ -119,7 +123,7 @@ StakeSchema.statics.findStakeById = function (id, callback) {
   const Stake = this;
 
   if (!id || !validator.isMongoId(id.toString()))
-    return callback('bad_request');
+    return callback('e');
 
   Stake.findById(mongoose.Types.ObjectId(id.toString()), (err, stake) => {
     if (err) return callback('database_error');
@@ -188,43 +192,6 @@ StakeSchema.statics.findStakeByIdAndFormatByLanguage = function (id, language, c
   });
 };
 
-StakeSchema.statics.findStakeByIdAndUpdateImage = function (id, file, callback) {
-  const Stake = this;
-
-  Stake.findStakeById(id, (err, stake) => {
-    if (err) return callback(err);
-
-    Project.findProjectById(stake.project_id, (err, project) => {
-      if (err) return callback(err);
-
-      Image.createImage({
-        file_name: file.filename,
-        original_name: IMAGE_NAME_PREFIX + project.name,
-        width: IMAGE_WIDTH,
-        height: IMAGE_HEIGHT,
-        is_used: true
-      }, (err, url) => {
-        if (err) return callback(err);
-    
-        Stake.findByIdAndUpdate(stake._id, { $set: {
-          image: url
-        }}, { new: false }, (err, stake) => {
-          if (err) return callback(err);
-  
-          if (!stake.image || stake.image == url)
-            return callback(null, url);
-  
-          Image.findImageByUrlAndDelete(stake.image, err => {
-            if (err) return callback(err);
-  
-            return callback(null, url);
-          });
-        });
-      });
-    });
-  });
-};
-
 StakeSchema.statics.findStakeByIdAndUpdate = function (id, data, callback) {
   const Stake = this;
 
@@ -265,6 +232,43 @@ StakeSchema.statics.findStakeByIdAndUpdateTranslations = function (id, data, cal
       if (err) return callback('database_error');
 
       return callback(null);
+    });
+  });
+};
+
+StakeSchema.statics.findStakeByIdAndUpdateImage = function (id, file, callback) {
+  const Stake = this;
+
+  Stake.findStakeById(id, (err, stake) => {
+    if (err) return callback(err);
+
+    Project.findProjectById(stake.project_id, (err, project) => {
+      if (err) return callback(err);
+
+      Image.createImage({
+        file_name: file.filename,
+        original_name: IMAGE_NAME_PREFIX + project.name,
+        width: IMAGE_WIDTH,
+        height: IMAGE_HEIGHT,
+        is_used: true
+      }, (err, url) => {
+        if (err) return callback(err);
+    
+        Stake.findByIdAndUpdate(stake._id, { $set: {
+          image: url
+        }}, { new: false }, (err, stake) => {
+          if (err) return callback(err);
+  
+          if (!stake.image || stake.image == url)
+            return callback(null, url);
+  
+          Image.findImageByUrlAndDelete(stake.image, err => {
+            if (err) return callback(err);
+  
+            return callback(null, url);
+          });
+        });
+      });
     });
   });
 };

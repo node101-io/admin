@@ -7,6 +7,7 @@ const Image = require('../image/Image');
 const Project = require('../project/Project');
 
 const formatTranslations = require('./functions/formatTranslations');
+const getFrequentlyAskedQuestions = require('./functions/getFrequentlyAskedQuestions');
 const getGuide = require('./functions/getGuide');
 const getGuideByLanguage = require('./functions/getGuideByLanguage');
 const isGuideComplete = require('./functions/isGuideComplete');
@@ -26,7 +27,7 @@ const GuideSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
-  name: {
+  title: {
     type: String,
     required: true,
     trim: true,
@@ -51,7 +52,7 @@ const GuideSchema = new Schema({
   image: {
     type: String,
     default: null,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   is_completed: {
@@ -60,58 +61,58 @@ const GuideSchema = new Schema({
   },
   mainnet_explorer_url: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   testnet_explorer_url: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   rewards: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   lock_period: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   cpu: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   ram: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   os: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   network: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
-    minlength: 1,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   frequently_asked_questions: {
@@ -137,6 +138,10 @@ const GuideSchema = new Schema({
   order: {
     type: Number,
     required: true
+  },
+  writing_id: {
+    type: mongoose.Types.ObjectId,
+    default: null
   }
 });
 
@@ -149,10 +154,10 @@ GuideSchema.statics.createGuide = function (data, callback) {
   Project.findProjectById(err, project => {
     if (err) return callback(err);
 
-    if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+    if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
-    const identifier = toURLString(data.name);
+    const identifier = toURLString(data.title);
 
     Guide.findOne({
       identifiers: identifier
@@ -165,13 +170,13 @@ GuideSchema.statics.createGuide = function (data, callback) {
 
         const newGuideData = {
           project_id: project._id,
-          name: data.name.trim(),
+          title: data.title.trim(),
           identifiers: [ identifier ],
           identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
           created_at: new Date(),
           order
         };
-      
+
         const newGuide = new Guide(newGuideData);
       
         newGuide.save((err, guide) => {
@@ -260,7 +265,7 @@ GuideSchema.statics.findGuideByIdAndUpdateImage = function (id, file, callback) 
 
     Image.createImage({
       file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + guide.name,
+      original_name: IMAGE_NAME_PREFIX + guide.title,
       width: IMAGE_WIDTH,
       height: IMAGE_HEIGHT,
       is_used: true
@@ -365,7 +370,7 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
       return callback(null, data);
 
     if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
-      filters.name = { $regex: data.search.trim(), $options: 'i' };
+      filters.title = { $regex: data.search.trim(), $options: 'i' };
     };
 
     Guide
@@ -404,7 +409,7 @@ GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
       return callback(null, 0);
 
     if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
-      filters.name = { $regex: data.search.trim(), $options: 'i' };
+      filters.title = { $regex: data.search.trim(), $options: 'i' };
     };
 
     Guide

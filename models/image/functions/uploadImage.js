@@ -10,13 +10,16 @@ const s3 = new AWS.S3({
 module.exports = (data, callback) => {
   const file_content = fs.readFileSync('./public/res/uploads/' + data.file_name);
 
+  const resizeParameters = {
+    fit: 'cover',
+    position: 'center'
+  }
+
+  if (data.width) resizeParameters.width = data.width;
+  if (data.height) resizeParameters.height = data.height;
+
   sharp(file_content)
-    .resize({
-      width: data.width,
-      height: data.height,
-      fit: 'cover',
-      position: 'center'
-    })
+    .resize(resizeParameters)
     .webp()
     .toBuffer()
     .then(image => {
