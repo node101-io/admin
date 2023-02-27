@@ -31,6 +31,7 @@ window.addEventListener('load', () => {
       const title = document.getElementById('title').value;
       const writerId = document.getElementById('writer-id').value;
       const subtitle = document.getElementById('subtitle').value;
+      const createdAt = document.getElementById('date').valueAsDate;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
@@ -48,10 +49,14 @@ window.addEventListener('load', () => {
       if (!subtitle || !subtitle.trim().length)
         return error.innerHTML = 'Please enter a subtitle for the writing.';
 
+      if (!createdAt)
+        return error.innerHTML = 'Please choose the creation date of the writing.';
+
       serverRequest(`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`, 'POST', {
         title,
         writer_id: writerId,
         subtitle,
+        created_at: createdAt,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
