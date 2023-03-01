@@ -1,5 +1,10 @@
 function setCSSNotYetStakabableVariable(notYetStakable) {
+  const root = document.querySelector(':root');
 
+  if (notYetStakable)
+    root.style.setProperty('--not-yet-stakable', 'none');
+  else
+    root.style.setProperty('--not-yet-stakable', 'unset');
 };
 
 window.addEventListener('load', () => {
@@ -24,6 +29,7 @@ window.addEventListener('load', () => {
         id: stake._id
       }, res => {
         isActiveUpdating = false;
+        isActive = !isActive;
         if (!res.success) return throwError(res.error);
 
         return;
@@ -73,7 +79,10 @@ window.addEventListener('load', () => {
 
       if (notYetStakable) {
         serverRequest('/stake/edit?id=' + stake._id, 'POST', {
-          not_yet_stakable: true
+          not_yet_stakable: true,
+          apr,
+          stake_url: stakeURL,
+          how_to_stake_url: howToStakeURL
         }, res => {
           if (!res.success) return throwError(res.error);
 
@@ -116,6 +125,9 @@ window.addEventListener('load', () => {
 
       const stakeURL = document.getElementById('turkish-stake-url').value;
       const howToStakeURL = document.getElementById('turkish-how-to-stake-url').value;
+    
+      if (!stake.is_completed)
+        return error.innerHTML = 'Please complete the stakable information of the project before adding a translation.';
 
       if (!stakeURL || !stakeURL.trim().length)
         return error.innerHTML = 'Please enter the stake URL for the project.';
@@ -123,7 +135,7 @@ window.addEventListener('load', () => {
       if (!howToStakeURL || !howToStakeURL.trim().length)
         return error.innerHTML = 'Please enter the how to stake URL for the project.';
 
-      serverRequest('/project/translate?id=' + project._id, 'POST', {
+      serverRequest('/stake/translate?id=' + stake._id, 'POST', {
         language: 'tr',
         stake_url: stakeURL,
         how_to_stake_url: howToStakeURL
@@ -145,13 +157,16 @@ window.addEventListener('load', () => {
       const stakeURL = document.getElementById('russian-stake-url').value;
       const howToStakeURL = document.getElementById('russian-how-to-stake-url').value;
 
+      if (!stake.is_completed)
+        return error.innerHTML = 'Please complete the stakable information of the project before adding a translation.';
+
       if (!stakeURL || !stakeURL.trim().length)
         return error.innerHTML = 'Please enter the stake URL for the project.';
 
       if (!howToStakeURL || !howToStakeURL.trim().length)
         return error.innerHTML = 'Please enter the how to stake URL for the project.';
 
-      serverRequest('/project/translate?id=' + project._id, 'POST', {
+      serverRequest('/stake/translate?id=' + stake._id, 'POST', {
         language: 'ru',
         stake_url: stakeURL,
         how_to_stake_url: howToStakeURL
@@ -176,13 +191,13 @@ window.addEventListener('load', () => {
       wrapper.childNodes[1].innerHTML = 'Loading...';
       wrapper.childNodes[0].type = 'text';
 
-      serverRequest('/stake/image?id=' + project._id, 'FILE', {
+      serverRequest('/stake/image?id=' + stake._id, 'FILE', {
         file
       }, res => {
         if (!res.success) return throwError(res.error);
     
         return createConfirm({
-          title: 'Project stake Image is Updated',
+          title: 'Project Stake Image is Updated',
           text: 'Project stake image is updated. Close to reload the page.',
           accept: 'Close'
         }, _ => window.location.reload());

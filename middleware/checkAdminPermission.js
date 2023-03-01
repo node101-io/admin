@@ -14,6 +14,7 @@ module.exports = (req, res, next) => {
     '/blog/writing/create': 'blog_create',
     '/blog/writing/delete': 'blog_delete',
     '/blog/writing/edit': 'blog_edit',
+    '/blog/writing/logo': 'blog_edit',
     '/blog/writing/image': 'blog_edit',
     '/blog/writing/restore': 'blog_delete',
     '/blog/writing/order': 'blog_edit',

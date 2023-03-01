@@ -297,5 +297,20 @@
 	"Turkish Flag": "Turkish Flag",
 	"Translate the custom flag to turkish": "Translate the custom flag to turkish",
 	"Russian Flag": "Russian Flag",
-	"Translate the custom flag to russian": "Translate the custom flag to russian"
+	"Translate the custom flag to russian": "Translate the custom flag to russian",
+	"Slider": "Slider",
+	"IMPORTANT! This writing is not yet complete. Please complete all the required fields to start using this writing in the website.": "IMPORTANT! This writing is not yet complete. Please complete all the required fields to start using this writing in the website.",
+	"Writing Logo": "Writing Logo",
+	"Is Visible": "Is Visible",
+	"Yes, this writing is visible to users.": "Yes, this writing is visible to users.",
+	"No, this writing is hidden from users.": "No, this writing is hidden from users.",
+	"Is Turkish Visible": "Is Turkish Visible",
+	"Yes, this writing is visible to users in turkish.": "Yes, this writing is visible to users in turkish.",
+	"No, this writing is hidden from users in turkish.": "No, this writing is hidden from users in turkish.",
+	"Is Russian Visible": "Is Russian Visible",
+	"Yes, this writing is visible to users in russian.": "Yes, this writing is visible to users in russian.",
+	"No, this writing is hidden from users in russian.": "No, this writing is hidden from users in russian.",
+	"Is Visible to Users?": "Is Visible to Users?",
+	"No, this project is not yet visible to users.": "No, this project is not yet visible to users.",
+	"Yes, this project is visible.": "Yes, this project is visible."
 }

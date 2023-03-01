@@ -66,7 +66,7 @@ const StakeSchema = new Schema({
   },
   is_active: {
     type: Boolean,
-    default: false
+    default: true
   }
 });
 

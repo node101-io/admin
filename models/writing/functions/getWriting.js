@@ -12,6 +12,7 @@ module.exports = (writing, callback) => {
       created_at: writing.created_at,
       writer,
       subtitle: writing.subtitle,
+      logo: writing.logo,
       cover: writing.cover,
       content: writing.content,
       is_completed: writing.is_completed,

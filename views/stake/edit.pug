@@ -16,7 +16,7 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Is Currently Stakable?')
           .general-select-input-wrapper
-            input.general-select-input-real-value#not-yet-stakable(type='text' value=stake.not_yet_stakable)
+            input.general-select-input-real-value#not-yet-stakable(type='text' value=JSON.stringify(stake.not_yet_stakable))
             input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=(stake.not_yet_stakable ? __('No, this project is not yet open to users.') : __('Yes, this project is stakable.')))
             .general-select-input-choices-wrapper
               .general-select-each-input-choice(id='select-input-false')= __('Yes, this project is stakable.')
@@ -24,7 +24,7 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Is Visible to Users?')
           .general-select-input-wrapper
-            input.general-select-input-real-value#is-active(type='text' value=stake.is_active)
+            input.general-select-input-real-value#is-active(type='text' value=JSON.stringify(stake.is_active))
             input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=(stake.is_active ? __('Yes, this project is visible.') : __('No, this project is not yet visible to users.')))
             .general-select-input-choices-wrapper
               .general-select-each-input-choice(id='select-input-true')= __('Yes, this project is visible.')
@@ -58,7 +58,7 @@ block main
       .general-create-button-wrapper
       span.general-create-title(style=`display: var(--not-yet-stakable)`)= __('Turkish Translation')
       .general-create-seperator(style=`display: var(--not-yet-stakable)`)
-      .general-create-input-grid-wrapper(style=`display: var(--not-yet-stakable)`)
+      .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
           span.general-create-subtitle.general-create-required= __('Stake URL')
           input.general-input#turkish-stake-url(type='text' placeholder=__('The URL where users will stake to node101 for this project.') value=stake.translations.tr.stake_url)
@@ -70,7 +70,7 @@ block main
         .general-create-button#update-turkish-button= __('Update Turkish')
       span.general-create-title(style=`display: var(--not-yet-stakable)`)= __('Russian Translation')
       .general-create-seperator(style=`display: var(--not-yet-stakable)`)
-      .general-create-input-grid-wrapper(style=`display: var(--not-yet-stakable)`)
+      .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
           span.general-create-subtitle.general-create-required= __('Stake URL')
           input.general-input#russian-stake-url(type='text' placeholder=__('The URL where users will stake to node101 for this project.') value=stake.translations.ru.stake_url)

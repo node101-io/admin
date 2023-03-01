@@ -13,6 +13,7 @@ const editGetController = require('../controllers/stake/edit/get');
 const editPostController = require('../controllers/stake/edit/post');
 const imagePostController = require('../controllers/stake/image/post');
 const statusPostController = require('../controllers/stake/status/post');
+const translatePostController = require('../controllers/stake/translate/post');
 
 router.get(
   '/edit',
@@ -43,6 +44,13 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     statusPostController
+);
+router.post(
+  '/translate',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    translatePostController
 );
 
 module.exports = router;

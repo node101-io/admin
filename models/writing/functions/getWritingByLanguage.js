@@ -23,6 +23,7 @@ module.exports = (writing, language, callback) => {
       parent_id: writing.parent_id,
       writer,
       created_at: writing.created_at,
+      logo: writing.logo,
       cover: writing.cover,
       subtitle: translation.subtitle,
       content: translation.content,
