@@ -9,21 +9,11 @@ const createNavbarData = require('../middleware/createNavbarData');
 const isAdmin = require('../middleware/isAdmin');
 
 const editGetController = require('../controllers/stake/edit/get');
-const indexGetController = require('../controllers/stake/index/get');
 
-const createPostController = require('../controllers/stake/create/post');
 const editPostController = require('../controllers/stake/edit/post');
 const imagePostController = require('../controllers/stake/image/post');
-const orderPostController = require('../controllers/stake/order/post');
 const statusPostController = require('../controllers/stake/status/post');
 
-router.get(
-  '/',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    indexGetController
-);
 router.get(
   '/edit',
     isAdmin,
@@ -32,13 +22,6 @@ router.get(
     editGetController
 );
 
-router.post(
-  '/create',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    createPostController
-);
 router.post(
   '/edit',
     isAdmin,
@@ -53,13 +36,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     imagePostController
-);
-router.post(
-  '/order',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    orderPostController
 );
 router.post(
   '/status',

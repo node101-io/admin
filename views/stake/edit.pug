@@ -1,0 +1,83 @@
+extends ../partials/navbar
+block main
+  input.display-none#stake-json(type='text' value=JSON.stringify(stake))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Stakable Project')} - #{stake.project.name}
+      .general-header-subtitle= __('Edit the project stake information and translate the stake information of the project.')
+    input.general-header-search-input#project-search-input(autocomplete='search' name='new-password' placeholder='Search by name or description' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !stake.is_completed
+        .general-create-info= __('IMPORTANT! This stakable project is not yet complete. Please complete all the required fields to start showing this project as stakable in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Is Currently Stakable?')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#not-yet-stakable(type='text' value=stake.not_yet_stakable)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=(stake.not_yet_stakable ? __('No, this project is not yet open to users.') : __('Yes, this project is stakable.')))
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-false')= __('Yes, this project is stakable.')
+              .general-select-each-input-choice(id='select-input-true')= __('No, this project is not yet open to users.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Is Visible to Users?')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#is-active(type='text' value=stake.is_active)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=(stake.is_active ? __('Yes, this project is visible.') : __('No, this project is not yet visible to users.')))
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-true')= __('Yes, this project is visible.')
+              .general-select-each-input-choice(id='select-input-false')= __('No, this project is not yet visible to users.')
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('Project APR')
+          input.general-input#apr(type='number' placeholder=__('Project APR as a decimal number. Update regularly.') value=stake.apr)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('Stake URL')
+          input.general-input#stake-url(type='text' placeholder=__('The URL where users will stake to node101 for this project.') value=stake.stake_url)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('How to Stake URL')
+          input.general-input#how-to-stake-url(type='text' placeholder=__('The link of the video explaining users how they will stake.') value=stake.how_to_stake_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Stake Image')
+          if stake.image
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${stake.image})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('IMPORTANT! Only actively stakable project are translatable, as there is no field to translate in coming projects. If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title(style=`display: var(--not-yet-stakable)`)= __('Turkish Translation')
+      .general-create-seperator(style=`display: var(--not-yet-stakable)`)
+      .general-create-input-grid-wrapper(style=`display: var(--not-yet-stakable)`)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('Stake URL')
+          input.general-input#turkish-stake-url(type='text' placeholder=__('The URL where users will stake to node101 for this project.') value=stake.translations.tr.stake_url)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('How to Stake URL')
+          input.general-input#turkish-how-to-stake-url(type='text' placeholder=__('The link of the video explaining users how they will stake.') value=stake.translations.tr.how_to_stake_url)
+      .general-create-button-wrapper(style=`display: var(--not-yet-stakable)`)
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title(style=`display: var(--not-yet-stakable)`)= __('Russian Translation')
+      .general-create-seperator(style=`display: var(--not-yet-stakable)`)
+      .general-create-input-grid-wrapper(style=`display: var(--not-yet-stakable)`)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('Stake URL')
+          input.general-input#russian-stake-url(type='text' placeholder=__('The URL where users will stake to node101 for this project.') value=stake.translations.ru.stake_url)
+        .general-create-input-grid-each-item-wrapper(style=`display: var(--not-yet-stakable)`)
+          span.general-create-subtitle.general-create-required= __('How to Stake URL')
+          input.general-input#russian-how-to-stake-url(type='text' placeholder=__('The link of the video explaining users how they will stake.') value=stake.translations.ru.how_to_stake_url)
+      .general-create-button-wrapper(style=`display: var(--not-yet-stakable)`)
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

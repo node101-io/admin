@@ -67,10 +67,6 @@ const StakeSchema = new Schema({
   is_active: {
     type: Boolean,
     default: false
-  },
-  order: {
-    type: Number,
-    required: true
   }
 });
 
@@ -273,71 +269,6 @@ StakeSchema.statics.findStakeByIdAndUpdateImage = function (id, file, callback) 
   });
 };
 
-StakeSchema.statics.findStakesByFilters = function (data, callback) {
-  const Stake = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  data.is_deleted = false;
-
-  Project.findProjectsByFilters(data, (err, project_data) => {
-    if (err) return callback(err);
-    
-    const data = {
-      search: project_data.search,
-      limit: project_data.limit,
-      page: project_data.page,
-      stakes: []
-    };
-
-    if (!project_data.projects || !project_data.projects.length)
-      return callback(null, data);
-    
-    Stake
-      .find({
-        project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
-      })
-      .sort({ order: -1 })
-      .then(stakes => async.timesSeries(
-        stakes.length,
-        (time, next) => Stake.findStakeByIdAndFormat(stakes[time]._id, (err, stake) => next(err, stake)),
-        (err, stakes) => {
-          if (err) return callback(err);
-
-          data.stakes = stakes;
-
-          return callback(null, data);
-        })
-      )
-      .catch(_ => callback('database_error'));
-  })
-};
-
-StakeSchema.statics.findStakeCountByFilters = function (data, callback) {
-  const Stake = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  data.is_deleted = false;
-
-  Project.findProjectsByFilters(data, (err, project_data) => {
-    if (err) return callback(err);
-
-    if (!project_data.projects || !project_data.projects.length)
-      return callback(null, 0);
-
-    Stake
-      .find({
-        _id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) }
-      })
-      .countDocuments()
-      .then(count => callback(null, count))
-      .catch(_ => callback('database_error'));
-  });
-};
-
 StakeSchema.statics.findStakeByIdAndRevertIsActive = function (id, callback) {
   const Stake = this;
 
@@ -350,43 +281,6 @@ StakeSchema.statics.findStakeByIdAndRevertIsActive = function (id, callback) {
       if (err) return callback('database_error');
 
       return callback(null);
-    });
-  });
-};
-
-StakeSchema.statics.findStakeByIdAndIncOrderByOne = function (id, callback) {
-  const Stake = this;
-
-  Stake.findStakeById(id, (err, stake) => {
-    if (err) return callback(err);
-    if (stake.is_deleted) return callback('not_authenticated_request');
-
-    Stake.findOne({
-      order: stake.order + 1
-    }, (err, prev_stake) => {
-      if (err) return callback('database_error');
-      if (!prev_stake) return callback(null);
-
-      Stake.findByIdAndUpdate(stake._id, {$inc: {
-        order: 1
-      }}, err => {
-        if (err) return callback('database_error');
-
-        Stake.findByIdAndUpdate(prev_stake._id, {$inc: {
-          order: -1
-        }}, err => {
-          if (err) return callback('database_error');
-
-          Project.findProjectById(prev_stake.project_id, (err, project) => {
-            if (err) return callback(err);
-
-            if (!project.is_deleted)
-              return callback(null);
-
-            return Stake.findStakeByIdAndIncOrderByOne(stake._id, err => callback(err));
-          });
-        });
-      });
     });
   });
 };

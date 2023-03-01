@@ -15,11 +15,6 @@ module.exports = (req, res, next) => {
       { permission: 'project_create', name: res.__('New Project'), link: '/project/create' },
       { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/project/delete' }
     ],
-    // 'Stakable Projects': [
-    //   { permission: 'stake_view', name: res.__('All Stake Projects'), link: '/stake' },
-    //   { permission: 'stake_create', name: res.__('New Stake Project'), link: '/stake/create' },
-    //   { permission: 'stake_delete', name: res.__('Deleted Stake Projects'), link: '/stake/delete' }
-    // ],
     // 'Testnet Guides': [
     //   { permission: 'guide_view', name: res.__('All Guides'), link: '/guide' },
     //   { permission: 'guide_create', name: res.__('New Guide'), link: '/guide/create' },

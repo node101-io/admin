@@ -1,0 +1,96 @@
+extends ../partials/navbar
+block main
+  input.display-none#blog-json(type='text' value=JSON.stringify(blog))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Blog')} - #{blog.name}
+      .general-header-subtitle= __('Edit the blog information and translate the blog.')
+    input.general-header-search-input#blog-search-input(autocomplete='search' name='new-password' placeholder='Search by name or subtitle' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !blog.is_completed
+        .general-create-info= __('IMPORTANT! This blog is not yet complete. Please complete all the required fields to start using this blog in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Title')
+          input.general-input#title(type='text' placeholder=__('Enter the blog title. Must be unique.') value=blog.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Type')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#type(value=blog.type)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=types[blog.type])
+            .general-select-input-choices-wrapper
+              each blog_type in Object.keys(types)
+                .general-select-each-input-choice(id='select-input-' + blog_type)= types[blog_type]
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Project')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#project-id(value=(blog.project ? blog.project._id : ''))
+            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(blog.project ? blog.project.name : ''))
+            .general-select-input-choices-wrapper#project-choices
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writer')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#writer-id(value=(blog.writer ? blog.writer._id : ''))
+            input.general-select-input-selected-value.do-not-listen#writer-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(blog.writer ? blog.writer.name : ''))
+            .general-select-input-choices-wrapper#writer-choices
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Subtitle')
+          input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on blog preview.') value=blog.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Image')
+          if blog.image
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${blog.image})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Blog')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=blog.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Turkish Title')
+          input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the blog title. Must be unique.') value=blog.translations.tr.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Turkish Subtitle')
+          input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the blog subtitle.') value=blog.translations.tr.subtitle)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Blog Turkish')} #{socialAccounts[social]} 
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=blog.translations.tr.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Russian Title')
+          input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the blog title. Must be unique.') value=blog.translations.ru.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Blog Russian Subtitle')
+          input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the blog subtitle.') value=blog.translations.ru.subtitle)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Blog Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=blog.translations.ru.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

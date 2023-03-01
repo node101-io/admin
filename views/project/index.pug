@@ -33,5 +33,7 @@ block main
             span.general-each-item-subtitle(style=(project.is_completed ? '' : 'color: var(--warning-color)')) #{project.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
             .general-each-item-third-button.order-each-project-button= __('Move Up')
+            if project.is_completed
+              a.general-each-item-fourth-button(href='/stake/edit?project_id=' + project._id)= __('See Stake Options')
             .general-each-item-second-button.delete-each-project-button= __('Delete')
             a.general-each-item-first-button(href='/project/edit?id=' + project._id)= __('Edit & Translate')
