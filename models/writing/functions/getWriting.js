@@ -18,6 +18,7 @@ module.exports = (writing, callback) => {
       label: writing.label,
       flag: writing.flag,
       social_media_accounts: writing.social_media_accounts,
+      is_hidden: writing.is_hidden,
       translations: writing.translations
     });
   });

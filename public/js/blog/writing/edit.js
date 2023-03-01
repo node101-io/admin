@@ -34,6 +34,7 @@ window.addEventListener('load', () => {
       const createdAt = document.getElementById('date').valueAsDate;
       const label = document.getElementById('label').value;
       const flag = document.getElementById('flag').value;
+      const isHidden = JSON.parse(document.getElementById('is-hidden').value);
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
@@ -61,6 +62,7 @@ window.addEventListener('load', () => {
         created_at: createdAt,
         label,
         flag,
+        is_hidden: isHidden,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
@@ -86,6 +88,7 @@ window.addEventListener('load', () => {
       const title = document.getElementById('turkish-title').value;
       const subtitle = document.getElementById('turkish-subtitle').value;
       const flag = document.getElementById('turkish-flag').value;
+      const isHidden = JSON.parse(document.getElementById('turkish-is-hidden').value);
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.turkish-social-account-input');
@@ -105,6 +108,7 @@ window.addEventListener('load', () => {
         title,
         subtitle,
         flag,
+        is_hidden: isHidden,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
@@ -130,6 +134,7 @@ window.addEventListener('load', () => {
       const title = document.getElementById('russian-title').value;
       const subtitle = document.getElementById('russian-subtitle').value;
       const flag = document.getElementById('russian-flag').value;
+      const isHidden = JSON.parse(document.getElementById('russian-is-hidden').value);
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.russian-social-account-input');
@@ -149,6 +154,7 @@ window.addEventListener('load', () => {
         title,
         subtitle,
         flag,
+        is_hidden: isHidden,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
@@ -183,5 +189,28 @@ window.addEventListener('load', () => {
         });
       });
     }
-  })
+  });
+
+  document.addEventListener('change', event => {
+    if (event.target.id == 'logo') {
+      const file = event.target.files[0];
+      const wrapper = event.target.parentNode;
+  
+      wrapper.style.cursor = 'progress';
+      wrapper.childNodes[1].innerHTML = 'Loading...';
+      wrapper.childNodes[0].type = 'text';
+
+      serverRequest(`/blog/writing/logo?id=${blog._id}&writing_id=${writing._id}`, 'FILE', {
+        file
+      }, res => {
+        if (!res.success) return throwError(res.error);
+    
+        return createConfirm({
+          title: 'Writing Logo is Updated',
+          text: 'Writing logo is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
+      });
+    }
+  });
 });

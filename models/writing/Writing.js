@@ -16,11 +16,14 @@ const isWritingComplete = require('./functions/isWritingComplete');
 
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const LOGO_HEIGHT = 300;
+const LOGO_WIDTH = 300;
 const COVER_HEIGHT = 414;
 const COVER_WIDTH = 752;
 const IMAGE_WIDTH = 500;
 const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
-const IMAGE_NAME_PREFIX = 'node101 writing cover ';
+const LOGO_NAME_PREFIX = 'node101 writing logo ';
+const COVER_NAME_PREFIX = 'node101 writing cover ';
 const IMAGE_IDENTIFIER_CLASS_NAME = 'general-writing-image';
 const LABEL_VALUES = ['slider', 'editors_pick', 'exclusive'];
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
@@ -71,6 +74,12 @@ const WritingSchema = new Schema({
     type: String,
     default: '',
     trim: true,
+    minlength: 0,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  logo: {
+    type: String,
+    default: null,
     minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
@@ -126,6 +135,10 @@ const WritingSchema = new Schema({
   order: {
     type: Number,
     required: true
+  },
+  is_hidden: {
+    type: Boolean,
+    default: false
   },
   is_deleted: {
     type: Boolean,
@@ -276,6 +289,39 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (
   });
 };
 
+WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogo = function (id, parent_id, file, callback) {
+  const Writing = this;
+
+  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
+    if (err) return callback(err);
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: LOGO_NAME_PREFIX + writing.title,
+      width: LOGO_WIDTH,
+      height: LOGO_HEIGHT,
+      is_used: true
+    }, (err, url) => {
+      if (err) return callback(err);
+  
+      Writing.findByIdAndUpdate(writing._id, { $set: {
+        logo: url
+      }}, { new: false }, (err, writing) => {
+        if (err) return callback(err);
+
+        if (!writing.logo || writing.logo.split('/')[writing.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          return callback(null, url);
+
+        Image.findImageByUrlAndDelete(writing.logo, err => {
+          if (err) return callback(err);
+
+          return callback(null, url);
+        });
+      });
+    });
+  });
+};
+
 WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, parent_id, file, callback) {
   const Writing = this;
 
@@ -284,7 +330,7 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, p
 
     Image.createImage({
       file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + writing.title,
+      original_name: COVER_NAME_PREFIX + writing.title,
       width: COVER_WIDTH,
       height: COVER_HEIGHT,
       is_used: true
@@ -353,7 +399,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : writing.label,
           flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
           social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
-          content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content
+          content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
+          is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
         }}, { new: true }, (err, writing) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');

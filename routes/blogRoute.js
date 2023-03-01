@@ -29,6 +29,7 @@ const writingCoverPostController = require('../controllers/blog/writing/cover/po
 const writingCreatePostController = require('../controllers/blog/writing/create/post');
 const writingDeletePostController = require('../controllers/blog/writing/delete/post');
 const writingEditPostController = require('../controllers/blog/writing/edit/post');
+const writingLogoPostController = require('../controllers/blog/writing/logo/post');
 const writingOrderPostController = require('../controllers/blog/writing/order/post');
 const writingRestorePostController = require('../controllers/blog/writing/restore/post');
 const writingTranslatePostController = require('../controllers/blog/writing/translate/post');
@@ -161,6 +162,14 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     writingEditPostController
+);
+router.post(
+  '/writing/logo',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingLogoPostController
 );
 router.post(
   '/writing/order',

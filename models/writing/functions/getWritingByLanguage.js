@@ -9,7 +9,8 @@ module.exports = (writing, language, callback) => {
       subtitle: writing.subtitle,
       content: writing.content,
       flag: writing.flag,
-      social_media_accounts: writing.social_media_accounts
+      social_media_accounts: writing.social_media_accounts,
+      is_hidden: writing.is_hidden
     };
 
   Writer.findWriterByIdAndFormatByLanguage(writing.writer_id, language, (err, writer) => {
@@ -28,7 +29,8 @@ module.exports = (writing, language, callback) => {
       is_completed: writing.is_completed,
       label: writing.label,
       flag: translation.flag,
-      social_media_accounts: translation.social_media_accounts
+      social_media_accounts: translation.social_media_accounts,
+      is_hidden: translation.is_hidden
     });
   });
 };
