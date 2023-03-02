@@ -2,6 +2,8 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const deleteFile = require('../../utils/deleteFile');
+
 const Image = require('../image/Image');
 const Project = require('../project/Project');
 
@@ -254,14 +256,18 @@ StakeSchema.statics.findStakeByIdAndUpdateImage = function (id, file, callback) 
           image: url
         }}, { new: false }, (err, stake) => {
           if (err) return callback(err);
-  
-          if (!stake.image || stake.image == url)
-            return callback(null, url);
-  
-          Image.findImageByUrlAndDelete(stake.image, err => {
+
+          deleteFile(file, err => {
             if (err) return callback(err);
-  
-            return callback(null, url);
+
+            if (!stake.image || stake.image.split('/')[stake.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+              return callback(null, url);
+    
+            Image.findImageByUrlAndDelete(stake.image, err => {
+              if (err) return callback(err);
+    
+              return callback(null, url);
+            });
           });
         });
       });

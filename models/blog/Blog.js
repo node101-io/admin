@@ -2,6 +2,7 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const deleteFile = require('../../utils/deleteFile');
 const toURLString =require('../../utils/toURLString')
 
 const Image = require('../image/Image');
@@ -338,13 +339,17 @@ BlogSchema.statics.findBlogByIdAndUpdateImage = function (id, file, callback) {
       }}, err => {
         if (err) return callback(err);
 
-        if (!blog.image || blog.image.split('/')[blog.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(blog.image, err => {
+        deleteFile(file, err => {
           if (err) return callback(err);
 
-          return callback(null, url);
+          if (!blog.image || blog.image.split('/')[blog.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(blog.image, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
+          });
         });
       });
     });

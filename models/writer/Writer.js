@@ -2,6 +2,8 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const deleteFile = require('../../utils/deleteFile');
+
 const Image = require('../image/Image');
 
 const formatTranslations = require('./functions/formatTranslations');
@@ -202,13 +204,17 @@ WriterSchema.statics.findWriterByIdAndUpdateImage = function (id, file, callback
       }}, err => {
         if (err) return callback(err);
 
-        if (!writer.image || writer.image.split('/')[writer.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(writer.image, err => {
+        deleteFile(file, err => {
           if (err) return callback(err);
 
-          return callback(null, url);
+          if (!writer.image || writer.image.split('/')[writer.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(writer.image, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
+          });
         });
       });
     });

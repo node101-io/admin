@@ -1,7 +1,8 @@
 const async = require('async');
-const fs = require('fs');
 const mongoose = require('mongoose');
 const validator = require('validator');
+
+const deleteFile = require('../../utils/deleteFile');
 
 const Image = require('../image/Image');
 
@@ -253,8 +254,8 @@ AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) 
       }}, { new: false }, (err, admin) => {
         if (err) return callback(err);
 
-        fs.unlink('./public/res/uploads/' + file.filename, err => {
-          if (err) return callback('fs_unlink_error');
+        deleteFile(file, err => {
+          if (err) return callback(err);
 
           if (!admin.image || admin.image == DEFAULT_IMAGE_ROUTE || admin.image == url)
             return callback(null, url);
