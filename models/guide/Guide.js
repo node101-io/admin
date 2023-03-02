@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const deleteFile = require('../../utils/deleteFile');
 const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 const Project = require('../project/Project');
+const Writing = require('../writing/Writing');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getFrequentlyAskedQuestions = require('./functions/getFrequentlyAskedQuestions');
@@ -141,7 +143,7 @@ const GuideSchema = new Schema({
   },
   writing_id: {
     type: mongoose.Types.ObjectId,
-    default: null
+    required: true
   }
 });
 
@@ -168,31 +170,39 @@ GuideSchema.statics.createGuide = function (data, callback) {
       Guide.findGuideCountByFilters({ is_deleted: false }, (err, order) => {
         if (err) return callback(err);
 
-        const newGuideData = {
-          project_id: project._id,
-          title: data.title.trim(),
-          identifiers: [ identifier ],
-          identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-          created_at: new Date(),
-          order
-        };
+        Writing.createWritingByParentIdWithoutWriter(guide._id, {
+          type: 'guide',
+          title: data.title.trim()
+        }, (err, writing) => {
+          if (err) return callback(err);
 
-        const newGuide = new Guide(newGuideData);
-      
-        newGuide.save((err, guide) => {
-          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-            return callback('duplicated_unique_field');
-          if (err) return callback('database_error');
-
-          guide.translations = formatTranslations(guide, 'tr');
-          guide.translations = formatTranslations(guide, 'ru');
-
-          Guide.findByIdAndUpdate(guide._id, {$set: {
-            translations: guide.translations
-          }}, err => {
+          const newGuideData = {
+            project_id: project._id,
+            title: data.title.trim(),
+            identifiers: [ identifier ],
+            identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+            created_at: new Date(),
+            order,
+            writing_id: writing._id
+          };
+  
+          const newGuide = new Guide(newGuideData);
+        
+          newGuide.save((err, guide) => {
+            if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+              return callback('duplicated_unique_field');
             if (err) return callback('database_error');
-
-            callback(null, guide._id.toString());
+  
+            guide.translations = formatTranslations(guide, 'tr');
+            guide.translations = formatTranslations(guide, 'ru');
+  
+            Guide.findByIdAndUpdate(guide._id, {$set: {
+              translations: guide.translations
+            }}, err => {
+              if (err) return callback('database_error');
+  
+              callback(null, guide._id.toString());            
+            });
           });
         });
       });
@@ -277,13 +287,21 @@ GuideSchema.statics.findGuideByIdAndUpdateImage = function (id, file, callback) 
       }}, { new: false }, (err, guide) => {
         if (err) return callback(err);
 
-        if (!guide.image || guide.image == url)
+        if (!guide.image || guide.image.split('/')[guide.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
           return callback(null, url);
 
         Image.findImageByUrlAndDelete(guide.image, err => {
           if (err) return callback(err);
 
-          return callback(null, url);
+          Writing.findWritingByIdAndAndParentIdUpdateLogo(guide.writing_id, guide._id, file, err => {
+            if (err) return callback(err);
+
+            deleteFile(file, err => {
+              if (err) return callback(err);
+
+              return callback(null, url);
+            });
+          });
         });
       });
     });
@@ -296,7 +314,6 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
   Guide.findGuideById(id, (err, guide) => {
     if (err) return callback(err);
 
-
     Guide.findByIdAndUpdate(guide._id, {$set: {
       mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : null,
       testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : null,
@@ -306,15 +323,7 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
       ram: data.ram && typeof data.ram == 'string' && data.ram.trim().length && data.ram.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.ram.trim() : null,
       os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
       network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
-      frequently_asked_questions: data.frequently_asked_questions && Array.isArray(data.frequently_asked_questions) ? data.frequently_asked_questions.filter(each =>
-        each.question && typeof each.question == 'string' && each.question.trim().length && each.question.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH &&
-        each.answer && typeof each.answer == 'string' && each.answer.trim().length && each.answer.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH
-      ).map(each => {
-        return {
-          question: each.question.trim(),
-          answer: each.answer.trim()
-        }
-      }) : []
+      frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions)
     }}, err => {
       if (err) return callback('database_error');
 

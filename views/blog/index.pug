@@ -3,7 +3,7 @@ block main
   .general-header-wrapper
     .general-header-text-wrapper
       .general-header-title= __('Blogs')
-      .general-header-subtitle= __('Add blogs to show in blog.node101.io.')
+      .general-header-subtitle= __('Add blogs to show in library.node101.io.')
     input.general-header-search-input#blog-search-input(type='text' placeholder='Search by name or description' value=blogs_search)
   .all-content-inner-wrapper
     .general-page-wrapper
@@ -34,5 +34,6 @@ block main
           .general-each-item-buttons-wrapper
             .general-each-item-third-button.order-each-blog-button= __('Move Up')
             .general-each-item-second-button.delete-each-blog-button= __('Delete')
-            a.general-each-item-fourth-button(href='/blog/writing?id=' + blog._id)= __('Writings')
+            if blog.is_completed
+              a.general-each-item-fourth-button(href='/blog/writing?id=' + blog._id)= __('Writings')
             a.general-each-item-first-button(href='/blog/edit?id=' + blog._id)= __('Edit & Translate')

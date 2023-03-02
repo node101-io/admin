@@ -1,0 +1,88 @@
+extends ../partials/navbar
+block main
+  input.display-none#book-json(type='text' value=JSON.stringify(book))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Book')} - #{book.name}
+      .general-header-subtitle= __('Edit the book information and translate the book.')
+    input.general-header-search-input#book-search-input(autocomplete='search' name='new-password' placeholder='Search by name or subtitle' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !book.is_completed
+        .general-create-info= __('IMPORTANT! This book is not yet complete. Please complete all the required fields to start using this book in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Name')
+          input.general-input#name(type='text' placeholder=__('Enter the book name. Must be unique.') value=book.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Project')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#project-id(value=(book.project ? book.project._id : ''))
+            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(book.project ? book.project.name : ''))
+            .general-select-input-choices-wrapper#project-choices
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writer')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#writer-id(value=(book.writer ? book.writer._id : ''))
+            input.general-select-input-selected-value.do-not-listen#writer-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(book.writer ? book.writer.name : ''))
+            .general-select-input-choices-wrapper#writer-choices
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Description')
+          input.general-input#description(type='text' placeholder=__('Enter a short description to show on book preview.') value=book.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Image')
+          if book.image
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${book.image})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Book')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=book.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Turkish Name')
+          input.general-input#turkish-name(type='text' placeholder=__('Enter the Turkish translation of the book name. Must be unique.') value=book.translations.tr.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Turkish Description')
+          input.general-input#turkish-description(type='text' placeholder=__('Enter the Turkish translation of the book description.') value=book.translations.tr.description)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Book Turkish')} #{socialAccounts[social]} 
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=book.translations.tr.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Russian Name')
+          input.general-input#russian-name(type='text' placeholder=__('Enter the Russian translation of the book name. Must be unique.') value=book.translations.ru.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Book Russian Description')
+          input.general-input#russian-description(type='text' placeholder=__('Enter the Russian translation of the book description.') value=book.translations.ru.description)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Book Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=book.translations.ru.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

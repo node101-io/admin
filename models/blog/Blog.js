@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
-const toURLString =require('../../utils/toURLString')
+const toURLString =require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 const Project = require('../project/Project');

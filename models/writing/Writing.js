@@ -176,7 +176,6 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
     if (writing) return callback('duplicated_unique_field');
 
     Writer.findWriterById(data.writer_id, (err, writer) => {
-      console.log(err);
       if (err) return callback(err);
 
       Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
@@ -221,6 +220,77 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
               .then(() => callback(null, writing._id.toString()))
               .catch(_ => callback('index_error'));
           });
+        });
+      });
+    });
+  });
+};
+
+WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_id, data, callback) {
+  const Writing = this;
+
+  if (!_parent_id || !validator.isMongoId(_parent_id.toString()))
+    return callback('bad_request');
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.type || !TYPE_VALUES.includes(data.type))
+    return callback('bad_request');
+
+  if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+    return callback('bad_request');
+
+  const identifier = toURLString(data.title);
+  const parent_id = mongoose.Types.ObjectId(_parent_id.toString());
+
+  Writing.findOne({
+    parent_id,
+    identifiers: identifier
+  }, (err, writing) => {
+    if (err) return callback('database_error');
+    if (writing) return callback('duplicated_unique_field');
+
+    Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
+
+      const newWritingData = {
+        title: data.title.trim(),
+        search_title: data.title.trim(),
+        identifiers: [ identifier ],
+        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+        type: data.type,
+        parent_id,
+        created_at: new Date(),
+        order
+      };
+  
+      const newWriting = new Writing(newWritingData);
+  
+      newWriting.save((err, writing) => {
+        console.log(err);
+        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+          return callback('duplicated_unique_field');
+        if (err) return callback('database_error');
+
+        writing.translations = formatTranslations(writing, 'tr');
+        writing.translations = formatTranslations(writing, 'ru');
+
+        Writing.findByIdAndUpdate(writing._id, {$set: {
+          translations: writing.translations
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Writing.collection
+            .createIndex(
+              { search_title: 'text', search_subtitle: 'text' },
+              { weights: {
+                search_title: 10,
+                search_subtitle: 1
+              } }
+            )
+            .then(() => callback(null, writing._id.toString()))
+            .catch(_ => callback('index_error'));
         });
       });
     });
@@ -788,7 +858,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndIncOrderByOne = function (id,
         Writing.findByIdAndUpdate(prev_writing._id, {$inc: {
           order: -1
         }}, err => {
-          if (err) return  callback('database_error');
+          if (err) return callback('database_error');
 
           return callback(null);
         });

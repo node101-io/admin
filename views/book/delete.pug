@@ -1,0 +1,35 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Deleted Books')
+      .general-header-subtitle= __('See and restore deleted books.')
+    input.general-header-search-input#book-search-input(type='text' placeholder='Search by name or description' value=books_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if books_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{books_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if books_page > 0
+            a.general-page-prev-button(href=`/book/delete?page=${books_page-1}${books_search ? '&search=' + books_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(books_count / books_limit) + (books_count % books_limit ? 1 : 0); i += 1)
+            if i != books_page
+              a.general-each-page-button(href=`/book/delete?page=${i}${books_search ? '&search=' + books_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (books_page + 1) * books_limit < books_count
+            a.general-page-next-button(href=`/book/delete?page=${books_page+1}${books_search ? '&search=' + books_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{books_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each book in books
+        .general-each-item-wrapper(id=book._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= book.title
+            span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
+          .general-each-item-buttons-wrapper
+            .general-each-item-first-button.restore-each-book-button= __('Restore')

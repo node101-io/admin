@@ -14,21 +14,12 @@ window.addEventListener('load', () => {
 
   document.addEventListener('click', event => {
     if (event.target.classList.contains('order-each-writer-button')) {
-      createConfirm({
-        title: 'Are you sure you want to increase the order of this writer?',
-        text: 'Writers are sorted by their order in the website. You may change the order of a writer whenever you like.',
-        reject: 'Cancel',
-        accept: 'Move Up'
+      serverRequest('/writer/order', 'POST', {
+        id: event.target.parentNode.parentNode.id
       }, res => {
-        if (res) {
-          serverRequest('/writer/order', 'POST', {
-            id: event.target.parentNode.parentNode.id
-          }, res => {
-            if (!res.success) return throwError(res.error);
+        if (!res.success) return throwError(res.error);
 
-            return location.reload();
-          });
-        };
+        return location.reload();
       });
     };
 

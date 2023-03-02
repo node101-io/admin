@@ -26,6 +26,32 @@ window.addEventListener('load', () => {
       });
     }
 
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/book/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Book',
+        url: '/book/create',
+        method: 'POST',
+        description: 'You will be asked to complete blog details once you create it.',
+        inputs: [
+          {
+            name: 'name',
+            placeholder: 'Name (must be unique)'
+          }
+        ],
+        button: 'Create New Book',
+        errors: {
+          duplicated_unique_field: 'Each book must have a unique name. Please use edit & translations page to change this book\'s details.'
+        }
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/book/edit?id=' + res.id;
+      });
+    }
+
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/member/create')) {
       event.preventDefault();
 
