@@ -410,7 +410,7 @@ function formatTitleAndSubtitleHeight() {
   document.querySelector('.general-writing-title').style.minHeight = (document.querySelector('.general-writing-title').scrollHeight) + 'px';
   document.querySelector('.general-writing-subtitle').style.height = (document.querySelector('.general-writing-subtitle').scrollHeight) + 'px';
   document.querySelector('.general-writing-subtitle').style.minHeight = (document.querySelector('.general-writing-subtitle').scrollHeight) + 'px';
-}
+};
 
 function generateWritingData() {
   const contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper');
@@ -443,10 +443,21 @@ function setIsSavedFalse() {
   document.querySelector('.general-writing-unsaved-changes-text').style.visibility = 'visible';
 };
 
+function fixContentItemsInnerText() {
+  const allTextItems = document.querySelectorAll('.general-writing-text');
+  const allListItems = document.querySelectorAll('.general-writing-list');
+
+  for (let i = 0; i < allTextItems.length; i++)
+    allTextItems[i].innerHTML = allTextItems[i].innerText.split('\n').join('');
+  for (let i = 0; i < allListItems.length; i++)
+    allListItems[i].innerHTML = allListItems[i].innerText.split('\n').join('');
+}
+
 window.addEventListener('load', () => {
   writing = JSON.parse(document.getElementById('writing-json').value);
   hljs.highlightAll();
   formatTitleAndSubtitleHeight();
+  fixContentItemsInnerText();
 
   const selectionMenu = document.querySelector('.general-writing-selection-menu');
   const headerChoicesWrapper = document.querySelector('.general-writing-each-content-item-add-header-choices-wrapper');
@@ -592,6 +603,9 @@ window.addEventListener('load', () => {
       } else if (!selectionString?.trim().length) {
         return;
       }
+
+      console.log(selectionIndex);
+      console.log(selectionString);
 
       setIsSavedFalse();
 
@@ -1791,7 +1805,10 @@ window.addEventListener('load', () => {
 
   document.addEventListener('paste', function (event) {
     event.preventDefault();
-    document.execCommand('inserttext', false, event.clipboardData.getData('text/plain'));
+    const temp = document.createElement('div');
+    temp.innerHTML = event.clipboardData.getData('text/plain');
+    const text = temp.innerText.split('\n').join('').split('\t').join('');
+    document.execCommand('inserttext', false, text);
   });
 });
 
