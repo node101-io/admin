@@ -52,29 +52,6 @@ window.addEventListener('load', () => {
       });
     }
 
-    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/member/create')) {
-      event.preventDefault();
-
-      createFormPopUp({
-        title: 'Create a New Member',
-        url: '/member/create',
-        method: 'POST',
-        description: 'You will be asked to complete member details once you create it.',
-        inputs: [
-          {
-            name: 'name',
-            placeholder: 'Name'
-          }
-        ],
-        button: 'Create New Member'
-      }, (error, res) => {
-        if (error) return alert(error);
-        if (!res) return;
-
-        return window.location = '/member/edit?id=' + res.id;
-      });
-    }
-
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/project/create')) {
       event.preventDefault();
 
@@ -98,6 +75,55 @@ window.addEventListener('load', () => {
         if (!res) return;
 
         return window.location = '/project/edit?id=' + res.id;
+      });
+    }
+
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/guide/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Testnet Guide',
+        url: '/guide/create',
+        method: 'POST',
+        description: 'You will be asked to complete blog details once you create it.',
+        inputs: [
+          {
+            name: 'title',
+            placeholder: 'Title (must be unique)'
+          }
+        ],
+        button: 'Create New Guide',
+        errors: {
+          duplicated_unique_field: 'Each blog must have a unique title. Please use edit & translations page to change this guide\'s details.'
+        }
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/guide/edit?id=' + res.id;
+      });
+    }
+
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/member/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Member',
+        url: '/member/create',
+        method: 'POST',
+        description: 'You will be asked to complete member details once you create it.',
+        inputs: [
+          {
+            name: 'name',
+            placeholder: 'Name'
+          }
+        ],
+        button: 'Create New Member'
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/member/edit?id=' + res.id;
       });
     }
 

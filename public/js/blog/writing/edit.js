@@ -169,6 +169,8 @@ window.addEventListener('load', () => {
           }, _ => window.location.reload());
       });
     }
+
+
   });
 
   document.addEventListener('input', event => {

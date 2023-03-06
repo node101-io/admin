@@ -2,6 +2,24 @@ window.addEventListener('load', () => {
   let openSelectInput = null;
 
   document.addEventListener('click', event => {
+    if (ancestorWithClassName(event.target, 'general-image-input-delete-button')) {
+      const target = ancestorWithClassName(event.target, 'general-image-input-delete-button');
+      const wrapper = target.parentNode;
+      wrapper.innerHTML = '';
+      wrapper.style.cursor = 'pointer';
+
+      const input = document.createElement('input');
+      input.classList.add('display-none');
+      input.id = 'image';
+      input.type = 'file';
+      wrapper.appendChild(input);
+
+      const placeholder = document.createElement('span');
+      placeholder.classList.add('general-image-input-placeholder');
+      placeholder.innerHTML = 'Upload from your device.';
+      wrapper.appendChild(placeholder);
+    }
+
     if (ancestorWithClassName(event.target, 'general-checkbox-input-wrapper')) {
       const target = ancestorWithClassName(event.target, 'general-checkbox-input-wrapper');
 

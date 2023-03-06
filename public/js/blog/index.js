@@ -26,7 +26,7 @@ window.addEventListener('load', () => {
     if (event.target.classList.contains('delete-each-blog-button')) {
       createConfirm({
         title: 'Are you sure you want to delete this blog?',
-        text: 'You can restore the blog whenever you like from the \`Deleted Members\` page..',
+        text: 'You can restore the blog whenever you like from the \`Deleted Blogs\` page..',
         reject: 'Cancel',
         accept: 'Delete'
       }, res => {
