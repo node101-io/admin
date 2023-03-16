@@ -1,0 +1,1 @@
+const Guide = require('../../../models/guide/Guide');

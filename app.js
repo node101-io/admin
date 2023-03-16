@@ -36,6 +36,7 @@ if (cluster.isMaster) {
   const QUERY_LIMIT = 20;
 
   const adminRouteController = require('./routes/adminRoute');
+  const apiRouteController = require('./routes/apiRoute');
   const authRouteController = require('./routes/authRoute');
   const blogRouteController = require('./routes/blogRoute');
   const bookRouteController = require('./routes/bookRoute');
@@ -101,6 +102,7 @@ if (cluster.isMaster) {
 
   app.use('/', indexRouteController);
   app.use('/admin', adminRouteController);
+  app.use('/api', apiRouteController);
   app.use('/auth', authRouteController);
   app.use('/blog', blogRouteController);
   app.use('/book', bookRouteController);
