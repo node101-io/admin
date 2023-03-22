@@ -1,9 +1,10 @@
 extends ../partials/navbar
 block main
   input.display-none#stake-json(type='text' value=JSON.stringify(stake))
+  input.display-none#project-json(type='text' value=JSON.stringify(project))
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title #{__('Edit Stakable Project')} - #{stake.project.name}
+      .general-header-title #{__('Edit Stakable Project')} - #{project.name}
       .general-header-subtitle= __('Edit the project stake information and translate the stake information of the project.')
     input.general-header-search-input#project-search-input(autocomplete='search' name='new-password' placeholder='Search by name or description' value='')
   .all-content-inner-wrapper

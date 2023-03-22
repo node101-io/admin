@@ -1,7 +1,7 @@
-const Stake = require('../../../models/stake/Stake');
+const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
-  Stake.findStakeByIdAndUpdateTranslations(req.query.id, req.body, err => {
+  Project.findProjectByIdAndUpdateStakeTranslations(req.query.id, req.body, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

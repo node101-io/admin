@@ -6,6 +6,7 @@ const deleteFile = require('../../utils/deleteFile');
 const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
+const Stake = require('../stake/Stake');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
@@ -101,6 +102,11 @@ const ProjectSchema = new Schema({
   order: {
     type: Number,
     required: true
+  },
+  stake_id: {
+    type: mongoose.Types.ObjectId,
+    default: null,
+    sparse: true
   }
 });
 
@@ -311,7 +317,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
           Project.findByIdAndUpdate(project._id, {$set: {
             search_name: Array.from(searchName).join(' '),
             search_description: Array.from(searchDescription).join(' ')
-          }}, err => {
+          }}, { new: true }, (err, project) => {
             if (err) return callback('database_error');
 
             Project.collection
@@ -322,7 +328,19 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
                   search_description: 1
                 } }
               )
-              .then(() => callback(null))
+              .then(() => {
+                if (!project.stake_id)
+                  return callback(null);
+
+                Stake.findStakeByIdAndUpdate(project.stake_id, {
+                  search_name: project.search_name,
+                  search_description: project.search_description
+                }, err => {
+                  if (err) return callback(err);
+
+                  return callback(null);
+                });
+              })
               .catch(_ => callback('index_error'));
           });
         });
@@ -652,18 +670,112 @@ ProjectSchema.statics.findProjectByIdAndIncOrderByOne = function (id, callback) 
 
       Project.findByIdAndUpdate(project._id, {$inc: {
         order: 1
-      }}, err => {
+      }}, { new: true }, (err, project) => {
         if (err) return callback('database_error');
 
         Project.findByIdAndUpdate(prev_project._id, {$inc: {
           order: -1
-        }}, err => {
+        }}, { new: true }, (err, prev_project) => {
           if (err) return  callback('database_error');
 
-          return callback(null);
+          Stake.findStakeByIdAndSetOrder(project.stake_id, project.order, _ => {
+            Stake.findStakeByIdAndSetOrder(prev_project.stake_id, prev_project.order, _ => 
+              callback(null)
+            );
+          });
         });
       });
     });
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndGetStake = function (id, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.stake_id)
+      return callback('document_not_found');
+
+    Stake.findStakeByIdAndFormat(project.stake_id, (err, stake) => callback(err, stake));
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndCreateStake = function (id, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (project.stake_id)
+      return callback(null);
+
+    if (!project.is_completed)
+      return callback('not_authenticated_request');
+
+    Stake.createStake({
+      project_id: project._id,
+      search_name: project.search_name,
+      search_description: project.search_description,
+      order: project.order
+    }, (err, id) => {
+      if (err) return callback(err);
+
+      Project.findByIdAndUpdate(project._id, {$set: {
+        stake_id: mongoose.Types.ObjectId(id.toString())
+      }}, err => {
+        if (err) return callback('database_error');
+
+        return callback(null, id);
+      });
+    });
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndUpdateStake = function (id, data, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.stake_id)
+      return callback('bad_request');
+
+    Stake.findStakeByIdAndUpdate(project.stake_id, data, err => callback(err));
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndUpdateStakeTranslations = function (id, data, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.stake_id)
+      return callback('bad_request');
+
+    Stake.findStakeByIdAndUpdate(project.stake_id, data, err => callback(err));
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndUpdateStakeImage = function (id, file, callback) {
+  const Project = this;
+
+  Project.findProjectById(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.stake_id)
+      return callback('bad_request');
+
+    Stake.findStakeByIdAndUpdateImage(project.stake_id, file, project.name, err => callback(err));
+  });
+};
+
+ProjectSchema.statics.findProjectByIdAndRevertStakeIsActive = function (id, callback) {
+  const Project = this;
+
+  Project.findStakeByIdAndUpdateTranslations(id, (err, project) => {
+    if (err) return callback(err);
+    if (!project.stake_id)
+      return callback('bad_request');
+
+    Stake.findStakeByIdAndRevertIsActive(project.stake_id, err => callback(err));
   });
 };
 

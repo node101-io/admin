@@ -1,7 +1,7 @@
-const Stake = require('../../../models/stake/Stake');
+const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
-  Stake.findStakeByIdAndUpdateImage(req.query.id, req.file, (err, url) => {
+  Project.findProjectByIdAndUpdateStakeImage(req.query.id, req.file, (err, url) => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

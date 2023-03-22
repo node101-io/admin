@@ -12,6 +12,7 @@ window.addEventListener('load', () => {
   let isActive = JSON.parse(document.getElementById('is-active').value);
   let isActiveUpdating = false;
   const stake = JSON.parse(document.getElementById('stake-json').value);
+  const project = JSON.parse(document.getElementById('project-json').value);
 
   setCSSNotYetStakabableVariable(notYetStakable);
 
@@ -60,7 +61,7 @@ window.addEventListener('load', () => {
       const howToStakeURL = document.getElementById('how-to-stake-url').value;
 
       if (notYetStakable) {
-        serverRequest('/stake/edit?id=' + stake._id, 'POST', {
+        serverRequest('/stake/edit?id=' + project._id, 'POST', {
           not_yet_stakable: true,
           apr,
           stake_url: stakeURL,
@@ -84,7 +85,7 @@ window.addEventListener('load', () => {
         if (!howToStakeURL || !howToStakeURL.trim().length)
           return error.innerHTML = 'Please enter the how to stake URL for the project.';
 
-        serverRequest('/stake/edit?id=' + stake._id, 'POST', {
+        serverRequest('/stake/edit?id=' + project._id, 'POST', {
           not_yet_stakable: false,
           apr,
           stake_url: stakeURL,
@@ -117,7 +118,7 @@ window.addEventListener('load', () => {
       if (!howToStakeURL || !howToStakeURL.trim().length)
         return error.innerHTML = 'Please enter the how to stake URL for the project.';
 
-      serverRequest('/stake/translate?id=' + stake._id, 'POST', {
+      serverRequest('/stake/translate?id=' + project._id, 'POST', {
         language: 'tr',
         stake_url: stakeURL,
         how_to_stake_url: howToStakeURL
@@ -148,7 +149,7 @@ window.addEventListener('load', () => {
       if (!howToStakeURL || !howToStakeURL.trim().length)
         return error.innerHTML = 'Please enter the how to stake URL for the project.';
 
-      serverRequest('/stake/translate?id=' + stake._id, 'POST', {
+      serverRequest('/stake/translate?id=' + project._id, 'POST', {
         language: 'ru',
         stake_url: stakeURL,
         how_to_stake_url: howToStakeURL
@@ -173,7 +174,7 @@ window.addEventListener('load', () => {
       wrapper.childNodes[1].innerHTML = 'Loading...';
       wrapper.childNodes[0].type = 'text';
 
-      serverRequest('/stake/image?id=' + stake._id, 'FILE', {
+      serverRequest('/stake/image?id=' + project._id, 'FILE', {
         file
       }, res => {
         if (!res.success) return throwError(res.error);
