@@ -6,6 +6,7 @@ module.exports = stake => {
       ||
       (
         stake.apr &&
+        stake.price &&
         stake.stake_url &&
         stake.how_to_stake_url
       )

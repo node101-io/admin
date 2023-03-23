@@ -57,6 +57,8 @@ window.addEventListener('load', () => {
       error.innerHTML = '';
       
       const apr = document.getElementById('apr').value;
+      const price = document.getElementById('price').value;
+      const priceAPIName = document.getElementById('price-api-name').value;
       const stakeURL = document.getElementById('stake-url').value;
       const howToStakeURL = document.getElementById('how-to-stake-url').value;
 
@@ -88,6 +90,8 @@ window.addEventListener('load', () => {
         serverRequest('/stake/edit?id=' + project._id, 'POST', {
           not_yet_stakable: false,
           apr,
+          price,
+          price_api_name: priceAPIName,
           stake_url: stakeURL,
           how_to_stake_url: howToStakeURL
         }, res => {

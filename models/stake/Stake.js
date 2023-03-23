@@ -7,6 +7,7 @@ const deleteFile = require('../../utils/deleteFile');
 const Image = require('../image/Image');
 
 const formatTranslations = require('./functions/formatTranslations');
+const getPrice = require('./functions/getPrice');
 const getStake = require('./functions/getStake');
 const getStakeByLanguage = require('./functions/getStakeByLanguage');
 const isStakeComplete = require('./functions/isStakeComplete');
@@ -17,6 +18,7 @@ const IMAGE_WIDTH = 200;
 const IMAGE_NAME_PREFIX = 'node101 stake ';
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
+const FIVE_MINUTE_IN_MS = 5 * 60 * 1000;
 
 const Schema = mongoose.Schema;
 
@@ -48,6 +50,20 @@ const StakeSchema = new Schema({
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   apr: {
+    type: Number,
+    default: null
+  },
+  price: {
+    type: Number,
+    default: null
+  },
+  price_api_name: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlenght: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  last_price_update_time: {
     type: Number,
     default: null
   },
@@ -155,16 +171,51 @@ StakeSchema.statics.findStakeById = function (id, callback) {
     if (err) return callback('database_error');
     if (!stake) return callback('document_not_found');
 
-    if (stake.is_completed == isStakeComplete(stake))
-      return callback(null, stake);
+    if (stake.price_api_name && (!stake.last_price_update_time || (new Date).getTime() - stake.last_price_update_time > FIVE_MINUTE_IN_MS)) {
+      getPrice(stake.price_api_name, (err, price) => {
+        if (err || !price) {
+          if (stake.is_completed == isStakeComplete(stake))
+            return callback(null, stake);
+    
+          Stake.findByIdAndUpdate(stake._id, {$set: {
+            is_completed: isStakeComplete(stake)
+          }}, { new: true }, (err, stake) => {
+            if (err) return callback('database_error');
+    
+            return callback(null, stake);
+          });
+        } else {
+          Stake.findByIdAndUpdate(stake._id, {$set: {
+            price,
+            last_price_update_time: (new Date).getTime()
+          }}, err => {
+            if (err) return callback('database_error');
 
-    Stake.findByIdAndUpdate(stake._id, {$set: {
-      is_completed: isStakeComplete(stake)
-    }}, { new: true }, (err, stake) => {
-      if (err) return callback('database_error');
+            if (stake.is_completed == isStakeComplete(stake))
+              return callback(null, stake);
+      
+            Stake.findByIdAndUpdate(stake._id, {$set: {
+              is_completed: isStakeComplete(stake)
+            }}, { new: true }, (err, stake) => {
+              if (err) return callback('database_error');
+      
+              return callback(null, stake);
+            });
+          });
+        };
+      });
+    } else {
+      if (stake.is_completed == isStakeComplete(stake))
+        return callback(null, stake);
 
-      return callback(null, stake);
-    });
+      Stake.findByIdAndUpdate(stake._id, {$set: {
+        is_completed: isStakeComplete(stake)
+      }}, { new: true }, (err, stake) => {
+        if (err) return callback('database_error');
+
+        return callback(null, stake);
+      });
+    };
   });
 };
 
@@ -228,6 +279,8 @@ StakeSchema.statics.findStakeByIdAndUpdate = function (id, data, callback) {
       search_name: data.search_name && typeof data.search_name == 'string' && data.search_name.trim().length && data.search_name.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.search_name.trim() : null,
       search_description: data.search_description && typeof data.search_description == 'string' && data.search_description.trim().length && data.search_description.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.search_description.trim() : null,
       apr: data.apr && !isNaN(parseFloat(data.apr)) ? parseFloat(data.apr) : null,
+      price: data.price && !isNaN(parseFloat(data.price)) ? parseFloat(data.price) : stake.price,
+      price_api_name: data.price_api_name && typeof data.price_api_name == 'string' && data.price_api_name.trim().length && data.price_api_name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.price_api_name.trim() : null,
       stake_url: data.stake_url && typeof data.stake_url == 'string' && data.stake_url.trim().length && data.stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.stake_url.trim() : null,
       how_to_stake_url: data.how_to_stake_url && typeof data.how_to_stake_url == 'string' && data.how_to_stake_url.trim().length && data.how_to_stake_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.how_to_stake_url.trim() : null,
       not_yet_stakable: data.not_yet_stakable ? true : false

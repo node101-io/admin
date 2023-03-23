@@ -5,6 +5,8 @@ module.exports = (stake, callback) => {
   return callback(null, {
     _id: stake._id.toString(),
     apr: stake.apr,
+    price: stake.price,
+    price_api_name: stake.price_api_name,
     image: stake.image,
     stake_url: stake.stake_url,
     how_to_stake_url: stake.how_to_stake_url,
