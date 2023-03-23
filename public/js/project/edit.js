@@ -23,6 +23,7 @@ window.addEventListener('load', () => {
       const description = document.getElementById('description').value;
       const rating = document.getElementById('rating').value;
       const socialMediaAccounts = {};
+      const wizardKey = document.getElementById('wizard-key').value;
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
 
@@ -43,7 +44,8 @@ window.addEventListener('load', () => {
         name,
         description,
         rating: parseInt(rating),
-        social_media_accounts: socialMediaAccounts
+        social_media_accounts: socialMediaAccounts,
+        wizard_key: wizardKey
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
           return error.innerHTML = 'There is already a project with this name.'

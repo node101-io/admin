@@ -38,6 +38,9 @@ block main
             label.general-image-input-wrapper(style='cursor: pointer')
               input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Project Wizard Key')
+          input.general-input#wizard-key(type='text' placeholder=__('Enter the wizard key for the usage in wizard application.') value=project.wizard_key)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Project')} #{socialAccounts[social]} 

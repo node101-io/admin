@@ -11,6 +11,7 @@ module.exports = (project, callback) => {
     image: project.image,
     is_completed: project.is_completed,
     social_media_accounts: project.social_media_accounts,
-    translations: project.translations
+    translations: project.translations,
+    wizard_key: project.wizard_key
   });
 }

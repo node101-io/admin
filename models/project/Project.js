@@ -107,6 +107,12 @@ const ProjectSchema = new Schema({
     type: mongoose.Types.ObjectId,
     default: null,
     sparse: true
+  },
+  wizard_key: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   }
 });
 
@@ -290,7 +296,8 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
         identifier_languages,
         description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : project.description,
         rating: data.rating && data.rating >= PROJECT_RATING_MIN_VALUE && data.rating <= PROJECT_RATING_MAX_VALUE ? data.rating : project.rating,
-        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
+        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
+        wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null
       }}, { new: true }, (err, project) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
