@@ -1,59 +1,69 @@
 extends ../partials/navbar
 block main
-  input.display-none#blog-json(type='text' value=JSON.stringify(blog))
+  input.display-none#guide-json(type='text' value=JSON.stringify(guide))
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title #{__('Edit Blog')} - #{blog.name}
-      .general-header-subtitle= __('Edit the blog information and translate the blog.')
-    input.general-header-search-input#blog-search-input(autocomplete='search' name='new-password' placeholder='Search by name or subtitle' value='')
+      .general-header-title #{__('Edit Testnet Guide')} - #{guide.title}
+      .general-header-subtitle= __('Edit the guide information and translate the guide.')
+    input.general-header-search-input#guide-search-input(autocomplete='search' name='new-password' placeholder='Search by title or subtitle' value='')
   .all-content-inner-wrapper
     .general-create-wrapper
-      if !blog.is_completed
-        .general-create-info= __('IMPORTANT! This blog is not yet complete. Please complete all the required fields to start using this blog in the website.')
+      if !guide.is_completed
+        .general-create-info= __('IMPORTANT! This guide is not yet complete. Please complete all the required fields to start using this guide in the website.')
       span.general-create-title= __('General Information')
       .general-create-seperator
       .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Title')
-          input.general-input#title(type='text' placeholder=__('Enter the blog title. Must be unique.') value=blog.title)
+          span.general-create-subtitle.general-create-required= __('Guide Title')
+          input.general-input#title(type='text' placeholder=__('Enter the guide title. Must be unique.') value=guide.title)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Type')
+          span.general-create-subtitle.general-create-required= __('Project')
           .general-select-input-wrapper
-            input.general-select-input-real-value#type(value=blog.type)
-            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=types[blog.type])
-            .general-select-input-choices-wrapper
-              each blog_type in Object.keys(types)
-                .general-select-each-input-choice(id='select-input-' + blog_type)= types[blog_type]
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Project')
-          .general-select-input-wrapper
-            input.general-select-input-real-value#project-id(value=(blog.project ? blog.project._id : ''))
-            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(blog.project ? blog.project.name : ''))
+            input.general-select-input-real-value#project-id(value=(guide.project ? guide.project._id : ''))
+            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(guide.project ? guide.project.name : ''))
             .general-select-input-choices-wrapper#project-choices
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Writer')
-          .general-select-input-wrapper
-            input.general-select-input-real-value#writer-id(value=(blog.writer ? blog.writer._id : ''))
-            input.general-select-input-selected-value.do-not-listen#writer-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(blog.writer ? blog.writer.name : ''))
-            .general-select-input-choices-wrapper#writer-choices
+          span.general-create-subtitle.general-create-required= __('Guide Subtitle')
+          input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on guide preview.') value=guide.subtitle)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Subtitle')
-          input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on blog preview.') value=blog.subtitle)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Image')
-          if blog.image
+          span.general-create-subtitle.general-create-required= __('Guide Image')
+          if guide.image
             label.general-image-input-wrapper(style='cursor: default')
-              .general-image-input-image(style=`background-image: url(${blog.image})`)
+              .general-image-input-image(style=`background-image: url(${guide.image}?${new Date().getTime()})`)
               svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
                 path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
           else
             label.general-image-input-wrapper(style='cursor: pointer')
               input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Mainnet Explorer URL')
+          input.general-input#mainnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet explorer URL.') value=guide.mainnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Testnet Explorer URL')
+          input.general-input#testnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet testnet URL.') value=guide.testnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Rewards')
+          input.general-input#rewards(type='text' placeholder=__('Entrer a the guide rewards.') value=guide.rewards)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Lock Period')
+          input.general-input#lock-period(type='text' placeholder=__('Enter the guide lock period.') value=guide.lock_period)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide CPU')
+          input.general-input#cpu(type='text' placeholder=__('Enter the guide CPU requirements.') value=guide.cpu)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide RAM')
+          input.general-input#ram(type='text' placeholder=__('Enter the guide RAM requirements.') value=guide.ram)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide OS')
+          input.general-input#os(type='text' placeholder=__('Enter the guide OS requirements.') value=guide.os)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Network')
+          input.general-input#network(type='text' placeholder=__('Enter the guide network requirements.') value=guide.network)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
-            span.general-create-subtitle #{__('Blog')} #{socialAccounts[social]} 
-            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=blog.social_media_accounts[social])
+            span.general-create-subtitle #{__('Guide')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=guide.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-error
         .general-create-button#update-button= __('Update')
@@ -65,15 +75,39 @@ block main
       .general-create-seperator
       .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Turkish Title')
-          input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the blog title. Must be unique.') value=blog.translations.tr.title)
+          span.general-create-subtitle.general-create-required= __('Guide Turkish Title')
+          input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the guide title. Must be unique.') value=guide.translations.tr.title)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Turkish Subtitle')
-          input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the blog subtitle.') value=blog.translations.tr.subtitle)
+          span.general-create-subtitle.general-create-required= __('Guide Turkish Subtitle')
+          input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the guide subtitle.') value=guide.translations.tr.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish Mainnet Explorer URL')
+          input.general-input#turkish-mainnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet explorer URL.') value=guide.translations.tr.mainnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish Testnet Explorer URL')
+          input.general-input#turkish-testnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet testnet URL.') value=guide.translations.tr.testnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish Rewards')
+          input.general-input#turkish-rewards(type='text' placeholder=__('Entrer a the guide rewards.') value=guide.translations.tr.rewards)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish Lock Period')
+          input.general-input#turkish-lock-period(type='text' placeholder=__('Enter the guide lock period.') value=guide.translations.tr.lock_period)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish CPU')
+          input.general-input#turkish-cpu(type='text' placeholder=__('Enter the guide CPU requirements.') value=guide.translations.tr.cpu)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish RAM')
+          input.general-input#turkish-ram(type='text' placeholder=__('Enter the guide RAM requirements.') value=guide.translations.tr.ram)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish OS')
+          input.general-input#turkish-os(type='text' placeholder=__('Enter the guide OS requirements.') value=guide.translations.tr.os)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Turkish Network')
+          input.general-input#turkish-network(type='text' placeholder=__('Enter the guide network requirements.') value=guide.translations.tr.network)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
-            span.general-create-subtitle #{__('Blog Turkish')} #{socialAccounts[social]} 
-            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=blog.translations.tr.social_media_accounts[social])
+            span.general-create-subtitle #{__('Guide Turkish')} #{socialAccounts[social]} 
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=guide.translations.tr.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-turkish-error
         .general-create-button#update-turkish-button= __('Update Turkish')
@@ -81,15 +115,39 @@ block main
       .general-create-seperator
       .general-create-input-grid-wrapper
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Russian Title')
-          input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the blog title. Must be unique.') value=blog.translations.ru.title)
+          span.general-create-subtitle.general-create-required= __('Guide Russian Title')
+          input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the guide title. Must be unique.') value=guide.translations.ru.title)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Blog Russian Subtitle')
-          input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the blog subtitle.') value=blog.translations.ru.subtitle)
+          span.general-create-subtitle.general-create-required= __('Guide Russian Subtitle')
+          input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the guide subtitle.') value=guide.translations.ru.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian Mainnet Explorer URL')
+          input.general-input#russian-mainnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet explorer URL.') value=guide.translations.ru.mainnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian Testnet Explorer URL')
+          input.general-input#russian-testnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet testnet URL.') value=guide.translations.ru.testnet_explorer_url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian Rewards')
+          input.general-input#russian-rewards(type='text' placeholder=__('Entrer a the guide rewards.') value=guide.translations.ru.rewards)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian Lock Period')
+          input.general-input#russian-lock-period(type='text' placeholder=__('Enter the guide lock period.') value=guide.translations.ru.lock_period)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian CPU')
+          input.general-input#russian-cpu(type='text' placeholder=__('Enter the guide CPU requirements.') value=guide.translations.ru.cpu)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian RAM')
+          input.general-input#russian-ram(type='text' placeholder=__('Enter the guide RAM requirements.') value=guide.translations.ru.ram)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian OS')
+          input.general-input#russian-os(type='text' placeholder=__('Enter the guide OS requirements.') value=guide.translations.ru.os)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Guide Russian Network')
+          input.general-input#russian-network(type='text' placeholder=__('Enter the guide network requirements.') value=guide.network)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
-            span.general-create-subtitle #{__('Blog Russian')} #{socialAccounts[social]} 
-            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=blog.translations.ru.social_media_accounts[social])
+            span.general-create-subtitle #{__('Guide Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=guide.translations.ru.social_media_accounts[social])
       .general-create-button-wrapper
         span.general-create-error#update-russian-error
         .general-create-button#update-russian-button= __('Update Russian')

@@ -1,14 +1,17 @@
 const getFrequentlyAskedQuestions = require('./getFrequentlyAskedQuestions');
+const getSocialMediaAccounts = require('./getSocialMediaAccounts');
 
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 
 module.exports = (guide, language, data) => {
-  if (!data)
-    data = {};
+  if (!data) data = {};
 
   const translations = JSON.parse(JSON.stringify(guide.translations));
 
   translations[language.toString().trim()] = {
+    title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : guide.title,
+    subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : guide.subtitle,
+    social_media_accounts: data.social_media_accounts && typeof data.social_media_accounts == 'object' ? getSocialMediaAccounts(data.social_media_accounts) : guide.social_media_accounts,
     mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : guide.mainnet_explorer_url,
     testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : guide.testnet_explorer_url,
     rewards: data.rewards && typeof data.rewards == 'string' && data.rewards.trim().length && data.rewards.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.rewards.trim() : guide.rewards,

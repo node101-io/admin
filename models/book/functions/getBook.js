@@ -23,7 +23,8 @@ module.exports = (book, callback) => {
             writer,
             is_completed: book.is_completed,
             social_media_accounts: book.social_media_accounts,
-            translations: book.translations
+            translations: book.translations,
+            children: book.children.reverse()
           });
         });
       });
@@ -41,7 +42,8 @@ module.exports = (book, callback) => {
           writer,
           is_completed: book.is_completed,
           social_media_accounts: book.social_media_accounts,
-          translations: book.translations
+          translations: book.translations,
+          children: book.children.reverse()
         });
       });
     }
@@ -60,7 +62,8 @@ module.exports = (book, callback) => {
           writer_id: book.writer_id,
           is_completed: book.is_completed,
           social_media_accounts: book.social_media_accounts,
-          translations: book.translations
+          translations: book.translations,
+          children: book.children.reverse()
         });
       });
     } else {
@@ -74,7 +77,8 @@ module.exports = (book, callback) => {
         writer_id: book.writer_id,
         is_completed: book.is_completed,
         social_media_accounts: book.social_media_accounts,
-        translations: book.translations
+        translations: book.translations,
+        children: book.children.reverse()
       });
     };
   };

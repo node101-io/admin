@@ -1,6 +1,12 @@
 const Guide = require('../../../models/guide/Guide');
 
 module.exports = (req, res) => {
+  const socialAccounts = {
+    'medium': 'Medium',
+    'youtube': 'Youtube',
+    'spotify': 'Spotify'
+  };
+
   Guide.findGuideByIdAndFormat(req.query.id, (err, guide) => {
     if (err) return res.redirect('/error?message=' + err);
 
@@ -10,10 +16,11 @@ module.exports = (req, res) => {
       includes: {
         external: {
           css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-          js: ['adminListeners', 'ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'page', 'serverRequest']
+          js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'page', 'navbarListeners', 'serverRequest']
         }
       },
-      guide
+      guide,
+      socialAccounts
     });
   });
 };

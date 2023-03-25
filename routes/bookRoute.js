@@ -12,6 +12,8 @@ const deleteGetController = require('../controllers/book/delete/get');
 const editGetController = require('../controllers/book/edit/get');
 const indexGetController = require('../controllers/book/index/get');
 
+const chapterIndexGetController = require('../controllers/book/chapter/index/get');
+
 const createPostController = require('../controllers/book/create/post');
 const deletePostController = require('../controllers/book/delete/post');
 const editPostController = require('../controllers/book/edit/post');
@@ -19,6 +21,9 @@ const imagePostController = require('../controllers/book/image/post');
 const orderPostController = require('../controllers/book/order/post');
 const restorePostController = require('../controllers/book/restore/post');
 const translatePostController = require('../controllers/book/translate/post');
+
+const chapterCreatePostController = require('../controllers/book/chapter/create/post');
+const chapterPushPostController = require('../controllers/book/chapter/push/post');
 
 router.get(
   '/',
@@ -40,6 +45,14 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     editGetController
+);
+
+router.get(
+  '/chapter',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    chapterIndexGetController
 );
 
 router.post(
@@ -91,6 +104,21 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     translatePostController
+);
+
+router.post(
+  '/chapter/create',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    chapterCreatePostController
+);
+router.post(
+  '/chapter/push',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    chapterPushPostController
 );
 
 module.exports = router;

@@ -9,8 +9,10 @@ const formatTranslations = require('./functions/formatTranslations');
 const getChapter = require('./functions/getChapter');
 
 const CHILDREN_TYPE_VALUES = ['chapter', 'writing'];
-const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 1e3;
 const MAX_CHILDREN_COUNT = 1e3;
+const MAX_DOCUMENT_COUNT_PER_QUERY = 1e3;
+const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 
 const Schema = mongoose.Schema;
 
@@ -60,7 +62,7 @@ ChapterSchema.statics.createChapter = function (data, callback) {
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  Book.findBookById(book_id, (err, book) => {
+  Book.findBookById(data.book_id, (err, book) => {
     if (err) return callback(err);
     if (!book.is_completed)
       return callback('not_authenticated_request');
@@ -90,6 +92,8 @@ ChapterSchema.statics.createChapter = function (data, callback) {
           translations: chapter.translations
         }}, err => {
           if (err) return callback('database_error');
+
+          // Book.
 
           return callback(null, chapter._id);
         });
@@ -126,6 +130,19 @@ ChapterSchema.statics.findChapterByIdAndFormat = function (id, callback) {
   });
 };
 
+ChapterSchema.statics.findChapterByIdAndGetChildren = function (id, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    async.timesSeries(
+      chapter.children.length,
+      // (time, next) => Chapter.
+    )
+  })
+}
+
 ChapterSchema.statics.findChaptersByFilters = function (data, callback) {
   const Chapter = this;
 
@@ -137,6 +154,9 @@ ChapterSchema.statics.findChaptersByFilters = function (data, callback) {
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
   const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
   const skip = page * limit;
+
+  if (data.book_id && validator.isMongoId(data.book_id.toString()))
+    filters.book_id == mongoose.Types.ObjectId(data.book_id.toString());
 
   if ('is_root' in data)
     filters.parent_id = data.is_root ? null : { $ne: null };
@@ -163,7 +183,7 @@ ChapterSchema.statics.findChaptersByFilters = function (data, callback) {
         });
       }
     ))
-    .catch(_ => callback('database_error'));
+    .catch(err => callback('database_error'));
 };
 
 ChapterSchema.statics.findChapterCountByFilters = function (data, callback) {
@@ -173,6 +193,9 @@ ChapterSchema.statics.findChapterCountByFilters = function (data, callback) {
     return callback('bad_request');
 
   const filters = {};
+
+  if (data.book_id && validator.isMongoId(data.book_id.toString()))
+    filters.book_id == mongoose.Types.ObjectId(data.book_id.toString());
 
   if ('is_root' in data)
     filters.parent_id = data.is_root ? null : { $ne: null };
@@ -287,27 +310,35 @@ ChapterSchema.statics.findChapterByIdAndUpdateTranslations = function (id, data,
 
 };
 
-ChapterSchema.statics.findChapterByIdAndIncOrderByOne = function (id, callback) {
+ChapterSchema.statics.findChapterChildByIdAndIncOrderByOne = function (id, callback) {
   const Chapter = this;
 
   Chapter.findChapterById(id, (err, chapter) => {
-    if (err) return callback(err);
+    if (err && err != 'document_not_found') return callback(err);
 
-    if (!chapter.parent_id) {
-      Chapter.findOne({
-        book_id: chapter.book_id,
-        order: chapter.order - 1
-      }, (err, prev_chapter) => {
-        if (err) return callback('database_error');
-        if (!prev_chapter) return callback(null);
+    if (err || !chapter) {
+      Writing.findWritingById(id, (err, writing) => {
+        if (err) return callback(err);
 
-        Chapter.findByIdAndUpdate(chapter._id, {$inc: {
-          order: 1
-        }}, err => {
+        Chapter.findOne({ children: {
+          _id: writing._id,
+          type: 'writing'
+        } }, (err, parent) => {
           if (err) return callback('database_error');
+          if (!parent) return callback('document_not_found');
 
-          Chapter.findByIdAndUpdate(prev_chapter._id, {$inc: {
-            order: -1
+          const index = parent.children.indexOf({
+            _id: writing._id,
+            type: 'writing'
+          });
+
+          if (index <= 0) return callback(null);
+
+          let newChildren = parent.children;
+          newChildren.splice(index, 2, newChildren[index], newChildren[index - 1]);
+
+          Chapter.findByIdAndUpdate(parent._id, {$set: {
+            children: newChildren
           }}, err => {
             if (err) return callback('database_error');
 
@@ -317,15 +348,18 @@ ChapterSchema.statics.findChapterByIdAndIncOrderByOne = function (id, callback) 
       });
     } else {
       Chapter.findChapterById(chapter.parent_id, (err, parent) => {
-        if (err) return callback(err);
+        if (err) return callback('database_error');
+        if (!parent) return callback('document_not_found');
 
         const index = parent.children.indexOf({
           _id: chapter._id,
           type: 'chapter'
         });
 
+        if (index <= 0) return callback(null);
+
         let newChildren = parent.children;
-        newChildren.splice(index, 2, newChildren[index], newChildren[index - 1])
+        newChildren.splice(index, 2, newChildren[index], newChildren[index - 1]);
 
         Chapter.findByIdAndUpdate(parent._id, {$set: {
           children: newChildren
@@ -335,35 +369,106 @@ ChapterSchema.statics.findChapterByIdAndIncOrderByOne = function (id, callback) 
           return callback(null);
         });
       });
-    };
-  });
+    }
+  })
 };
 
-ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndIncOrderByOne = function (parent_id, id, callback) {
+ChapterSchema.statics.findChapterChildByIdAndMoveToSameLevelWithParent = function (id, callback) {
   const Chapter = this;
 
-  Writing.findWritingById(id, (err, writing) => {
-    if (err) return callback(err);
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err && err != 'document_not_found') return callback(err);
 
-    Chapter.findChapterById(parent_id, (err, parent) => {
-      if (err) return callback(err);
+    if (err || !chapter) {
+      Writing.findWritingById(id, (err, writing) => {
+        if (err) return callback(err);
 
-      const index = parent.children.indexOf({
-        _id: writing._id,
-        type: 'writing'
+        Chapter.findOne({ children: {
+          _id: writing._id,
+          type: 'writing'
+        } }, (err, parent) => {
+          if (err) return callback('database_error');
+          if (!parent) return callback('document_not_found');
+
+          Chapter.findByIdAndUpdate(parent._id, {$pull: {
+            children: {
+              _id: writing._id,
+              type: 'writing'
+            }
+          }}, err => {
+            if (err) return callback('database_error');
+
+            if (parent.parent_id) {
+              Chapter.findByIdAndUpdate(parent.parent_id, {$push: {
+                children: {
+                  _id: writing._id,
+                  type: 'writing'
+                }
+              }}, err => {
+                if (err) return callback('database_error');
+
+                return callback(null);
+              });
+            } else {
+              Book.findBookByIdAndPushChildren(parent.book_id, {$push: {
+                children: {
+                  _id: writing._id,
+                  type: 'writing'
+                }
+              }}, err => {
+                if (err) return callback('database_error');
+
+                return callback(null);
+              });
+            };
+          });
+        });
       });
-
-      let newChildren = parent.children;
-      newChildren.splice(index, 2, newChildren[index], newChildren[index - 1])
-
-      Chapter.findByIdAndUpdate(parent._id, {$set: {
-        children: newChildren
-      }}, err => {
+    } else {
+      Chapter.findChapterById(chapter.parent_id, (err, parent) => {
         if (err) return callback('database_error');
+        if (!parent) return callback('document_not_found');
 
-        return callback(null);
+        Chapter.findByIdAndUpdate(parent._id, {$pull: {
+          children: {
+            _id: chapter._id,
+            type: 'chapter'
+          }
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Chapter.findByIdAndUpdate(chapter._id, {$set: {
+            parent_id: parent.parent_id
+          }}, err => {
+            if (err) return callback('database_error');
+
+            if (parent.parent_id) {
+              Chapter.findByIdAndUpdate(parent.parent_id, {$push: {
+                children: {
+                  _id: chapter._id,
+                  type: 'chapter'
+                }
+              }}, err => {
+                if (err) return callback('database_error');
+  
+                return callback(null);
+              });
+            } else {
+              Book.findBookByIdAndPushChildren(parent.book_id, {$push: {
+                children: {
+                  _id: chapter._id,
+                  type: 'chapter'
+                }
+              }}, err => {
+                if (err) return callback('database_error');
+  
+                return callback(null);
+              });
+            };
+          });
+        });
       });
-    });
+    }
   });
 };
 

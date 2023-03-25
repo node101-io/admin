@@ -66,10 +66,6 @@ const WritingSchema = new Schema({
     type: Date,
     required: true
   },
-  writer_id: {
-    type: mongoose.Types.ObjectId,
-    required: true
-  },
   subtitle: {
     type: String,
     default: '',
@@ -268,7 +264,6 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
       const newWriting = new Writing(newWritingData);
   
       newWriting.save((err, writing) => {
-        console.log(err);
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
@@ -290,7 +285,7 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
               } }
             )
             .then(() => callback(null, writing._id.toString()))
-            .catch(_ => callback('index_error'));
+            .catch(err => callback('index_error'));
         });
       });
     });
@@ -472,6 +467,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
           is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
         }}, { new: true }, (err, writing) => {
+          console.log(err);
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');

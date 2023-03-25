@@ -169,8 +169,6 @@ window.addEventListener('load', () => {
           }, _ => window.location.reload());
       });
     }
-
-
   });
 
   document.addEventListener('input', event => {
@@ -194,7 +192,7 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('change', event => {
-    if (event.target.id == 'logo') {
+    if (event.target.id == 'image') {
       const file = event.target.files[0];
       const wrapper = event.target.parentNode;
   

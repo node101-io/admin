@@ -81,9 +81,10 @@ ImageSchema.statics.createImage = function (data, callback) {
   uploadImage(data, (err, url) => {
     if (err) return callback('aws_database_error');
 
-    Image.findImageByUrl(url, (err, image) => {
-      if (err && err != 'document_not_found')
-        return callback(err);
+    Image.findOne({
+      name: data.original_name
+    }, (err, image) => {
+      if (err) return callback('database_error');
 
       if (err || !image) {
         const newImageData = {
@@ -105,7 +106,7 @@ ImageSchema.statics.createImage = function (data, callback) {
           Image.findExpiredImagesAndDelete(err => {
             if (err) console.log(err);
   
-            return callback(null, url);
+            return callback(null, image.url);
           });
         });
       } else {

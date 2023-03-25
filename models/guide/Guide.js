@@ -1,3 +1,4 @@
+const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
@@ -12,6 +13,7 @@ const formatTranslations = require('./functions/formatTranslations');
 const getFrequentlyAskedQuestions = require('./functions/getFrequentlyAskedQuestions');
 const getGuide = require('./functions/getGuide');
 const getGuideByLanguage = require('./functions/getGuideByLanguage');
+const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isGuideComplete = require('./functions/isGuideComplete');
 
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
@@ -19,16 +21,15 @@ const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 200;
 const IMAGE_WIDTH = 200;
 const IMAGE_NAME_PREFIX = 'node101 guide ';
-const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e5;
+const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
+const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
+
 
 const Schema = mongoose.Schema;
 
 const GuideSchema = new Schema({
-  project_id: {
-    type: mongoose.Types.ObjectId,
-    required: true
-  },
   title: {
     type: String,
     required: true,
@@ -46,6 +47,30 @@ const GuideSchema = new Schema({
   identifier_languages: {
     type: Object,
     default: {}
+  },
+  project_id: {
+    type: mongoose.Types.ObjectId,
+    default: null
+  },
+  subtitle: {
+    type: String,
+    default: null,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  search_title: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
+  },
+  search_subtitle: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   created_at: {
     type: Date,
@@ -129,6 +154,14 @@ const GuideSchema = new Schema({
       }]
     */
   },
+  is_deleted: {
+    type: Boolean,
+    default: false
+  },
+  social_media_accounts: {
+    type: Object,
+    default: {}
+  },
   translations: {
     type: Object,
     default: {}
@@ -143,7 +176,7 @@ const GuideSchema = new Schema({
   },
   writing_id: {
     type: mongoose.Types.ObjectId,
-    required: true
+    default: null
   }
 });
 
@@ -153,56 +186,61 @@ GuideSchema.statics.createGuide = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  Project.findProjectById(err, project => {
-    if (err) return callback(err);
-
     if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-      return callback('bad_request');
+    return callback('bad_request');
 
-    const identifier = toURLString(data.title);
+  const identifier = toURLString(data.title);
 
-    Guide.findOne({
-      identifiers: identifier
-    }, (err, guide) => {
-      if (err) return callback('database_error');
-      if (guide) return callback('duplicated_unique_field');
+  Guide.findOne({
+    identifiers: identifier
+  }, (err, guide) => {
+    if (err) return callback('database_error');
+    if (guide) return callback('duplicated_unique_field');
 
-      Guide.findGuideCountByFilters({ is_deleted: false }, (err, order) => {
-        if (err) return callback(err);
+    Guide.findGuideCountByFilters({ is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
+
+      const newGuideData = {
+        title: data.title.trim(),
+        search_title: data.title.trim(),
+        identifiers: [ identifier ],
+        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+        created_at: new Date(),
+        order
+      };
+
+      const newGuide = new Guide(newGuideData);
+    
+      newGuide.save((err, guide) => {
+        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+          return callback('duplicated_unique_field');
+        if (err) return callback('database_error');
 
         Writing.createWritingByParentIdWithoutWriter(guide._id, {
           type: 'guide',
           title: data.title.trim()
-        }, (err, writing) => {
+        }, (err, writing_id) => {
           if (err) return callback(err);
+  
+          guide.translations = formatTranslations(guide, 'tr');
+          guide.translations = formatTranslations(guide, 'ru');
 
-          const newGuideData = {
-            project_id: project._id,
-            title: data.title.trim(),
-            identifiers: [ identifier ],
-            identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-            created_at: new Date(),
-            order,
-            writing_id: writing._id
-          };
-  
-          const newGuide = new Guide(newGuideData);
-        
-          newGuide.save((err, guide) => {
-            if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-              return callback('duplicated_unique_field');
+          Guide.findByIdAndUpdate(guide._id, {$set: {
+            translations: guide.translations,
+            writing_id: mongoose.Types.ObjectId(writing_id)
+          }}, err => {
             if (err) return callback('database_error');
-  
-            guide.translations = formatTranslations(guide, 'tr');
-            guide.translations = formatTranslations(guide, 'ru');
-  
-            Guide.findByIdAndUpdate(guide._id, {$set: {
-              translations: guide.translations
-            }}, err => {
-              if (err) return callback('database_error');
-  
-              callback(null, guide._id.toString());            
-            });
+            
+            Guide.collection
+              .createIndex(
+                { search_title: 'text', search_subtitle: 'text' },
+                { weights: {
+                  search_title: 10,
+                  search_subtitle: 1
+                } }
+              )
+              .then(() => callback(null, guide._id.toString()))
+              .catch(_ => callback('index_error'));       
           });
         });
       });
@@ -250,7 +288,127 @@ GuideSchema.statics.findGuideByIdAndFormat = function (id, callback) {
 GuideSchema.statics.findGuideByIdAndFormatByLanguage = function (id, language, callback) {
   const Guide = this;
 
-  if (!language || !validator.isISO31661Alpha2(language.toString()))
+  Guide.findGuideById(id, (err, guide) => {
+    if (err) return callback(err);
+
+    getGuideByLanguage(guide, language, (err, guide) => {
+      if (err) return callback(err);
+
+      return callback(null, guide);
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
+  const Guide = this;
+
+  Guide.findGuideById(id, (err, guide) => {
+    if (err) return callback(err);
+    if (guide.is_deleted) return callback('not_authenticated_request');
+
+    if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+      return callback('bad_request');
+
+    const newIdentifier = toURLString(data.title);
+    const oldIdentifier = toURLString(guide.title);
+
+    Guide.findOne({
+      _id: { $ne: guide._id },
+      identifiers: newIdentifier
+    }, (err, duplicate) => {
+      if (err) return callback('database_error');
+      if (duplicate) return callback('duplicated_unique_field');
+
+      const identifiers = guide.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+
+      const identifier_languages = {
+        [newIdentifier]: DEFAULT_IDENTIFIER_LANGUAGE
+      };
+
+      Object.keys(guide.identifier_languages).forEach(key => {
+        if (key != oldIdentifier)
+          identifier_languages[key] = guide.identifier_languages[key]
+      });
+
+      Project.findProjectById(data.project_id, (project_err, project) => {
+        Guide.findByIdAndUpdate(guide._id, {$set: {
+          title: data.title.trim(),
+          identifiers,
+          identifier_languages,
+          subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : guide.subtitle,
+          type: data.type && TYPE_VALUES.includes(data.type) ? data.type : guide.type,
+          project_id: !project_err ? project._id : guide.project_id,
+          social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
+          mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : null,
+          testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : null,
+          rewards: data.rewards && typeof data.rewards == 'string' && data.rewards.trim().length && data.rewards.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.rewards.trim() : null,
+          lock_period: data.lock_period && typeof data.lock_period == 'string' && data.lock_period.trim().length && data.lock_period.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.lock_period.trim() : null,
+          cpu: data.cpu && typeof data.cpu == 'string' && data.cpu.trim().length && data.cpu.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.cpu.trim() : null,
+          ram: data.ram && typeof data.ram == 'string' && data.ram.trim().length && data.ram.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.ram.trim() : null,
+          os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
+          network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
+          frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions)
+        }}, { new: true }, (err, guide) => {
+          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+            return callback('duplicated_unique_field');
+          if (err) return callback('database_error');
+  
+          guide.translations = formatTranslations(guide, 'tr', guide.translations.tr);
+          guide.translations = formatTranslations(guide, 'ru', guide.translations.ru);
+    
+          Guide.findByIdAndUpdate(guide._id, {$set: {
+            translations: guide.translations
+          }}, { new: true }, (err, guide) => {
+            if (err) return callback('database_error');
+  
+            const searchTitle = new Set();
+            const searchSubtitle = new Set();
+
+            guide.title.split(' ').forEach(word => searchTitle.add(word));
+            guide.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
+            guide.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
+            guide.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+            guide.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+            guide.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+
+            Guide.findByIdAndUpdate(guide._id, {$set: {
+              search_title: Array.from(searchTitle).join(' '),
+              search_subtitle: Array.from(searchSubtitle).join(' ')
+            }}, err => {
+              if (err) return callback('database_error');
+
+              Writing.findWritingByIdAndParentIdAndUpdate(guide.writing_id, guide._id, {
+                title: guide.title,
+                subtitle: guide.subtitle
+              }, err => {
+                if (err) return callback(err);
+
+                Guide.collection
+                  .createIndex(
+                    { search_title: 'text', search_subtitle: 'text' },
+                    { weights: {
+                      search_title: 10,
+                      search_subtitle: 1
+                    } }
+                  )
+                  .then(() => callback(null))
+                  .catch(_ => callback('index_error'));
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndUpdateTranslations = function (id, data, callback) {
+  const Guide = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
     return callback('bad_request');
 
   Guide.findGuideById(id, (err, guide) => {
@@ -259,10 +417,75 @@ GuideSchema.statics.findGuideByIdAndFormatByLanguage = function (id, language, c
     if (!guide.is_completed)
       return callback('not_authenticated_request');
 
-    getGuideByLanguage(guide, language, (err, guide) => {
-      if (err) return callback(err);
+    const translations = formatTranslations(guide, data.language, data);
+    let oldIdentifier = toURLString(guide.translations[data.language]?.title);
+    const newIdentifier = toURLString(translations[data.language].title);
 
-      return callback(null, guide);
+    if (oldIdentifier == toURLString(guide.title))
+      oldIdentifier = null;
+
+    Guide.findOne({
+      _id: { $ne: guide._id },
+      identifiers: newIdentifier
+    }, (err, duplicate) => {
+      if (err) return callback('database_error');
+      if (duplicate) return callback('duplicated_unique_field');
+
+      const identifiers = guide.identifiers.filter(each => each != oldIdentifier);
+      if (!identifiers.includes(newIdentifier))
+        identifiers.push(newIdentifier);
+      const identifier_languages = {
+        [newIdentifier]: data.language
+      };
+  
+      Object.keys(guide.identifier_languages).forEach(key => {
+        if (key != oldIdentifier)
+          identifier_languages[key] = guide.identifier_languages[key]
+      });
+  
+      Guide.findByIdAndUpdate(guide._id, {$set: {
+        identifiers,
+        identifier_languages,
+        translations
+      }}, { new: true }, (err, guide) => {
+        if (err) return callback('database_error');
+  
+        const searchTitle = new Set();
+        const searchSubtitle = new Set();
+
+        guide.title.split(' ').forEach(word => searchTitle.add(word));
+        guide.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
+        guide.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
+        guide.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+        guide.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+        guide.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+
+        Guide.findByIdAndUpdate(guide._id, {$set: {
+          search_title: Array.from(searchTitle).join(' '),
+          search_subtitle: Array.from(searchSubtitle).join(' ')
+        }}, err => {
+          if (err) return callback('database_error');
+
+          Writing.findWritingByIdAndParentIdAndUpdateTranslations(guide.writing_id, guide._id, {
+            language: data.language,
+            title: data.title,
+            subtitle: data.subtitle
+          }, err => {
+            if (err) return callback(err);
+
+            Guide.collection
+              .createIndex(
+                { search_title: 'text', search_subtitle: 'text' },
+                { weights: {
+                  search_title: 10,
+                  search_subtitle: 1
+                } }
+              )
+              .then(() => callback(null))
+              .catch(_ => callback('index_error'));
+          });
+        });
+      });
     });
   });
 };
@@ -287,72 +510,23 @@ GuideSchema.statics.findGuideByIdAndUpdateImage = function (id, file, callback) 
       }}, { new: false }, (err, guide) => {
         if (err) return callback(err);
 
-        if (!guide.image || guide.image.split('/')[guide.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(guide.image, err => {
+        Writing.findWritingByIdAndAndParentIdUpdateLogo(guide.writing_id, guide._id, file, err => {
           if (err) return callback(err);
 
-          Writing.findWritingByIdAndAndParentIdUpdateLogo(guide.writing_id, guide._id, file, err => {
+          if (!guide.image || guide.image.split('/')[guide.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(guide.image, err => {
             if (err) return callback(err);
 
             deleteFile(file, err => {
               if (err) return callback(err);
-
+  
               return callback(null, url);
             });
           });
         });
       });
-    });
-  });
-};
-
-GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
-  const Guide = this;
-
-  Guide.findGuideById(id, (err, guide) => {
-    if (err) return callback(err);
-
-    Guide.findByIdAndUpdate(guide._id, {$set: {
-      mainnet_explorer_url: data.mainnet_explorer_url && typeof data.mainnet_explorer_url == 'string' && data.mainnet_explorer_url.trim().length && data.mainnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.mainnet_explorer_url.trim() : null,
-      testnet_explorer_url: data.testnet_explorer_url && typeof data.testnet_explorer_url == 'string' && data.testnet_explorer_url.trim().length && data.testnet_explorer_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.testnet_explorer_url.trim() : null,
-      rewards: data.rewards && typeof data.rewards == 'string' && data.rewards.trim().length && data.rewards.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.rewards.trim() : null,
-      lock_period: data.lock_period && typeof data.lock_period == 'string' && data.lock_period.trim().length && data.lock_period.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.lock_period.trim() : null,
-      cpu: data.cpu && typeof data.cpu == 'string' && data.cpu.trim().length && data.cpu.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.cpu.trim() : null,
-      ram: data.ram && typeof data.ram == 'string' && data.ram.trim().length && data.ram.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.ram.trim() : null,
-      os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
-      network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
-      frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions)
-    }}, err => {
-      if (err) return callback('database_error');
-
-      return callback(null);
-    });
-  });
-};
-
-GuideSchema.statics.findGuideByIdAndUpdateTranslations = function (id, data, callback) {
-  const Guide = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
-    return callback('bad_request');
-
-  Guide.findGuideById(id, (err, guide) => {
-    if (err) return callback(err);
-
-    if (!guide.is_completed)
-      return callback('not_authenticated_request');
-
-    Guide.findByIdAndUpdate(guide._id, {$set: {
-      translations: formatTranslations(guide, data.language, data)
-    }}, err => {
-      if (err) return callback('database_error');
-
-      return callback(null);
     });
   });
 };
@@ -363,44 +537,63 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  Project.findProjectsByFilters(data, (err, project_data) => {
-    if (err) return callback(err);
+  const filters = {};
 
-    const data = {
-      search: project_data.search,
-      limit: project_data.limit,
-      page: project_data.page,
-      guides: []
-    };
+  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
 
-    const filters = {};
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
 
-    if (!project_data.projects || !project_data.projects.length)
-      return callback(null, data);
-
-    if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
-      filters.title = { $regex: data.search.trim(), $options: 'i' };
-    };
-
+  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Guide
-      .find({$and: [
-        filters,
-        { project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) } }
-      ]})
+      .find(filters)
       .sort({ order: -1 })
+      .limit(limit)
+      .skip(skip)
       .then(guides => async.timesSeries(
         guides.length,
         (time, next) => Guide.findGuideByIdAndFormat(guides[time]._id, (err, guide) => next(err, guide)),
         (err, guides) => {
           if (err) return callback(err);
 
-          data.guides = guides;
-  
-          return callback(null, data);
+          return callback(null, {
+            search: null,
+            limit,
+            page,
+            guides
+          });
         })
       )
       .catch(_ => callback('database_error'));
-  });
+  } else {
+    filters.$text = { $search: data.search.trim() };
+
+    Guide
+      .find(filters)
+      .sort({
+        score: { $meta: 'textScore' }, 
+        order: -1
+      })
+      .limit(limit)
+      .skip(skip)
+      .then(guides => async.timesSeries(
+        guides.length,
+        (time, next) => Guide.findGuideByIdAndFormat(guides[time]._id, (err, guide) => next(err, guide)),
+        (err, guides) => {
+          if (err) return callback(err);
+
+          return callback(null, {
+            search: data.search.trim(),
+            limit,
+            page,
+            guides
+          });
+        })
+      )
+      .catch(_ => callback('database_error'));
+  };
 };
 
 GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
@@ -409,27 +602,26 @@ GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  Project.findProjectsByFilters(data, (err, project_data) => {
-    if (err) return callback(err);
+  const filters = {};
 
-    const filters = {};
+  if ('is_deleted' in data)
+    filters.is_deleted = data.is_deleted ? true : false;
 
-    if (!project_data.projects || !project_data.projects.length)
-      return callback(null, 0);
-
-    if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
-      filters.title = { $regex: data.search.trim(), $options: 'i' };
-    };
+  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
+    Guide
+      .find(filters)
+      .countDocuments()
+      .then(count => callback(null, count))
+      .catch(err => callback('database_error'));
+  } else {
+    filters.$text = { $search: data.search.trim() };
 
     Guide
-      .find({$and: [
-        filters,
-        { project_id: { $in: project_data.projects.map(each => mongoose.Types.ObjectId(each._id.toString())) } }
-      ]})
+      .find(filters)
       .countDocuments()
       .then(count => callback(null, count))
       .catch(_ => callback('database_error'));
-  });
+  };
 };
 
 GuideSchema.statics.findGuideByIdAndRevertIsActive = function (id, callback) {
@@ -480,6 +672,65 @@ GuideSchema.statics.findGuideByIdAndIncOrderByOne = function (id, callback) {
           });
         });
       });
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndGetWritingAndUpdate = function (id, data, callback) {
+  const Guide = this;
+
+  Guide.findGuideByIdAndUpdate(id, data, err => {
+    if (err) return callback(err);
+
+    Guide.findGuideById(id, (err, guide) => {
+      if (err) return callback(err);
+
+      Writing.findWritingByIdAndParentIdAndUpdate(guide.writing_id, guide._id, {
+        title: guide.title,
+        subtitle: guide.subtitle,
+        content: data.content
+      }, err => {
+        if (err) return callback(err);
+
+        return callback(null);
+      });
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndGetWritingAndUpdateTranslations = function (id, data, callback) {
+  const Guide = this;
+
+  Guide.findGuideByIdAndUpdateTranslations(id, data, err => {
+    if (err) return callback(err);
+
+    Guide.findGuideById(id, (err, guide) => {
+      if (err) return callback(err);
+
+      Writing.findWritingByIdAndParentIdAndUpdateTranslations(guide.writing_id, guide._id, {
+        language: data.language,
+        title: guide.title,
+        subtitle: guide.subtitle,
+        content: data.content
+      }, err => {
+        if (err) return callback(err);
+
+        return callback(null);
+      });
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndGetWritingAndUpdateCover = function (id, file, callback) {
+  const Guide = this;
+
+  Guide.findGuideById(id, (err, guide) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCover(guide.writing_id, guide._id, file, err => {
+      if (err) return callback(err);
+
+      return callback(null);
     });
   });
 };

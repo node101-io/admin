@@ -14,11 +14,13 @@ const getBook = require('./functions/getBook');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isBookComplete = require('./functions/isBookComplete');
 
+const CHILDREN_TYPE_VALUES = ['chapter', 'writing'];
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 300;
 const IMAGE_NAME_PREFIX = 'node101 book ';
+const MAX_CHILDREN_COUNT = 1e3;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e3;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
@@ -100,6 +102,17 @@ const BookSchema = new Schema({
   order: {
     type: Number,
     min: 0
+  },
+  children: {
+    type: Array,
+    default: [],
+    maxlength: MAX_CHILDREN_COUNT
+    /*
+      Format: [{
+        _id: mongoose.Types.ObjectId,
+        type: String
+      }]
+    */
   }
 });
 
@@ -641,5 +654,33 @@ BookSchema.statics.findBookByIdAndIncOrderByOne = function (id, callback) {
     });
   });
 };
+
+BookSchema.statics.findBookByIdAndPushChildren = function (id, data, callback) {
+  const Book = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.type || !CHILDREN_TYPE_VALUES.includes(data.type))
+    return callback('bad_request');
+
+  if (!data._id || !validator.isMongoId(data._id.toString()))
+    return callback('bad_request');
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Book.findByIdAndUpdate(book._id, {$push: {
+      children: {
+        _id: mongoose.Types.ObjectId(data._id.toString()),
+        type: data.type
+      }
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+},
 
 module.exports = mongoose.model('Book', BookSchema);

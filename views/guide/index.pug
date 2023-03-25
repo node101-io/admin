@@ -2,37 +2,37 @@ extends ../partials/navbar
 block main
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title= __('Blogs')
-      .general-header-subtitle= __('Add blogs to show in blog.node101.io.')
-    input.general-header-search-input#blog-search-input(type='text' placeholder='Search by name or description' value=blogs_search)
+      .general-header-title= __('Testnet Guides')
+      .general-header-subtitle= __('Add testnet guides to show in testnet.node101.io.')
+    input.general-header-search-input#guide-search-input(type='text' placeholder='Search by name or description' value=guides_search)
   .all-content-inner-wrapper
     .general-page-wrapper
-      if blogs_search
-        span.general-page-search-text #{__('Showing results of the search:')} "#{blogs_search}"
+      if guides_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{guides_search}"
       .general-page-inner-wrapper
         .general-page-buttons-wrapper
-          if blogs_page > 0
-            a.general-page-prev-button(href=`/blog?page=${blogs_page-1}${blogs_search ? '&search=' + blogs_search : ''}`) < #{__('Previous')}
+          if guides_page > 0
+            a.general-page-prev-button(href=`/guide?page=${guides_page-1}${guides_search ? '&search=' + guides_search : ''}`) < #{__('Previous')}
           else
             span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
-          - for (let i = 0; i < parseInt(blogs_count / blogs_limit) + (blogs_count % blogs_limit ? 1 : 0); i += 1)
-            if i != blogs_page
-              a.general-each-page-button(href=`/blog?page=${i}${blogs_search ? '&search=' + blogs_search : ''}`)= i+1
+          - for (let i = 0; i < parseInt(guides_count / guides_limit) + (guides_count % guides_limit ? 1 : 0); i += 1)
+            if i != guides_page
+              a.general-each-page-button(href=`/guide?page=${i}${guides_search ? '&search=' + guides_search : ''}`)= i+1
             else
               span.general-each-page-button.general-each-page-button-selected= i+1
-          if (blogs_page + 1) * blogs_limit < blogs_count
-            a.general-page-next-button(href=`/blog?page=${blogs_page+1}${blogs_search ? '&search=' + blogs_search : ''}`) #{__('Next')} >
+          if (guides_page + 1) * guides_limit < guides_count
+            a.general-page-next-button(href=`/guide?page=${guides_page+1}${guides_search ? '&search=' + guides_search : ''}`) #{__('Next')} >
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
-        span.general-page-info #{__('Showing')} #{blogs_limit} #{__('results per page.')}
+        span.general-page-info #{__('Showing')} #{guides_limit} #{__('results per page.')}
     .general-items-wrapper
-      each blog in blogs
-        .general-each-item-wrapper(id=blog._id)
+      each guide in guides
+        .general-each-item-wrapper(id=guide._id)
           .general-each-item-title-wrapper
-            span.general-each-item-title= blog.title
-            span.general-each-item-subtitle(style=(blog.is_completed ? '' : 'color: var(--warning-color)')) #{blog.is_completed ? '' : `(${__('not completed')})`}
+            span.general-each-item-title= guide.title
+            span.general-each-item-subtitle(style=(guide.is_completed ? '' : 'color: var(--warning-color)')) #{guide.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
-            .general-each-item-third-button.order-each-blog-button= __('Move Up')
-            .general-each-item-second-button.delete-each-blog-button= __('Delete')
-            a.general-each-item-fourth-button(href='/blog/writing?id=' + blog._id)= __('Writings')
-            a.general-each-item-first-button(href='/blog/edit?id=' + blog._id)= __('Edit & Translate')
+            .general-each-item-third-button.order-each-guide-button= __('Move Up')
+            .general-each-item-second-button.delete-each-guide-button= __('Delete')
+            a.general-each-item-fourth-button(href='/guide/writing?id=' + guide._id)= __('Edit Content')
+            a.general-each-item-first-button(href='/guide/edit?id=' + guide._id)= __('Edit & Translate')
