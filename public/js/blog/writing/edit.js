@@ -193,24 +193,46 @@ window.addEventListener('load', () => {
 
   document.addEventListener('change', event => {
     if (event.target.id == 'image') {
-      const file = event.target.files[0];
-      const wrapper = event.target.parentNode;
-  
-      wrapper.style.cursor = 'progress';
-      wrapper.childNodes[1].innerHTML = 'Loading...';
-      wrapper.childNodes[0].type = 'text';
-
-      serverRequest(`/blog/writing/logo?id=${blog._id}&writing_id=${writing._id}`, 'FILE', {
-        file
-      }, res => {
-        if (!res.success) return throwError(res.error);
+      if (ancestorWithClassName(event.target, 'turkish-translation') || ancestorWithClassName(event.target, 'russian-translation')) {
+        const language = ancestorWithClassName(event.target, 'turkish-translation') ? 'tr' : 'ru';
+        const file = event.target.files[0];
+        const wrapper = event.target.parentNode;
     
-        return createConfirm({
-          title: 'Writing Logo is Updated',
-          text: 'Writing logo is updated. Close to reload the page.',
-          accept: 'Close'
-        }, _ => window.location.reload());
-      });
+        wrapper.style.cursor = 'progress';
+        wrapper.childNodes[1].innerHTML = 'Loading...';
+        wrapper.childNodes[0].type = 'text';
+  
+        serverRequest(`/blog/writing/logo-translate?id=${blog._id}&writing_id=${writing._id}&language=${language}`, 'FILE', {
+          file
+        }, res => {
+          if (!res.success) return throwError(res.error);
+      
+          return createConfirm({
+            title: 'Writing Logo Translation is Updated',
+            text: 'Writing logo translation is updated. Close to reload the page.',
+            accept: 'Close'
+          }, _ => window.location.reload());
+        });
+      } else {
+        const file = event.target.files[0];
+        const wrapper = event.target.parentNode;
+    
+        wrapper.style.cursor = 'progress';
+        wrapper.childNodes[1].innerHTML = 'Loading...';
+        wrapper.childNodes[0].type = 'text';
+  
+        serverRequest(`/blog/writing/logo?id=${blog._id}&writing_id=${writing._id}`, 'FILE', {
+          file
+        }, res => {
+          if (!res.success) return throwError(res.error);
+      
+          return createConfirm({
+            title: 'Writing Logo is Updated',
+            text: 'Writing logo is updated. Close to reload the page.',
+            accept: 'Close'
+          }, _ => window.location.reload());
+        });
+      }
     }
   });
 });

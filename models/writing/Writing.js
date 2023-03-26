@@ -2,6 +2,7 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const deleteFile = require('../../utils/deleteFile');
 const generateRandomHEX = require('../../utils/generateRandomHEX');
 const toURLString = require('../../utils/toURLString');
 
@@ -374,13 +375,65 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogo = function (id, pa
       }}, { new: false }, (err, writing) => {
         if (err) return callback(err);
 
-        if (!writing.logo || writing.logo.split('/')[writing.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(writing.logo, err => {
+        deleteFile(file, err => {
           if (err) return callback(err);
 
-          return callback(null, url);
+          if (!writing.logo || writing.logo.split('/')[writing.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(writing.logo, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
+          });
+        });
+      });
+    });
+  });
+};
+
+WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogoTranslation = function (id, parent_id, language, file, callback) {
+  const Writing = this;
+
+  if (!language || !validator.isISO31661Alpha2(language.toString()))
+    return callback('bad_request');
+
+  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
+    if (err) return callback(err);
+
+    const translations = JSON.parse(JSON.stringify(writing.translations));
+
+    if (!translations[language]) return callback('bad_request');
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: LOGO_NAME_PREFIX + writing.title + '-' + language,
+      width: LOGO_WIDTH,
+      height: LOGO_HEIGHT,
+      is_used: true
+    }, (err, url) => {
+      if (err) return callback(err);
+
+      translations[language].logo = url;
+  
+      Writing.findByIdAndUpdate(writing._id, { $set: {
+        translations
+      }}, { new: false }, err => {
+        if (err) return callback(err);
+        
+        deleteFile(file, err => {
+          if (err) return callback(err);
+
+          const oldLogo = translations[language].logo;
+
+          if (!oldLogo || oldLogo.split('/')[oldLogo.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+  
+          Image.findImageByUrlAndDelete(oldLogo, err => {
+            if (err) return callback(err);
+  
+            return callback(null, url);
+          });
         });
       });
     });
@@ -407,13 +460,65 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, p
       }}, { new: false }, (err, writing) => {
         if (err) return callback(err);
 
-        if (!writing.cover || writing.cover.split('/')[writing.cover.split('/').length-1] == url.split('/')[url.split('/').length-1])
-          return callback(null, url);
-
-        Image.findImageByUrlAndDelete(writing.cover, err => {
+        deleteFile(file, err => {
           if (err) return callback(err);
 
-          return callback(null, url);
+          if (!writing.cover || writing.cover.split('/')[writing.cover.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(writing.cover, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
+          });
+        });
+      });
+    });
+  });
+};
+
+WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCoverTranslation = function (id, parent_id, language, file, callback) {
+  const Writing = this;
+
+  if (!language || !validator.isISO31661Alpha2(language.toString()))
+    return callback('bad_request');
+
+  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
+    if (err) return callback(err);
+
+    const translations = JSON.parse(JSON.stringify(writing.translations));
+
+    if (!translations[language]) return callback('bad_request');
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: COVER_NAME_PREFIX + writing.title + '-' + language,
+      width: COVER_WIDTH,
+      height: COVER_HEIGHT,
+      is_used: true
+    }, (err, url) => {
+      if (err) return callback(err);
+
+      translations[language].cover = url;
+  
+      Writing.findByIdAndUpdate(writing._id, { $set: {
+        translations
+      }}, { new: false }, err => {
+        if (err) return callback(err);
+        
+        deleteFile(file, err => {
+          if (err) return callback(err);
+
+          const oldCover = translations[language].logo;
+
+          if (!oldCover || oldCover.split('/')[oldCover.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+  
+          Image.findImageByUrlAndDelete(oldCover, err => {
+            if (err) return callback(err);
+  
+            return callback(null, url);
+          });
         });
       });
     });
@@ -547,6 +652,9 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
 
     if (!writing.is_completed)
       return callback('not_authenticated_request');
+
+    data.logo = writing.translations[data.language] ? writing.translations[data.language].logo : null;
+    data.cover = writing.translations[data.language] ? writing.translations[data.language].cover : null;
 
     const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
       

@@ -760,6 +760,22 @@ BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateLogo = function (id, wr
   });
 };
 
+BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateLogoTranslation = function (id, writing_id, language, file, callback) {
+  const Blog = this;
+
+  Blog.findBlogById(id, (err, blog) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndAndParentIdUpdateLogoTranslation(
+      writing_id,
+      blog._id,
+      language,
+      file,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
 BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateCover = function (id, writing_id, file, callback) {
   const Blog = this;
 

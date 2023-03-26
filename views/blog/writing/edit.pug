@@ -72,7 +72,7 @@ block main
       .general-create-button-wrapper
       span.general-create-title= __('Turkish Translation')
       .general-create-seperator
-      .general-create-input-grid-wrapper
+      .general-create-input-grid-wrapper.turkish-translation
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Writing Turkish Title')
           input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the writing title. Must be unique.') value=writing.translations.tr.title)
@@ -90,6 +90,17 @@ block main
             .general-select-input-choices-wrapper
               .general-select-each-input-choice(id='select-input-false')= __('Yes, this writing is visible to users in turkish.')
               .general-select-each-input-choice(id='select-input-true')= __('No, this writing is hidden from users in turkish.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Turkish Logo')
+          if writing.translations.tr.logo
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${writing.translations.tr.logo}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing Turkish')} #{socialAccounts[social]} 
@@ -99,7 +110,7 @@ block main
         .general-create-button#update-turkish-button= __('Update Turkish')
       span.general-create-title= __('Russian Translation')
       .general-create-seperator
-      .general-create-input-grid-wrapper
+      .general-create-input-grid-wrapper.russian-translation
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Writing Russian Title')
           input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the writing title. Must be unique.') value=writing.translations.ru.title)
@@ -117,6 +128,17 @@ block main
             .general-select-input-choices-wrapper
               .general-select-each-input-choice(id='select-input-false')= __('Yes, this writing is visible to users in russian.')
               .general-select-each-input-choice(id='select-input-true')= __('No, this writing is hidden from users in russian.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Russian Logo')
+          if writing.translations.ru.logo
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${writing.translations.ru.logo}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none.russian-logo#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Writing Russian')} #{socialAccounts[social]} 
