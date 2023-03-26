@@ -481,10 +481,10 @@ window.addEventListener('load', () => {
       const newItem = createHeaderContentItem('', target.classList);
 
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, wrapper);
-      document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(wrapper, newItem);
       headerChoicesWrapper.style.display = 'none';
       clickedCreateHeaderNode = null;
-      changeAddContentState(wrapper.childNodes[0].childNodes[0].childNodes[0]);
+      changeAddContentState(wrapper.childNodes[0].childNodes[0].childNodes[1]);
       newItem.childNodes[1].childNodes[0].focus();
     } else if (clickedCreateHeaderNode && !ancestorWithClassName(event.target, 'general-writing-each-content-item-add-header-choices-wrapper')) {
       headerChoicesWrapper.style.display = 'none';
