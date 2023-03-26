@@ -60,7 +60,7 @@ block main
         label.general-writing-cover-wrapper(style='cursor: pointer')
           input.display-none.general-writing-cover-input(type='file')
           span.general-writing-cover-placeholder= __('Click to load a cover image to the writing. (752:414)')
-          img.general-writing-cover-image(alt=writing.title src=writing.cover style=`display: ${writing.cover ? 'flex' : 'none'}`)
+          img.general-writing-cover-image(alt=writing.title src=`${writing.cover}?${(new Date).getTime()}` style=`display: ${writing.cover ? 'flex' : 'none'}`)
         textarea.general-writing-title(contecontenteditable=true spellcheck=false placeholder=__('Writing Title'))= writing.title
         textarea.general-writing-subtitle(contenteditable=true spellcheck=false placeholder=__('Writing Subtitle'))= writing.subtitle
         .general-writing-content-items-wrapper

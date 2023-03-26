@@ -26,6 +26,7 @@ const restorePostController = require('../controllers/blog/restore/post');
 const translatePostController = require('../controllers/blog/translate/post');
 
 const writingCoverPostController = require('../controllers/blog/writing/cover/post');
+const writingCoverTranslatePostController = require('../controllers/blog/writing/cover-translate/post');
 const writingCreatePostController = require('../controllers/blog/writing/create/post');
 const writingDeletePostController = require('../controllers/blog/writing/delete/post');
 const writingEditPostController = require('../controllers/blog/writing/edit/post');
@@ -142,6 +143,14 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     writingCoverPostController
+);
+router.post(
+  '/writing/cover-translate',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCoverTranslatePostController
 );
 router.post(
   '/writing/create',

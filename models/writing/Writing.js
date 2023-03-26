@@ -509,12 +509,13 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCoverTranslation = func
         deleteFile(file, err => {
           if (err) return callback(err);
 
-          const oldCover = translations[language].logo;
+          const oldCover = translations[language].cover;
 
           if (!oldCover || oldCover.split('/')[oldCover.split('/').length-1] == url.split('/')[url.split('/').length-1])
             return callback(null, url);
   
           Image.findImageByUrlAndDelete(oldCover, err => {
+            console.log(err);
             if (err) return callback(err);
   
             return callback(null, url);

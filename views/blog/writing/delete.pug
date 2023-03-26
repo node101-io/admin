@@ -35,4 +35,4 @@ block main
             span.general-each-item-title= writing.title
             span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
           .general-each-item-buttons-wrapper
-            a.general-each-item-first-button(href='/writing/edit')= __('Restore')
+            a.general-each-item-first-button.restore-each-writing-button= __('Restore')

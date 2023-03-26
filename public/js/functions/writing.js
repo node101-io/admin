@@ -457,7 +457,7 @@ window.addEventListener('load', () => {
   writing = JSON.parse(document.getElementById('writing-json').value);
   hljs.highlightAll();
   formatTitleAndSubtitleHeight();
-  fixContentItemsInnerText();
+  // fixContentItemsInnerText();
 
   const selectionMenu = document.querySelector('.general-writing-selection-menu');
   const headerChoicesWrapper = document.querySelector('.general-writing-each-content-item-add-header-choices-wrapper');

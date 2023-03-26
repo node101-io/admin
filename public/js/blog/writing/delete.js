@@ -51,10 +51,10 @@ window.addEventListener('load', () => {
         title: 'Are you sure you want to restore this writing?',
         text: 'Do not forget to fix the order of the writing once you restore it. All restored writings are ordered as if they are new',
         reject: 'Cancel',
-        accept: 'Delete'
+        accept: 'Restore'
       }, res => {
         if (res) {
-          serverRequest('/writing/restore?id=' + blog._id, 'POST', {
+          serverRequest('/blog/writing/restore?id=' + blog._id, 'POST', {
             id: event.target.parentNode.parentNode.id
           }, res => {
             if (!res.success) return throwError(res.error);

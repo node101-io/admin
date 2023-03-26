@@ -73,7 +73,7 @@ window.addEventListener('load', () => {
         accept: 'Delete'
       }, res => {
         if (res) {
-          serverRequest('/writing/delete?id=' + blog._id, 'POST', {
+          serverRequest('/blog/writing/delete?id=' + blog._id, 'POST', {
             id: event.target.parentNode.parentNode.id
           }, res => {
             if (!res.success) return throwError(res.error);

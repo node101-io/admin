@@ -1,13 +1,13 @@
 const Blog = require('../../../../models/blog/Blog');
 
 module.exports = (req, res) => {
-  Blog.findBlogByIdAndGetWritingByIdAndRestore(req.query.id, req.body.id, err => {
+  Blog.findBlogByIdAndGetWritingByIdAndUpdateCoverTranslation(req.query.id, req.query.writing_id, req.query.language, req.file, (err, url) => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();
     }
 
-    res.write(JSON.stringify({ success: true }));
+    res.write(JSON.stringify({ success: true, url }));
     return res.end();
   });
 };

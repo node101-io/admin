@@ -7,6 +7,8 @@ module.exports = (writing, language, data) => {
   if (!data)
     data = {};
 
+  console.log(data.content[2])
+
   const translations = JSON.parse(JSON.stringify(writing.translations));
 
   translations[language.toString().trim()] = {
@@ -14,7 +16,7 @@ module.exports = (writing, language, data) => {
     subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
     logo: data.logo && typeof data.logo == 'string' && data.logo.trim().length && data.logo.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH  ? data.logo.trim() : writing.logo,
     cover: data.cover && typeof data.cover == 'string' && data.cover.trim().length && data.cover.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH  ? data.cover.trim() : writing.cover,
-    content: data.content && typeof data.content == 'string' && data.content.trim().length && data.content.trim().length < MAX_DATABASE_LONG_TEXT_FIELD_LENGTH ? data.content.trim() : writing.content,
+    content: data.content && Array.isArray(data.content) && !data.content.find(each => typeof each != 'string' || !each.trim().length || each.trim().length > MAX_DATABASE_LONG_TEXT_FIELD_LENGTH) ? data.content.map(each => each.trim()) : writing.content,
     flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
     social_media_accounts: data.social_media_accounts && typeof data.social_media_accounts == 'object' ? getSocialMediaAccounts(data.social_media_accounts) : writing.social_media_accounts,
     is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden

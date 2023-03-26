@@ -7,11 +7,18 @@ module.exports = (writing, language, callback) => {
     translation = {
       title: writing.title.replace(writing._id.toString(), ''),
       subtitle: writing.subtitle,
+      logo: writing.logo,
+      cover: writing.cover,
       content: writing.content,
       flag: writing.flag,
       social_media_accounts: writing.social_media_accounts,
       is_hidden: writing.is_hidden
     };
+
+  if (!translation.logo)
+    translation.logo = writing.logo;
+  if (!translation.cover)
+    translation.cover = writing.cover;
 
   if (writing.writer_id) {
     Writer.findWriterByIdAndFormatByLanguage(writing.writer_id, language, (err, writer) => {
@@ -24,8 +31,8 @@ module.exports = (writing, language, callback) => {
         parent_id: writing.parent_id,
         writer,
         created_at: writing.created_at,
-        logo: writing.logo,
-        cover: writing.cover,
+        logo: translation.logo,
+        cover: translation.cover,
         subtitle: translation.subtitle,
         content: translation.content,
         is_completed: writing.is_completed,

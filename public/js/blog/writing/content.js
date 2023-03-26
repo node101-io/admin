@@ -61,18 +61,33 @@ window.addEventListener('load', () => {
     if (!file) return;
     imageLoadingPrompt.style.display = 'flex';
 
-    serverRequest(`/blog/writing/cover?id=${blog._id}&writing_id=${writing._id}`, 'FILE', {
-      file
-    }, res => {
-      if (!res.success) {
+    if (!translate || translate == 'en') {
+      serverRequest(`/blog/writing/cover?id=${blog._id}&writing_id=${writing._id}`, 'FILE', {
+        file
+      }, res => {
+        if (!res.success) {
+          imageLoadingPrompt.style.display = 'none';
+          return throwError(res.error);
+        }
+  
         imageLoadingPrompt.style.display = 'none';
-        return throwError(res.error);
-      }
-
-      imageLoadingPrompt.style.display = 'none';
-      coverImage.style.display = 'block';
-      coverImage.src = res.url;
-    });
+        coverImage.style.display = 'block';
+        coverImage.src = res.url;
+      });
+    } else {
+      serverRequest(`/blog/writing/cover-translate?id=${blog._id}&writing_id=${writing._id}&language=${translate}`, 'FILE', {
+        file
+      }, res => {
+        if (!res.success) {
+          imageLoadingPrompt.style.display = 'none';
+          return throwError(res.error);
+        }
+  
+        imageLoadingPrompt.style.display = 'none';
+        coverImage.style.display = 'block';
+        coverImage.src = res.url;
+      });
+    }
   });
 
   document.addEventListener('click', event => {
