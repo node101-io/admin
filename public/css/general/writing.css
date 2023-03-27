@@ -755,7 +755,7 @@
   background-color: var(--box-color) !important;
   font-weight: 600 !important;
   padding: 15px 30px;
-  color: var(--text-color);
+  color: rgb(7, 161, 40);
 }
 
 .general-writing-quote {

@@ -422,6 +422,7 @@ function generateWritingData() {
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-text') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-video-wrapper') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-code') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
     ) && contentNodes[i].innerText?.trim().length)
@@ -455,7 +456,7 @@ function fixContentItemsInnerText() {
 
 window.addEventListener('load', () => {
   writing = JSON.parse(document.getElementById('writing-json').value);
-  hljs.highlightAll();
+  // hljs.highlightAll();
   formatTitleAndSubtitleHeight();
   // fixContentItemsInnerText();
 
@@ -1716,11 +1717,84 @@ window.addEventListener('load', () => {
     }
 
     if (ancestorWithClassName(event.target, 'general-writing-code')) {
-      if (event.key == 'Tab') {
+      const target = ancestorWithClassName(event.target, 'general-writing-code');
+
+      if (event.key == 'Enter') {
         event.preventDefault();
-        const content = event.target.innerHTML;
-        console.log((selectionIndex ? content.substring(0, selectionIndex - 1) : '') + '   ' + content.substring(selectionIndex))
-        event.target.innerHTML = (selectionIndex ? content.substring(0, selectionIndex - 1) : '') + '   ' + content.substring(selectionIndex);
+
+        if (!selectionIndex) return;
+
+        setIsSavedFalse();
+
+        const contentInnerHTML = target.innerHTML;
+        const openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let firstContentInnerHTML = '';
+        let secondContentInnerHTML = '';
+  
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            firstContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>') {
+              tag += contentInnerHTML[i++];
+            }
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            firstContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            firstContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          firstContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          secondContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            secondContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>') {
+              tag += contentInnerHTML[i++];
+            }
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            secondContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            secondContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        target.innerHTML = firstContentInnerHTML;
+      
+        const newItem = createCodeContentItem(secondContentInnerHTML);
+
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target.parentNode.parentNode);
+        document.querySelector('.general-writing-content-items-wrapper').insertBefore(target.parentNode.parentNode, newItem);
+        newItem.childNodes[1].childNodes[0].focus();
+      } else if (event.key == 'Backspace') {
+        setIsSavedFalse();
+        if (!target.innerText.length) {
+          target.parentNode.parentNode.remove();
+        } else if (selectionIndex == 0 && target.parentNode?.parentNode?.previousElementSibling?.childNodes[1]?.childNodes[0]?.classList?.contains('general-writing-code')) {
+          const prevElement = target.parentNode.parentNode.previousElementSibling.childNodes[1].childNodes[0];
+          prevElement.innerHTML = prevElement.innerHTML + target.innerHTML;
+          target.parentNode.parentNode.remove();
+        }
       }
     }
   });
