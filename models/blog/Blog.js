@@ -751,11 +751,11 @@ BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateLogo = function (id, wr
   Blog.findBlogById(id, (err, blog) => {
     if (err) return callback(err);
 
-    Writing.findWritingByIdAndAndParentIdUpdateLogo(
+    Writing.findWritingByIdAndParentIdUpdateLogo(
       writing_id,
       blog._id,
       file,
-      (err, writing) => callback(err, writing)
+      (err, url) => callback(err, url)
     );
   });
 };
@@ -766,12 +766,12 @@ BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateLogoTranslation = funct
   Blog.findBlogById(id, (err, blog) => {
     if (err) return callback(err);
 
-    Writing.findWritingByIdAndAndParentIdUpdateLogoTranslation(
+    Writing.findWritingByIdAndParentIdUpdateLogoTranslation(
       writing_id,
       blog._id,
       language,
       file,
-      (err, writing) => callback(err, writing)
+      (err, ur) => callback(err, ur)
     );
   });
 };
@@ -782,11 +782,11 @@ BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateCover = function (id, w
   Blog.findBlogById(id, (err, blog) => {
     if (err) return callback(err);
 
-    Writing.findWritingByIdAndAndParentIdUpdateCover(
+    Writing.findWritingByIdAndParentIdAndUpdateCover(
       writing_id,
       blog._id,
       file,
-      (err, writing) => callback(err, writing)
+      (err, url) => callback(err, url)
     );
   });
 };
@@ -797,12 +797,12 @@ BlogSchema.statics.findBlogByIdAndGetWritingByIdAndUpdateCoverTranslation = func
   Blog.findBlogById(id, (err, blog) => {
     if (err) return callback(err);
 
-    Writing.findWritingByIdAndAndParentIdUpdateCoverTranslation(
+    Writing.findWritingByIdAndParentIdAndUpdateCoverTranslation(
       writing_id,
       blog._id,
       language,
       file,
-      (err, writing) => callback(err, writing)
+      (err, url) => callback(err, url)
     );
   });
 };

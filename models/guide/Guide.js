@@ -510,7 +510,7 @@ GuideSchema.statics.findGuideByIdAndUpdateImage = function (id, file, callback) 
       }}, { new: false }, (err, guide) => {
         if (err) return callback(err);
 
-        Writing.findWritingByIdAndAndParentIdUpdateLogo(guide.writing_id, guide._id, file, err => {
+        Writing.findWritingByIdAndParentIdUpdateLogo(guide.writing_id, guide._id, file, err => {
           if (err) return callback(err);
 
           if (!guide.image || guide.image.split('/')[guide.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
@@ -640,11 +640,100 @@ GuideSchema.statics.findGuideByIdAndRevertIsActive = function (id, callback) {
   });
 };
 
+GuideSchema.statics.findGuideByIdAndDelete = function (id, callback) {
+  const Guide = this;
+
+  Guide.findGuideById(id, (err, guide) => {
+    if (err) return callback(err);
+    if (guide.is_deleted) return callback(null);
+
+    Guide.findByIdAndUpdate(guide._id, {$set: {
+      title: guide.title + guide._id.toString(),
+      identifiers: [],
+      identifier_languages: {},
+      is_deleted: true,
+      order: null
+    }}, err => {
+      if (err) return callback('database_error');
+
+      Guide.find({
+        order: { $gt: guide.order }
+      }, (err, guides) => {
+        if (err) return callback('database_error');
+
+        async.timesSeries(
+          guides.length,
+          (time, next) => Guide.findByIdAndUpdate(guides[time]._id, {$inc: {
+            order: -1
+          }}, err => next(err)),
+          err => {
+            if (err) return callback('database_error');
+
+            return callback(null);
+          }
+        );
+      });
+    });
+  });
+};
+
+GuideSchema.statics.findGuideByIdAndRestore = function (id, callback) {
+  const Guide = this;
+
+  Guide.findGuideById(id, (err, guide) => {
+    if (err) return callback(err);
+    if (!guide.is_deleted) return callback(null);
+
+    identifiers = [ toURLString(guide.title.replace(guide._id.toString(), '')) ];
+    const identifierLanguages = {
+      [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
+    };
+
+    Object.values(guide.translations).forEach((lang, index) => {
+      const languageIdentifier = toURLString(lang.title);
+      if (!identifiers.includes(languageIdentifier)) {
+        identifiers.push(languageIdentifier);
+        identifierLanguages[languageIdentifier] = Object.keys(guide.translations)[index]; 
+      }
+    });
+
+    async.timesSeries(
+      identifiers.length,
+      (time, next) => Guide.findOne({ identifiers: identifiers[time] }, (err, guide) => {
+        if (err) return next('database_error');
+        if (guide) return next('duplicated_unique_field');
+
+        return next(null);
+      }),
+      err => {
+        if (err) return callback(err);
+
+        Guide.findGuideCountByFilters({ is_deleted: false }, (err, order) => {
+          if (err) return callback(err);
+
+          Guide.findByIdAndUpdate(guide._id, {
+            title: guide.title.replace(guide._id.toString(), ''),
+            identifiers,
+            identifier_languages: identifierLanguages,
+            is_deleted: false,
+            order
+          }, err => {
+            if (err) return callback('database_error');
+  
+            return callback(null);
+          });
+        });
+      }
+    );
+  });
+};
+
 GuideSchema.statics.findGuideByIdAndIncOrderByOne = function (id, callback) {
   const Guide = this;
 
   Guide.findGuideById(id, (err, guide) => {
     if (err) return callback(err);
+    if (guide.is_deleted) return callback('not_authenticated_request');
 
     Guide.findOne({
       order: guide.order + 1
@@ -663,9 +752,9 @@ GuideSchema.statics.findGuideByIdAndIncOrderByOne = function (id, callback) {
           if (err) return callback('database_error');
 
           Project.findProjectById(prev_guide.project_id, (err, project) => {
-            if (err) return callback(err);
+            if (prev_guide.project_id && err) return callback(err);
 
-            if (!project.is_deleted)
+            if (!project || !project.is_deleted)
               return callback(null);
 
             return Guide.findGuideByIdAndIncOrderByOne(guide._id, err => callback(err));
@@ -727,11 +816,12 @@ GuideSchema.statics.findGuideByIdAndGetWritingAndUpdateCover = function (id, fil
   Guide.findGuideById(id, (err, guide) => {
     if (err) return callback(err);
 
-    Writing.findWritingByIdAndParentIdAndUpdateCover(guide.writing_id, guide._id, file, err => {
-      if (err) return callback(err);
-
-      return callback(null);
-    });
+    Writing.findWritingByIdAndParentIdAndUpdateCover(
+      guide.writing_id,
+      guide._id,
+      file,
+      (err, url) => callback(err, url)
+    );
   });
 };
 

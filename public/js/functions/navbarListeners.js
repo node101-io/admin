@@ -94,7 +94,7 @@ window.addEventListener('load', () => {
         ],
         button: 'Create New Guide',
         errors: {
-          duplicated_unique_field: 'Each blog must have a unique title. Please use edit & translations page to change this guide\'s details.'
+          duplicated_unique_field: 'Each guide must have a unique title. Please use edit & translations page to change this guide\'s details.'
         }
       }, (error, res) => {
         if (error) return alert(error);

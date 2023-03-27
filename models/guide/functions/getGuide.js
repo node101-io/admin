@@ -15,7 +15,7 @@ module.exports = (guide, callback) => {
         return callback(null, {
           _id: guide._id.toString(),
           project,
-          title: guide.title,
+          title: guide.title.replace(guide._id.toString(), ''),
           subtitle: guide.subtitle,
           identifier: guide.identifiers[0],
           image: guide.image,
@@ -39,7 +39,7 @@ module.exports = (guide, callback) => {
       return callback(null, {
         _id: guide._id.toString(),
         project: null,
-        title: guide.title,
+        title: guide.title.replace(guide._id.toString(), ''),
         subtitle: guide.subtitle,
         identifier: guide.identifiers[0],
         image: guide.image,

@@ -354,8 +354,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (
   });
 };
 
-WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogo = function (id, parent_id, file, callback) {
+WritingSchema.statics.findWritingByIdAndParentIdUpdateLogo = function (id, parent_id, file, callback) {
   const Writing = this;
+
+  if (!file || !file.filename)
+    return callback('bad_request');
 
   Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
     if (err) return callback(err);
@@ -391,8 +394,11 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogo = function (id, pa
   });
 };
 
-WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogoTranslation = function (id, parent_id, language, file, callback) {
+WritingSchema.statics.findWritingByIdAndParentIdUpdateLogoTranslation = function (id, parent_id, language, file, callback) {
   const Writing = this;
+
+  if (!file || !file.filename)
+    return callback('bad_request');
 
   if (!language || !validator.isISO31661Alpha2(language.toString()))
     return callback('bad_request');
@@ -439,8 +445,11 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateLogoTranslation = funct
   });
 };
 
-WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, parent_id, file, callback) {
+WritingSchema.statics.findWritingByIdAndParentIdAndUpdateCover = function (id, parent_id, file, callback) {
   const Writing = this;
+
+  if (!file || !file.filename)
+    return callback('bad_request');
 
   Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
     if (err) return callback(err);
@@ -476,8 +485,11 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCover = function (id, p
   });
 };
 
-WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCoverTranslation = function (id, parent_id, language, file, callback) {
+WritingSchema.statics.findWritingByIdAndParentIdAndUpdateCoverTranslation = function (id, parent_id, language, file, callback) {
   const Writing = this;
+
+  if (!file || !file.filename)
+    return callback('bad_request');
 
   if (!language || !validator.isISO31661Alpha2(language.toString()))
     return callback('bad_request');

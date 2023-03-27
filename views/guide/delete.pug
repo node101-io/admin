@@ -2,34 +2,34 @@ extends ../partials/navbar
 block main
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title= __('Deleted Blogs')
-      .general-header-subtitle= __('See and restore deleted blogs.')
-    input.general-header-search-input#blog-search-input(type='text' placeholder='Search by name or description' value=blogs_search)
+      .general-header-title= __('Deleted Guides')
+      .general-header-subtitle= __('See and restore deleted guides.')
+    input.general-header-search-input#guide-search-input(type='text' placeholder='Search by name or description' value=guides_search)
   .all-content-inner-wrapper
     .general-page-wrapper
-      if blogs_search
-        span.general-page-search-text #{__('Showing results of the search:')} "#{blogs_search}"
+      if guides_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{guides_search}"
       .general-page-inner-wrapper
         .general-page-buttons-wrapper
-          if blogs_page > 0
-            a.general-page-prev-button(href=`/blog/delete?page=${blogs_page-1}${blogs_search ? '&search=' + blogs_search : ''}`) < #{__('Previous')}
+          if guides_page > 0
+            a.general-page-prev-button(href=`/guide/delete?page=${guides_page-1}${guides_search ? '&search=' + guides_search : ''}`) < #{__('Previous')}
           else
             span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
-          - for (let i = 0; i < parseInt(blogs_count / blogs_limit) + (blogs_count % blogs_limit ? 1 : 0); i += 1)
-            if i != blogs_page
-              a.general-each-page-button(href=`/blog/delete?page=${i}${blogs_search ? '&search=' + blogs_search : ''}`)= i+1
+          - for (let i = 0; i < parseInt(guides_count / guides_limit) + (guides_count % guides_limit ? 1 : 0); i += 1)
+            if i != guides_page
+              a.general-each-page-button(href=`/guide/delete?page=${i}${guides_search ? '&search=' + guides_search : ''}`)= i+1
             else
               span.general-each-page-button.general-each-page-button-selected= i+1
-          if (blogs_page + 1) * blogs_limit < blogs_count
-            a.general-page-next-button(href=`/blog/delete?page=${blogs_page+1}${blogs_search ? '&search=' + blogs_search : ''}`) #{__('Next')} >
+          if (guides_page + 1) * guides_limit < guides_count
+            a.general-page-next-button(href=`/guide/delete?page=${guides_page+1}${guides_search ? '&search=' + guides_search : ''}`) #{__('Next')} >
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
-        span.general-page-info #{__('Showing')} #{blogs_limit} #{__('results per page.')}
+        span.general-page-info #{__('Showing')} #{guides_limit} #{__('results per page.')}
     .general-items-wrapper
-      each blog in blogs
-        .general-each-item-wrapper(id=blog._id)
+      each guide in guides
+        .general-each-item-wrapper(id=guide._id)
           .general-each-item-title-wrapper
-            span.general-each-item-title= blog.title
+            span.general-each-item-title= guide.title
             span.general-each-item-subtitle(style='color: var(--warning-color)') (#{__('deleted')})
           .general-each-item-buttons-wrapper
-            .general-each-item-first-button.restore-each-blog-button= __('Restore')
+            .general-each-item-first-button.restore-each-guide-button= __('Restore')
