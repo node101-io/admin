@@ -7,8 +7,6 @@ module.exports = (writing, language, data) => {
   if (!data)
     data = {};
 
-  console.log(data.content[2])
-
   const translations = JSON.parse(JSON.stringify(writing.translations));
 
   translations[language.toString().trim()] = {

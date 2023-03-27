@@ -193,7 +193,6 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
         const newWriting = new Writing(newWritingData);
     
         newWriting.save((err, writing) => {
-          console.log(err);
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
@@ -515,7 +514,6 @@ WritingSchema.statics.findWritingByIdAndAndParentIdUpdateCoverTranslation = func
             return callback(null, url);
   
           Image.findImageByUrlAndDelete(oldCover, err => {
-            console.log(err);
             if (err) return callback(err);
   
             return callback(null, url);
@@ -573,7 +571,6 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
           is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
         }}, { new: true }, (err, writing) => {
-          console.log(err);
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
