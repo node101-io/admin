@@ -758,7 +758,7 @@ ProjectSchema.statics.findProjectByIdAndUpdateStakeTranslations = function (id, 
     if (!project.stake_id)
       return callback('bad_request');
 
-    Stake.findStakeByIdAndUpdate(project.stake_id, data, err => callback(err));
+    Stake.findStakeByIdAndUpdateTranslations(project.stake_id, data, err => callback(err));
   });
 };
 
