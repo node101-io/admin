@@ -138,10 +138,22 @@ ChapterSchema.statics.findChapterByIdAndGetChildren = function (id, callback) {
 
     async.timesSeries(
       chapter.children.length,
-      // (time, next) => Chapter.
-    )
-  })
-}
+      (time, next) => {
+        const child = chapter.children[time];
+
+        if (child.type == 'chapter')
+          Chapter.findChapterByIdAndFormat(child._id, (err, chapter) => next(err, chapter));
+        else
+          Writing.findWritingByIdAndFormat(child._id, (err, writing) => next(err, writing));
+      },
+      (err, children) => {
+        if (err) return callback(err);
+
+        return callback(null, children.reverse());
+      }
+    );
+  });
+};
 
 ChapterSchema.statics.findChaptersByFilters = function (data, callback) {
   const Chapter = this;
@@ -302,7 +314,9 @@ ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
   Chapter.findChapterById(id, (err, chapter) => {
     if (err) return callback(err);
 
-    
+    Chapter.findByIdAndUpdate(chapter._id, {$set: {
+      // title: 
+    }})
   })
 };
 

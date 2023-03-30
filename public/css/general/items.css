@@ -102,6 +102,24 @@
   cursor: pointer;
   box-shadow: 0 0 2px var(--shadow-color);
 }
+.general-each-item-fifth-button {
+  background-color: var(--box-color);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--third-color);
+  height: 25px;
+  padding: 0 15px;
+  border: 1px solid var(--third-color);
+  margin-right: 10px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 0 2px var(--shadow-color);
+}
 .general-each-item-third-button {
   background-color: var(--third-color);
   font-size: 14px;

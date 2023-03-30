@@ -1,6 +1,7 @@
 extends ../../partials/navbar
 block main
   input.display-none#blog-json(value=JSON.stringify(blog))
+  input.display-none#copy-element
   .general-header-wrapper
     .general-header-text-wrapper
       .general-header-title #{__('Writings')} - #{blog.title}
@@ -36,6 +37,7 @@ block main
             span.general-each-item-subtitle(style=(writing.is_completed ? '' : 'color: var(--warning-color)')) #{writing.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
             .general-each-item-third-button.order-each-writing-button= __('Move Up')
+            .general-each-item-fifth-button.copy-static-link-each-writing-button= __('Copy Static Link')
             .general-each-item-second-button.delete-each-writing-button= __('Delete')
             a.general-each-item-fourth-button(href=`/blog/writing/edit?id=${blog._id}&writing_id=${writing._id}`)= __('Informations')
             a.general-each-item-first-button(href=`/blog/writing/content?id=${blog._id}&writing_id=${writing._id}`)= __('Edit Content')

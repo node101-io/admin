@@ -1,3 +1,5 @@
+const STATIC_LINK_URL = 'https://library.node101.io/link?id='
+
 window.addEventListener('load', () => {
   const blog = JSON.parse(document.getElementById('blog-json').value);
 
@@ -15,6 +17,8 @@ window.addEventListener('load', () => {
   }
 
   document.addEventListener('click', event => {
+    const copyElement = document.getElementById('copy-element');
+
     if (event.target.id == 'create-writing-button') {
       if (!blog.is_completed)
         return createConfirm({
@@ -44,6 +48,18 @@ window.addEventListener('load', () => {
 
         return window.location = `/blog/writing/edit?id=${blog._id}&writing_id=${res.id}`;
       });
+    }
+
+    if (event.target.classList.contains('copy-static-link-each-writing-button')) {
+      const id = event.target.parentNode.parentNode.id;
+      copyElement.value = STATIC_LINK_URL + id;
+      copyElement.select();
+      copyElement.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(copyElement.value);
+      event.target.innerHTML = 'Copied!';
+      setTimeout(() => {
+        event.target.innerHTML = 'Copy Static Link';
+      }, 1000);
     }
 
     if (event.target.classList.contains('order-each-writing-button')) {
