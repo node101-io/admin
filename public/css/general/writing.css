@@ -5,9 +5,11 @@
   --writing-content-item-min-height: 35px;
   --writing-content-item-button-size: 35px;
   --writing-add-item-animation-duration: 0.25s;
+  --writing-add-item-choices-count: 9;
   --writing-image-width: 500px;
   --writing-video-width: 500px;
   --writing-video-height: 300px;
+  --writing-twitter-width: 400px;
 }
 
 .general-writing-unsaved-changes-text {
@@ -388,8 +390,8 @@
     min-width: 0px;
   }
   to {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
 }
 @-webkit-keyframes general-writing-each-content-item-add-button-choices-open-animation {
@@ -398,8 +400,8 @@
     min-width: 0px;
   }
   to {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
 }
 @-moz-keyframes general-writing-each-content-item-add-button-choices-open-animation {
@@ -408,8 +410,8 @@
     min-width: 0px;
   }
   to {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
 }
 .general-writing-each-content-item-add-button-choices-close-animation-class {
@@ -419,8 +421,8 @@
 }
 @keyframes general-writing-each-content-item-add-button-choices-close-animation {
   from {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
   to {
     width: 0px;
@@ -429,8 +431,8 @@
 }
 @-webkit-keyframes general-writing-each-content-item-add-button-choices-close-animation {
   from {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
   to {
     width: 0px;
@@ -439,8 +441,8 @@
 }
 @-moz-keyframes general-writing-each-content-item-add-button-choices-close-animation {
   from {
-    width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
-    min-width: calc(8 * (var(--writing-content-item-button-size) - 2px) + 7 * (10px));
+    width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
+    min-width: calc(var(--writing-add-item-choices-count) * (var(--writing-content-item-button-size) - 2px) + (var(--writing-add-item-choices-count) - 1) * (10px));
   }
   to {
     width: 0px;
@@ -800,6 +802,50 @@
   color: var(--text-color-two);
   font-size: 40px;
   letter-spacing: 10px;
+}
+
+.general-writing-twitter-wrapper {
+  position: relative;
+  width: 100%;
+  height: fit-content;
+  min-height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+.general-writing-twitter-embed-text {
+  position: absolute;
+  left: calc((100% - var(--writing-twitter-width)) / 2);
+  top: 15px;
+  background-color: var(--box-color);
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 4px 8px;
+  outline: none;
+  opacity: 0.8;
+  width: 300px;
+  height: 20px;
+  display: flex;
+  white-space: nowrap;
+  overflow-x: scroll;
+}
+.general-writing-twitter-embed-text::before {
+  content: 'Embed Code: ';
+  font-weight: 600;
+}
+.general-writing-twitter-embed-tex:empty:before {
+  content: 'Copy & Paste the embed code.';
+  color: var(--placeholder-color);
+}
+.general-writing-twitter {
+  width: var(--writing-twitter-width);
+  min-width: var(--writing-twitter-width);
+  height: auto;
+  min-height: 300px;
+  border-radius: 2px;
 }
 
 @media only screen and (max-width: 1300px) {

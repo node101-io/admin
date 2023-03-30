@@ -121,6 +121,11 @@ function createEachContentItemWrapper() {
       name: 'ellipsis',
       viewBox: '0 0 448 512',
       path: 'M0 256a56 56 0 1 1 112 0A56 56 0 1 1 0 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z'
+    },
+    {
+      name: 'twitter',
+      viewBox: '0 0 512 512',
+      path: 'M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z'
     }
   ];
 
@@ -242,7 +247,7 @@ function createImageContentItem(url, text) {
   imageWrapper.appendChild(altText);
 
   const image = document.createElement('img');
-  image.classList.add('general-writigin-image');
+  image.classList.add('general-writing-image');
   image.src = url;
   imageWrapper.appendChild(image);
 
@@ -347,6 +352,26 @@ function createEllipsisContentItem() {
   return newItem;
 };
 
+function createTwitterContentItem() {
+  const newItem = createEachContentItemWrapper();
+
+  const twitterWrapper = document.createElement('div');
+  twitterWrapper.classList.add('general-writing-twitter-wrapper');
+
+  const embedCode = document.createElement('div');
+  embedCode.classList.add('general-writing-twitter-embed-text');
+  embedCode.contentEditable = 'true';
+  embedCode.spellcheck = 'false';
+  twitterWrapper.appendChild(embedCode);
+
+  const content = document.createElement('div');
+  content.classList.add('general-writing-twitter');
+  twitterWrapper.appendChild(content);
+
+  newItem.childNodes[1].appendChild(twitterWrapper);
+  return newItem;
+};
+
 function formatHTML(contentInnerHTML, index, options) {
   if (!index)
     index = 0;
@@ -424,7 +449,8 @@ function generateWritingData() {
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-list') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-code') ||
       contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-quote') ||
-      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis')
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-ellipsis') ||
+      contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-twitter-wrapper')
     ) && contentNodes[i].innerText?.trim().length)
       content.push(contentNodes[i].innerHTML);
     else if (contentNodes[i]?.childNodes[0]?.classList.contains('general-writing-image-wrapper'))
@@ -452,7 +478,35 @@ function fixContentItemsInnerText() {
     allTextItems[i].innerHTML = allTextItems[i].innerText.split('\n').join('');
   for (let i = 0; i < allListItems.length; i++)
     allListItems[i].innerHTML = allListItems[i].innerText.split('\n').join('');
-}
+};
+
+// From StackOverflow, https://stackoverflow.com/questions/1197575/can-scripts-be-inserted-with-innerhtml
+function nodeScriptReplace(node) {
+  if ( nodeScriptIs(node) === true ) {
+          node.parentNode.replaceChild( nodeScriptClone(node) , node );
+  }
+  else {
+          var i = -1, children = node.childNodes;
+          while ( ++i < children.length ) {
+                nodeScriptReplace( children[i] );
+          }
+  }
+
+  return node;
+};
+function nodeScriptClone(node){
+  var script  = document.createElement("script");
+  script.text = node.innerHTML;
+
+  var i = -1, attrs = node.attributes, attr;
+  while ( ++i < attrs.length ) {                                    
+        script.setAttribute( (attr = attrs[i]).name, attr.value );
+  }
+  return script;
+};
+function nodeScriptIs(node) {
+  return node.tagName && node.tagName === 'SCRIPT';
+};
 
 window.addEventListener('load', () => {
   writing = JSON.parse(document.getElementById('writing-json').value);
@@ -558,6 +612,17 @@ window.addEventListener('load', () => {
 
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
       document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
+      changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
+      setIsSavedFalse();
+    }
+
+    if (ancestorWithClassName(event.target, 'general-writing-each-choice-twitter')) {
+      const target = ancestorWithClassName(event.target, 'general-writing-each-content-item-left-options-wrapper').parentNode;
+      const newItem = createTwitterContentItem();
+
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(newItem, target);
+      document.querySelector('.general-writing-content-items-wrapper').insertBefore(target, newItem);
+      newItem.childNodes[1].childNodes[0].focus();
       changeAddContentState(target.childNodes[0].childNodes[0].childNodes[1]);
       setIsSavedFalse();
     }
@@ -1851,6 +1916,11 @@ window.addEventListener('load', () => {
     if (event.target.classList.contains('general-writing-video-url')) {
       event.target.nextElementSibling.nextElementSibling.src = event.target.innerHTML;
     }
+
+    if (event.target.classList.contains('general-writing-twitter-embed-text')) {
+      event.target.nextElementSibling.innerHTML = event.target.innerText;
+      nodeScriptReplace(event.target.nextElementSibling.childNodes[event.target.nextElementSibling.childNodes.length - 1]);
+    }
   });
 
   document.addEventListener('change', event => {
@@ -1878,17 +1948,23 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('paste', function (event) {
-    event.preventDefault();
-    const temp = document.createElement('div');
-    temp.innerHTML = event.clipboardData.getData('text/plain');
-    const text = temp.innerText.split('\n').join('').split('\t').join('');
-    document.execCommand('inserttext', false, text);
+    if (!event.target.classList.contains('general-writing-twitter-embed-text')) {
+      event.preventDefault();
+      const temp = document.createElement('div');
+      temp.innerHTML = event.clipboardData.getData('text/plain');
+      const text = temp.innerText.split('\n').join('').split('\t').join('');
+      document.execCommand('inserttext', false, text);
+    } else {
+      event.preventDefault();
+      document.execCommand('inserttext', false, event.clipboardData.getData('text/plain'));
+    }
   });
 });
 
-window.addEventListener('beforeunload', event => {
-  if (!isSaved) {
-    event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
-    return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
-  };
-});
+// window.addEventListener('beforeunload', event => {
+//   if (!isSaved) {
+//     event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
+//     return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
+//   };
+// });
+
