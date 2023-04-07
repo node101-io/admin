@@ -10,7 +10,7 @@ const authenticatePostController = require('../controllers/api/authenticate/post
 
 router.get(
   '/projects',
-    isAPIAuthenticated,
+    // isAPIAuthenticated,
     projectsGetController
 );
 
