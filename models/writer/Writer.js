@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
+const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 
@@ -13,6 +14,7 @@ const getWriterByLanguage = require('./functions/getWriterByLanguage');
 const isWriterComplete = require('./functions/isWriterComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
+const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const IMAGE_HEIGHT = 300;
 const IMAGE_WIDTH = 300;
 const IMAGE_NAME_PREFIX = 'node101 writer ';
@@ -26,6 +28,13 @@ const WriterSchema = new Schema({
     type: String,
     required: true,
     trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  identifier: {
+    type: String,
+    required: true,
+    unique: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
@@ -81,6 +90,7 @@ WriterSchema.statics.createWriter = function (data, callback) {
 
     const newWriterData = {
       name: data.name.trim(),
+      identifier: toURLString(data.name),
       created_at: new Date(),
       order
     };
@@ -96,6 +106,8 @@ WriterSchema.statics.createWriter = function (data, callback) {
       Writer.findByIdAndUpdate(writer._id, {$set: {
         translations: writer.translations
       }}, err => {
+        if (err && err.code == 'DUPLICATED_UNIQUE_FIELD_ERROR_CODE')
+          return callback('duplicated_unique_field');
         if (err) return callback('database_error');
 
         return callback(null, writer._id.toString());
@@ -174,9 +186,12 @@ WriterSchema.statics.findWriterByIdAndUpdate = function (id, data, callback) {
 
     Writer.findByIdAndUpdate(writer._id, {$set: {
       name: data.name.trim(),
+      identifier: toURLString(data.name),
       title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writer.title,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
     }}, err => {
+      if (err && err.code == 'DUPLICATED_UNIQUE_FIELD_ERROR_CODE')
+        return callback('duplicated_unique_field');
       if (err) return callback('database_error');
 
       return callback(null);
@@ -317,6 +332,7 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
     if (writer.is_deleted) return callback(null);
 
     Writer.findByIdAndUpdate(writer._id, { $set: {
+      identifier: writer.identifier + writer._id.toString(),
       is_deleted: true,
       order: null
     } }, err => {
@@ -354,6 +370,7 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
       if (err) return callback(err);
 
       Writer.findByIdAndUpdate(writer._id, {
+        identifier: writer.identifier.replace(writer._id.toString(), ''),
         is_deleted: false,
         order
       }, err => {

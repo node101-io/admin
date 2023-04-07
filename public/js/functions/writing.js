@@ -1961,10 +1961,9 @@ window.addEventListener('load', () => {
   });
 });
 
-// window.addEventListener('beforeunload', event => {
-//   if (!isSaved) {
-//     event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
-//     return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
-//   };
-// });
-
+window.addEventListener('beforeunload', event => {
+  if (!isSaved) {
+    event.returnValue = 'Your changes in this document are not yet saved. Are you sure you want to exit the page?'
+    return 'Your changes in this document are not yet saved. Are you sure you want to exit the page?';
+  };
+});

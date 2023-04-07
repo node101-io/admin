@@ -141,7 +141,10 @@ window.addEventListener('load', () => {
             placeholder: 'Name'
           }
         ],
-        button: 'Create New Writer'
+        button: 'Create New Writer',
+        errors: {
+          duplicated_unique_field: 'Each writer must have a unique name. Please use edit & translations page to change this writer\'s details.'
+        }
       }, (error, res) => {
         if (error) return alert(error);
         if (!res) return;
