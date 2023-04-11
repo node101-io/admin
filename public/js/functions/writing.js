@@ -437,9 +437,26 @@ function formatTitleAndSubtitleHeight() {
   document.querySelector('.general-writing-subtitle').style.minHeight = (document.querySelector('.general-writing-subtitle').scrollHeight) + 'px';
 };
 
+function clearWritingContent(item) {
+  if (!item) return;
+
+  if (!item.innerText?.length && !item.childNodes?.length && !item.children?.length) {
+    item.remove();
+    return;
+  }
+  
+  for (let i = 0; i < item.childNodes.length; i++)
+    clearWritingContent(item.childNodes[i]);
+};
+
 function generateWritingData() {
-  const contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper');
+  let contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper');
   const content = [];
+
+  // for (let i = 0; i < contentNodes.length; i++)
+  //   clearWritingContent(contentNodes[i]);
+
+  // contentNodes = document.querySelectorAll('.general-writing-each-content-item-inner-wrapper')
 
   for (let i = 0; i < contentNodes.length; i++)
     if ((
@@ -1180,7 +1197,7 @@ window.addEventListener('load', () => {
           newContentInnerHTML += '</span>';
 
         wrapper.innerHTML = newContentInnerHTML;
-        target.classList.remove('general-writing-selection-menu-icon-selected');        
+        target.classList.remove('general-writing-selection-menu-icon-selected');      
       } else { // Case 2
         const contentInnerHTML = wrapper.innerHTML;
         let openTags = [];
@@ -1303,17 +1320,91 @@ window.addEventListener('load', () => {
       const wrapper = ancestorWithClassName(anchorNode, 'general-writing-item');
 
       if (target.classList.contains('general-writing-selection-menu-icon-selected')) { // Case 1
-        if (!activeLinkNodeId) return;
+        const contentInnerHTML = wrapper.innerHTML;
+        let openTags = [];
+        let i = 0;
+        let contentInnerText = '';
+        let newContentInnerHTML = '';
 
-        const urlContent = document.getElementById(activeLinkNodeId).innerHTML;
-        const beforeUrlArray = wrapper.innerHTML.split(activeLinkNodeId)[0].split('<');
-        beforeUrlArray.pop();
-        const beforeUrl = beforeUrlArray.join('');
-        const afterUrl = wrapper.innerHTML.split(activeLinkNodeId)[1].split('>').filter((_, i) => i > 0).join('');
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
 
-        wrapper.innerHTML = beforeUrl + urlContent + afterUrl;
-        target.classList.remove('general-writing-selection-menu-icon-selected');  
-        document.querySelector('.general-writing-selection-menu-url-input').style.display = 'none';
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-url'))
+            newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length && contentInnerText.length < selectionIndex + selectionString.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            if (!openTags[openTags.length - 1].includes('general-writing-text-url'))
+              newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+
+            if (!tag.includes('general-writing-text-url'))
+              newContentInnerHTML += tag;
+
+            openTags.push(tag);
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          if (!openTags[i].includes('general-writing-text-url'))
+            newContentInnerHTML += '</span>';
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += openTags[i];
+
+        while (i < contentInnerHTML.length) {
+          if (contentInnerHTML.substring(i, i + 7) == '</span>') {
+            newContentInnerHTML += '</span>';
+            openTags.pop();
+            i += 7;
+          } else if (contentInnerHTML.substring(i, i + 5) == '<span') {
+            let tag = '';
+            while (contentInnerHTML[i] != '>')
+              tag += contentInnerHTML[i++];
+            tag += contentInnerHTML[i++];
+  
+            openTags.push(tag);
+            newContentInnerHTML += tag;
+          } else {
+            contentInnerText += contentInnerHTML[i];
+            newContentInnerHTML += contentInnerHTML[i++];
+          }
+        }
+
+        for (let i = 0; i < openTags.length; i++)
+          newContentInnerHTML += '</span>';
+
+        wrapper.innerHTML = newContentInnerHTML;
+        target.classList.remove('general-writing-selection-menu-icon-selected');      
       } else { // Case 2
         if (!selectionString?.trim().length)
           return;
