@@ -135,7 +135,7 @@ block main
                       .general-writing-each-content-item-add-button-each-choice.general-writing-each-choice-ellipsis
                         svg.general-writing-each-content-item-add-button-each-choice-icon(xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512')
                           path(d='M0 256a56 56 0 1 1 112 0A56 56 0 1 1 0 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z')
-              .general-writing-each-content-item-inner-wrapper !{item}
+              .general-writing-each-content-item-inner-wrapper !{item.split('<b').join('<span class=\'general-writing-text-bold\'').split('</b>').join('</span>').split('<i').join('<span class=\'general-writing-text-italic\'').split('</i>').join('</span>')}
               .general-writing-each-content-item-right-options-wrapper
                 .general-writing-each-content-item-options-line
                   .general-writing-each-content-item-order-up-button
