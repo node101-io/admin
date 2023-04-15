@@ -1,3 +1,4 @@
 node_modules/
 .env
 public/res/uploads/*
+utils/updateData.js

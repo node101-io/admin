@@ -49,6 +49,7 @@ if (cluster.isMaster) {
   const writingRouteController = require('./routes/writingRoute');
 
   const fromDateToHTMLInputString = require('./utils/fromDateToHTMLInputString');
+  // const updateData = require('./utils/updateData');
 
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug');
@@ -115,5 +116,9 @@ if (cluster.isMaster) {
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);
+    // updateData(err => {
+    //   if (err) console.log(err);
+    //   return console.log("Update Finished!");
+    // })
   });
 }

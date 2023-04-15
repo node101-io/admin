@@ -12,17 +12,16 @@ const Writer = require('../writer/Writer');
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const getWriting = require('./functions/getWriting');
-const getWritingByLanguage = require('./functions/getWritingByLanguage');
 const isWritingComplete = require('./functions/isWritingComplete');
 
-const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
+const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
+const DEFAULT_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const LOGO_HEIGHT = 300;
 const LOGO_WIDTH = 300;
 const COVER_HEIGHT = 414;
 const COVER_WIDTH = 752;
 const IMAGE_WIDTH = 500;
-const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
 const LOGO_NAME_PREFIX = 'node101 writing logo ';
 const COVER_NAME_PREFIX = 'node101 writing cover ';
 const IMAGE_IDENTIFIER_CLASS_NAME = 'general-writing-image';
@@ -98,7 +97,7 @@ const WritingSchema = new Schema({
   },
   flag: {
     type: String,
-    default: null,
+    default: '',
     trim: true,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
@@ -114,20 +113,6 @@ const WritingSchema = new Schema({
   translations: {
     type: Object,
     default: {}
-  },
-  search_title: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 0,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
-  },
-  search_subtitle: {
-    type: String,
-    default: '',
-    trim: true,
-    minlength: 0,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   order: {
     type: Number,
@@ -180,9 +165,8 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
   
         const newWritingData = {
           title: data.title.trim(),
-          search_title: data.title.trim(),
           identifiers: [ identifier ],
-          identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+          identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
           type: data.type,
           parent_id,
           writer_id: writer._id,
@@ -205,16 +189,7 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
           }}, err => {
             if (err) return callback('database_error');
   
-            Writing.collection
-              .createIndex(
-                { search_title: 'text', search_subtitle: 'text' },
-                { weights: {
-                  search_title: 10,
-                  search_subtitle: 1
-                } }
-              )
-              .then(() => callback(null, writing._id.toString()))
-              .catch(_ => callback('index_error'));
+            return callback(null, writing._id.toString());
           });
         });
       });
@@ -252,9 +227,8 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
 
       const newWritingData = {
         title: data.title.trim(),
-        search_title: data.title.trim(),
         identifiers: [ identifier ],
-        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+        identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
         type: data.type,
         parent_id,
         created_at: new Date(),
@@ -276,16 +250,7 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         }}, err => {
           if (err) return callback('database_error');
 
-          Writing.collection
-            .createIndex(
-              { search_title: 'text', search_subtitle: 'text' },
-              { weights: {
-                search_title: 10,
-                search_subtitle: 1
-              } }
-            )
-            .then(() => callback(null, writing._id.toString()))
-            .catch(err => callback('index_error'));
+          return callback(null, writing._id.toString());
         });
       });
     });
@@ -327,26 +292,6 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormat = function (id, parent
     if (err) return callback(err);
 
     getWriting(writing, (err, writing) => {
-      if (err) return callback(err);
-
-      return callback(null, writing);
-    });
-  });
-};
-
-WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (id, parent_id, language, callback) {
-  const Writing = this;
-
-  if (!language || !validator.isISO31661Alpha2(language.toString()))
-    return callback('bad_request');
-
-  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
-    if (err) return callback(err);
-
-    if (!writing.is_completed)
-      return callback('not_authenticated_request');
-
-    getWritingByLanguage(writing, language, (err, writing) => {
       if (err) return callback(err);
 
       return callback(null, writing);
@@ -561,7 +506,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
       const identifiers = writing.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
 
       const identifier_languages = {
-        identifier: DEFAULT_IDENTIFIER_LANGUAGE
+        identifier: DEFAULT_LANGUAGE
       };
 
       Object.keys(writing.identifier_languages).forEach(key => {
@@ -595,52 +540,26 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
           }}, { new: true }, (err, writing) => {
             if (err) return callback('database_error');
   
-            const searchTitle = new Set();
-            const searchSubtitle = new Set();
-  
-            writing.title.split(' ').forEach(word => searchTitle.add(word));
-            writing.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
-            writing.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
-            writing.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-            writing.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-            writing.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-  
-            Writing.findByIdAndUpdate(writing._id, {$set: {
-              search_title: Array.from(searchTitle).join(' '),
-              search_subtitle: Array.from(searchSubtitle).join(' ')
-            }}, err => {
-              if (err) return callback('database_error');
+            const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+            const newImages = writing.content
+              .concat(writing.translations.tr.content)
+              .concat(writing.translations.ru.content)
+              .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
 
-              const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
-              const newImages = writing.content
-                .concat(writing.translations.tr.content)
-                .concat(writing.translations.ru.content)
-                .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+            async.timesSeries(
+              oldImages.length,
+              (time, next) => {
+                if (newImages.includes(oldImages[time]))
+                  return next(null);
 
-              async.timesSeries(
-                oldImages.length,
-                (time, next) => {
-                  if (newImages.includes(oldImages[time]))
-                    return next(null);
+                return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
+              },
+              err => {
+                if (err) return callback(err);
 
-                  return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
-                },
-                err => {
-                  if (err) return callback(err);
-
-                  Writing.collection
-                    .createIndex(
-                      { search_title: 'text', search_subtitle: 'text' },
-                      { weights: {
-                        search_title: 10,
-                        search_subtitle: 1
-                      } }
-                    )
-                    .then(() => callback(null))
-                    .catch(_ => callback('index_error'));
-                }
-              );
-            });
+                return callback(null);
+              }
+            );
           });
         });
       });
@@ -701,52 +620,26 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
       }}, { new: true }, (err, writing) => {
         if (err) return callback('database_error');
   
-        const searchTitle = new Set();
-        const searchSubtitle = new Set();
+        const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
+        const newImages = writing.content
+          .concat(writing.translations.tr.content)
+          .concat(writing.translations.ru.content)
+          .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
 
-        writing.title.split(' ').forEach(word => searchTitle.add(word));
-        writing.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
-        writing.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
-        writing.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-        writing.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-        writing.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
+        async.timesSeries(
+          oldImages.length,
+          (time, next) => {
+            if (newImages.includes(oldImages[time]))
+              return next(null);
 
-        Writing.findByIdAndUpdate(writing._id, {$set: {
-          search_title: Array.from(searchTitle).join(' '),
-          search_subtitle: Array.from(searchSubtitle).join(' ')
-        }}, err => {
-          if (err) return callback('database_error');
+            return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
+          },
+          err => {
+            if (err) return callback(err);
 
-          const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
-          const newImages = writing.content
-            .concat(writing.translations.tr.content)
-            .concat(writing.translations.ru.content)
-            .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
-
-          async.timesSeries(
-            oldImages.length,
-            (time, next) => {
-              if (newImages.includes(oldImages[time]))
-                return next(null);
-
-              return Image.findImageByUrlAndDelete(oldImages[time], err => next(err));
-            },
-            err => {
-              if (err) return callback(err);
-
-              Writing.collection
-                .createIndex(
-                  { search_title: 'text', search_subtitle: 'text' },
-                  { weights: {
-                    search_title: 10,
-                    search_subtitle: 1
-                  } }
-                )
-                .then(() => callback(null))
-                .catch(_ => callback('index_error'));
-            }
-          );
-        });
+            return callback(null);
+          }
+        );
       });
     });
   });
@@ -908,7 +801,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
 
     identifiers = [ toURLString(writing.title.replace(writing._id.toString(), '')) ];
     const identifierLanguages = {
-      [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
+      [identifiers[0]]: DEFAULT_LANGUAGE
     };
 
     Object.values(writing.translations).forEach((lang, index) => {
