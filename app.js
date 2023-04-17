@@ -45,6 +45,7 @@ if (cluster.isMaster) {
   const memberRouteController = require('./routes/memberRoute');
   const projectRouteController = require('./routes/projectRoute');
   const stakeRouteController = require('./routes/stakeRoute');
+  const wizardRouteController = require('./routes/wizardRoute');
   const writerRouteController = require('./routes/writerRoute');
   const writingRouteController = require('./routes/writingRoute');
 
@@ -111,6 +112,7 @@ if (cluster.isMaster) {
   app.use('/member', memberRouteController);
   app.use('/project', projectRouteController);
   app.use('/stake', stakeRouteController);
+  app.use('/wizard', wizardRouteController);
   app.use('/writer', writerRouteController);
   app.use('/writing', writingRouteController);
 

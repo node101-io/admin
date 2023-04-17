@@ -1,0 +1,70 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Wizard App Version Controller')}
+      .general-header-subtitle= __('View the current version & publish a new version for the wizard app to use.')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !admin.roles.includes('wizard_edit')
+        .general-create-info= __('IMPORTANT! Your account does not have the required permission to publish a new version. You may view but cannot change the current version.')
+        .general-create-input-grid-wrapper
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required= __('Version')
+            span.general-input-not-allowed= data.version
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle= __('Version Notes')
+            span.general-input-not-allowed= data.notes
+        each platform, i in Object.keys(data.platforms)
+          .general-create-input-grid-wrapper.each-platform-input-wrapper
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform Name')} - #{i + 1}
+              span.general-input-not-allowed= platform
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform Signature')} - #{i + 1}
+              span.general-input-not-allowed= data.platforms[platform].signature
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform URL')} - #{i + 1}
+              span.general-input-not-allowed= data.platforms[platform].url
+      else
+        .general-create-input-grid-wrapper
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required= __('Version')
+            input.general-input#version(type='text' placeholder=__('Please make sure to match the version format conventions.') value=data.version)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle= __('Version Notes')
+            input.general-input#notes(type='text' placeholder=__('Your notes on this new version.') value=data.notes)
+        each platform, i in Object.keys(data.platforms)
+          .general-create-input-grid-wrapper.each-platform-input-wrapper
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform Name')} - #{i + 1}
+              input.general-input#platform-name(type='text' placeholder=__('Name of the platform') value=platform)
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform Signature')} - #{i + 1}
+              input.general-input#platform-signature(type='text' placeholder=__('Signature of the platform') value=data.platforms[platform].signature)
+            .general-create-input-grid-each-item-wrapper
+              span.general-create-subtitle.general-create-required #{__('Platform URL')} - #{i + 1}
+              input.general-input#platform-url(type='text' placeholder=__('URL of the platform') value=data.platforms[platform].url)
+        .general-create-input-grid-wrapper.each-platform-input-wrapper
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform Name')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-name(type='text' placeholder=__('Name of the platform'))
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform Signature')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-signature(type='text' placeholder=__('Signature of the platform'))
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform URL')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-url(type='text' placeholder=__('URL of the platform'))
+        .general-create-input-grid-wrapper.display-none#duplicate
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform Name')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-name(type='text' placeholder=__('Name of the platform'))
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform Signature')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-signature(type='text' placeholder=__('Signature of the platform'))
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle.general-create-required #{__('Platform URL')} - #{Object.keys(data.platforms).length + 1}
+            input.general-input#platform-url(type='text' placeholder=__('URL of the platform'))
+        .general-create-button-wrapper
+          span.general-create-error#publish-error
+          .general-create-button#publish-button= __('Publish')

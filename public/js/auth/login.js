@@ -31,7 +31,10 @@ window.addEventListener('load', () => {
         return;
       }
 
-      return window.location = res.redirect;      
+      if (res.redirect)
+        return window.location = res.redirect;      
+      else
+        return window.location = '/';
     });
   });
 });

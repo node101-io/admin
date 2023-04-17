@@ -65,6 +65,8 @@ module.exports = (req, res, next) => {
     '/stake/image': 'stake_edit',
     '/stake/status': 'stake_edit',
     '/stake/translate': 'stake_edit',
+    '/wizard': 'wizard_view',
+    '/wizard/edit': 'wizard_edit',
     '/writer': 'writer_view',
     '/writer/create': 'writer_create',
     '/writer/delete': 'writer_delete',

@@ -25,6 +25,9 @@ module.exports = (req, res, next) => {
       { permission: 'member_create', name: res.__('New Member'), link: '/member/create' },
       { permission: 'member_delete', name: res.__('Deleted Members'), link: '/member/delete' }
     ],
+    'Wizard': [
+      { permission: 'wizard_view', name: res.__('Wizard App Version Controller'), link: '/wizard' }
+    ],
     'Writers': [
       { permission: 'writer_view', name: res.__('All Writers'), link: '/writer' },
       { permission: 'writer_create', name: res.__('New Writer'), link: '/writer/create' },

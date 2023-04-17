@@ -32,16 +32,13 @@ module.exports = (req, res) => {
     'stake_edit': res.__('Edit & Translate Stakable Projects'),
     'stake_order': res.__('Change the Order of Stakable Projects'),
     'stake_delete': res.__('Delete & Restore Stakable Projects'),
+    'wizard_view': res.__('View Wizard App Versions'),
+    'wizard_edit': res.__('Publish New Wizard App Versions'),
     'writer_view': res.__('View Writers'),
     'writer_create': res.__('Create New Writers'),
     'writer_edit': res.__('Edit & Translate Writers'),
     'writer_order': res.__('Change the Order of Writers'),
-    'writer_delete': res.__('Delete & Restore Writers'),
-    'writing_view': res.__('View Writings (from Blogs & Books)'),
-    'writing_create': res.__('Create New Writings (from Blogs & Books)'),
-    'writing_edit': res.__('Edit & Translate Writings (from Blogs & Books)'),
-    'writing_order': res.__('Change the Order of Writings (from Blogs & Books)'),
-    'writing_delete': res.__('Delete & Restore Writings (from Blogs & Books)')
+    'writer_delete': res.__('Delete & Restore Writers')
   };
 
   Admin.findAdminByIdAndFormat(req.query.id, (err, admin) => {
