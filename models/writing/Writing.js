@@ -9,6 +9,7 @@ const toURLString = require('../../utils/toURLString');
 const Image = require('../image/Image');
 const Writer = require('../writer/Writer');
 
+const checkAndUpdateWritingFilter = require('./functions/checkAndUpdateWritingFilter');
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const getWriting = require('./functions/getWriting');
@@ -273,14 +274,22 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
       return callback('not_authenticated_request');
 
     if (writing.is_completed == isWritingComplete(writing))
-      return callback(null, writing);
+      return checkAndUpdateWritingFilter(writing, err => {
+        if (err) return callback(err);
+
+        return callback(null, writing);
+      });
 
     Writing.findByIdAndUpdate(writing._id, {$set: {
       is_completed: isWritingComplete(writing)
     }}, { new: true }, (err, writing) => {
       if (err) return callback('database_error');
 
-      return callback(null, writing);
+      checkAndUpdateWritingFilter(writing, err => {
+        if (err) return callback(err);
+
+        return callback(null, writing);
+      });
     });
   });
 };

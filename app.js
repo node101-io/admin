@@ -120,9 +120,5 @@ if (cluster.isMaster) {
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);
-    // updateData(err => {
-    //   if (err) console.log(err);
-    //   return console.log("Update Finished!");
-    // })
   });
 }
