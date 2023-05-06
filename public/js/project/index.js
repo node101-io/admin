@@ -26,7 +26,7 @@ window.addEventListener('load', () => {
     if (event.target.classList.contains('delete-each-project-button')) {
       createConfirm({
         title: 'Are you sure you want to delete this project?',
-        text: 'You can restore the project whenever you like from the \`Deleted Members\` page..',
+        text: 'You can restore the project whenever you like from the \`Deleted Members\` page.',
         reject: 'Cancel',
         accept: 'Delete'
       }, res => {

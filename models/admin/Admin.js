@@ -30,6 +30,7 @@ const role_values = [
   'member_view', 'member_create', 'member_edit', 'member_order', 'member_delete',
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
+  'tag_view', 'tag_create', 'tag_edit', 'tag_order', 'tag_delete',
   'wizard_view', 'wizard_edit',
   'writer_view', 'writer_create', 'writer_edit', 'writer_order', 'writer_delete'
 ];

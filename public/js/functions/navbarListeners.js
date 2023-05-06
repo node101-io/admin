@@ -127,6 +127,32 @@ window.addEventListener('load', () => {
       });
     }
 
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/tag/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Library Tag',
+        url: '/tag/create',
+        method: 'POST',
+        description: 'You will be asked to complete tag details once you create it.',
+        inputs: [
+          {
+            name: 'name',
+            placeholder: 'Name'
+          }
+        ],
+        button: 'Create New Tag',
+        errors: {
+          duplicated_unique_field: 'Each tag must have a unique name. Please use edit & translations page to change this tag\'s details.'
+        }
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/tag/edit?id=' + res.id;
+      });
+    }
+
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/writer/create')) {
       event.preventDefault();
 
