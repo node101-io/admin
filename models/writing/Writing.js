@@ -13,6 +13,7 @@ const checkAndUpdateWritingFilter = require('./functions/checkAndUpdateWritingFi
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const getWriting = require('./functions/getWriting');
+const getWritingByLanguage = require('./functions/getWritingByLanguage');
 const isWritingComplete = require('./functions/isWritingComplete');
 
 const DEFAULT_IMAGE_RANDOM_NAME_LENGTH = 32;
@@ -301,6 +302,20 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormat = function (id, parent
     if (err) return callback(err);
 
     getWriting(writing, (err, writing) => {
+      if (err) return callback(err);
+
+      return callback(null, writing);
+    });
+  });
+};
+
+WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (id, parent_id, language, callback) {
+  const Writing = this;
+
+  Writing.findWritingByIdAndParentId(id, parent_id, (err, writing) => {
+    if (err) return callback(err);
+
+    getWritingByLanguage(writing, language, (err, writing) => {
       if (err) return callback(err);
 
       return callback(null, writing);
