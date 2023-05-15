@@ -1,66 +1,94 @@
+const async = require('async');
+
 const WritingFilter = require('../../writing_filter/WritingFilter');
 
-function generateWritingFilterData(writing) {
+const DEFAULT_LANGUAGE = 'en';
+const LANGUAGE_VALUES = ['en', 'tr', 'ru'];
+
+function generateWritingFilterData(writing, language) {
   const title = new Set();
   const subtitle = new Set();
 
-  writing.title.split(' ').map(each => title.add(each));
-  writing.translations.tr.title.split(' ').map(each => title.add(each));
-  writing.translations.ru.title.split(' ').map(each => title.add(each));
-
-  writing.subtitle.split(' ').map(each => subtitle.add(each));
-  writing.translations.tr.subtitle.split(' ').map(each => subtitle.add(each));
-  writing.translations.ru.subtitle.split(' ').map(each => subtitle.add(each));
-
-  return {
-    writing_id: writing._id,
-    title: Array.from(title).join(' '),
-    type: writing.type,
-    parent_id: writing.parent_id,
-    writer_id: writing.writer_id,
-    created_at: writing.created_at,
-    subtitle: Array.from(subtitle).join(' '),
-    label: writing.label,
-    flag: writing.flag,
-    order: writing.order
-  };
+  if (language == DEFAULT_LANGUAGE) {
+    writing.title.split(' ').map(each => title.add(each));
+    writing.subtitle.split(' ').map(each => subtitle.add(each));
+  
+    return {
+      writing_id: writing._id,
+      language,
+      title: Array.from(title).join(' '),
+      type: writing.type,
+      parent_id: writing.parent_id,
+      writer_id: writing.writer_id,
+      created_at: writing.created_at,
+      subtitle: Array.from(subtitle).join(' '),
+      label: writing.label,
+      flag: writing.flag,
+      order: writing.order
+    };
+  } else {
+    writing.translations[language].title.split(' ').map(each => title.add(each));
+    writing.translations[language].subtitle.split(' ').map(each => subtitle.add(each));
+  
+    return {
+      writing_id: writing._id,
+      language,
+      title: Array.from(title).join(' '),
+      type: writing.type,
+      parent_id: writing.parent_id,
+      writer_id: writing.writer_id,
+      created_at: writing.created_at,
+      subtitle: Array.from(subtitle).join(' '),
+      label: writing.label,
+      flag: writing.translations[language].flag,
+      order: writing.order
+    };
+  }  
 };
 
 module.exports = (writing, callback) => {
-  const data = generateWritingFilterData(writing);
+  async.timesSeries(
+    LANGUAGE_VALUES.length,
+    (time, next) => {
+      const language = LANGUAGE_VALUES[time];
 
-  WritingFilter.findWritingFilterByWritingId(writing._id, (err, writing_filter) => {
-    if (err && err != 'document_not_found') return callback(err);
+      const data = generateWritingFilterData(writing, language);
 
-    if (
-      !writing.is_completed ||
-      writing.is_deleted ||
-      writing.is_hidden
-    ) {
-      if (err) return callback(null);
+      WritingFilter.findWritingFilterByWritingIdAndLanguage(writing._id, language, (err, writing_filter) => {
+        if (err && err != 'document_not_found') return next(err);
 
-      WritingFilter.findWritingFilterByIdAndDelete(writing_filter._id, err => {
-        if (err) return callback(err);
+        if (
+          !writing.is_completed ||
+          writing.is_deleted ||
+          (language == DEFAULT_LANGUAGE ? writing.is_hidden : writing.translations[language].is_hidden)
+        ) {
+          if (err) return next(null);
+    
+          WritingFilter.findWritingFilterByIdAndDelete(writing_filter._id, err => {
+            if (err) return next(err);
 
-        return callback(null);
+            return next(null);
+          });
+        } else {
+          if (err) {
+            WritingFilter.createWritingFilter(data, err => {
+              if (err) return next(err);
+      
+              return next(null);
+            })
+          } else {
+            if (!Object.keys(data).find(key => data[key] && data[key].toString() != writing_filter[key]?.toString()))
+              return next(null);
+    
+            WritingFilter.findWritingFilterByIdAndUpdate(writing_filter._id, data, err => {
+              if (err) return next(err);
+    
+              return next(null);
+            });
+          };
+        };
       });
-    } else {
-      if (err) {
-        WritingFilter.createWritingFilter(data, err => {
-          if (err) return callback(err);
-  
-          return callback(null);
-        })
-      } else {
-        if (!Object.keys(data).find(key => data[key] && data[key].toString() != writing_filter[key]?.toString()))
-          return callback(null);
-
-        WritingFilter.findWritingFilterByIdAndUpdate(writing_filter._id, data, err => {
-          if (err) return callback(err);
-
-          return callback(null);
-        });
-      };
-    };
-  });
+    },
+    err => callback(err)
+  );
 };

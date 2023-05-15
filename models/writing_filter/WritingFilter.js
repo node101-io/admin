@@ -6,7 +6,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 
@@ -15,8 +15,12 @@ const Schema = mongoose.Schema;
 const WritingFilterSchema = new Schema({
   writing_id: {
     type: mongoose.Types.ObjectId,
-    required: true,
-    unique: true
+    required: true
+  },
+  language: {
+    type: String,
+    length: 2,
+    required: true
   },
   title: {
     type: String,
@@ -74,6 +78,7 @@ WritingFilterSchema.statics.createWritingFilter = function (data, callback) {
 
   const newWritingFilterData = {
     writing_id: data.writing_id,
+    language: data.language,
     title: data.title,
     type: data.type,
     parent_id: data.parent_id,
@@ -111,14 +116,15 @@ WritingFilterSchema.statics.findWritingFilterById = function (id, callback) {
   });
 };
 
-WritingFilterSchema.statics.findWritingFilterByWritingId = function (writing_id, callback) {
+WritingFilterSchema.statics.findWritingFilterByWritingIdAndLanguage = function (writing_id, language, callback) {
   const WritingFilter = this;
 
   if (!writing_id || !validator.isMongoId(writing_id.toString()))
     return callback('bad_request');
 
   WritingFilter.findOne({
-    writing_id: mongoose.Types.ObjectId(writing_id.toString())
+    writing_id: mongoose.Types.ObjectId(writing_id.toString()),
+    language
   }, (err, writing_filter) => {
     if (err) return callback('database_error');
     if (!writing_filter) return callback('document_not_found');
