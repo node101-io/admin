@@ -27,8 +27,7 @@ module.exports = (req, res, next) => {
     ],
     'Tags': [
       { permission: 'tag_view', name: res.__('All Library Tags'), link: '/tag' },
-      { permission: 'tag_create', name: res.__('New Tag'), link: '/tag/create' },
-      { permission: 'tag_delete', name: res.__('Deleted Tags'), link: '/tag/delete' }
+      { permission: 'tag_create', name: res.__('New Tag'), link: '/tag/create' }
     ],
     'Wizard': [
       { permission: 'wizard_view', name: res.__('Wizard App Version Controller'), link: '/wizard' }
