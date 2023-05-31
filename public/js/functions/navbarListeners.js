@@ -183,6 +183,7 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('change', event => {
+    event.preventDefault();
     if (event.target.id == 'navbar-image-input') {
       const file = event.target.files[0];
 

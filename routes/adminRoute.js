@@ -56,7 +56,7 @@ router.post(
 router.post(
   '/image',
     upload.single('file'),
-    isSystemAdmin,
+    // isSystemAdmin,
     imagePostController
 );
 router.post(
