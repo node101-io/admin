@@ -1,4 +1,6 @@
 window.addEventListener('load', () => {
+  const admin_id = document.getElementById('admin-id').value;
+
   document.addEventListener('click', event => {
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/blog/create')) {
       event.preventDefault();
@@ -176,6 +178,28 @@ window.addEventListener('load', () => {
         if (!res) return;
 
         return window.location = '/writer/edit?id=' + res.id;
+      });
+    }
+  });
+
+  document.addEventListener('change', event => {
+    if (event.target.id == 'navbar-image-input') {
+      const file = event.target.files[0];
+
+      const formdata = new FormData();
+      formdata.append('file', file);
+
+      serverRequest('/admin/image?id=' + admin_id, 'FILE', {
+        file,
+      }, res => {
+        if (!res.success)
+          return throwError(res.error);
+
+        return createConfirm({
+          title: 'Image Updated',
+          text: 'Admin profile image is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
       });
     }
   });

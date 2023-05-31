@@ -3,8 +3,11 @@ block content
   .all-wrapper
     .all-navbar-wrapper
       .all-navbar-header-wrapper
+        if admin
+          input.display-none#admin-id(type='text' value=admin._id)
         if navbar.image
-          .all-navbar-header-image(style=`background-image: url(${navbar.image})`)
+          .all-navbar-header-image(style=`background-image: url(${navbar.image}); cursor: pointer;` onclick='document.querySelector("#image").click();')
+            input.display-none#navbar-image-input(type='file')
         .all-navbar-header-text-wrapper
           .all-navbar-header-title= navbar.title
           .all-navbar-header-subtitle= navbar.subtitle
