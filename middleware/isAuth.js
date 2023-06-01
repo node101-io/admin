@@ -10,7 +10,6 @@ module.exports = (req, res, next) => {
             if (err) return res.status(401).redirect('/auth/login');;
 
             req.session.admin = admin;
-            console.log('isAuth.js: admin: ', admin);
             return next();
         });
 

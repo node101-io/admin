@@ -1,5 +1,6 @@
 window.addEventListener('load', () => {
   const admin_id = document.getElementById('admin-id').value;
+  const imageInput = document.querySelector('#navbar-image-input');
 
   document.addEventListener('click', event => {
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/blog/create')) {
@@ -179,6 +180,10 @@ window.addEventListener('load', () => {
 
         return window.location = '/writer/edit?id=' + res.id;
       });
+    }
+
+    if (event.target.classList.contains('all-navbar-header-image') || event.target.classList.contains('all-navbar-header-image-icon')) {
+      imageInput.click();
     }
   });
 
