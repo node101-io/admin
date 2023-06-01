@@ -5,6 +5,7 @@ const router = express.Router();
 const upload = multer({ dest: './public/res/uploads/' });
 
 const isSystemAdmin = require('../middleware/isSystemAdmin');
+const isAuth = require('../middleware/isAuth');
 
 const editGetController = require('../controllers/admin/edit/get');
 const indexGetController = require('../controllers/admin/index/get');
@@ -56,7 +57,7 @@ router.post(
 router.post(
   '/image',
     upload.single('file'),
-    // isSystemAdmin,
+    isAuth,
     imagePostController
 );
 router.post(

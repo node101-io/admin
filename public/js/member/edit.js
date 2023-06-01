@@ -27,7 +27,7 @@ window.addEventListener('load', () => {
 
       for (let i = 0; i < socialAccountInputs.length; i++)
         if (socialAccountInputs[i].value && socialAccountInputs[i].value.trim().length)
-          socialMediaAccounts[socialAccountInputs[i].id]= socialAccountInputs[i].value.trim();
+          socialMediaAccounts[socialAccountInputs[i].id] = socialAccountInputs[i].value.trim();
 
       if (!name || !name.trim().length)
         return error.innerHTML = 'Please enter a name for your member.';
@@ -45,11 +45,11 @@ window.addEventListener('load', () => {
         if (!res.success)
           return throwError(res.error);
 
-          return createConfirm({
-            title: 'Member is Updated',
-            text: 'Member is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
+        return createConfirm({
+          title: 'Member is Updated',
+          text: 'Member is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
       });
     }
 
@@ -67,7 +67,7 @@ window.addEventListener('load', () => {
 
       for (let i = 0; i < socialAccountInputs.length; i++)
         if (socialAccountInputs[i].value && socialAccountInputs[i].value.trim().length)
-          socialMediaAccounts[socialAccountInputs[i].id.replace('turkish-', '')]= socialAccountInputs[i].value.trim();
+          socialMediaAccounts[socialAccountInputs[i].id.replace('turkish-', '')] = socialAccountInputs[i].value.trim();
 
       if (!title || !title.trim().length)
         return error.innerHTML = 'Please enter a title for the member.';
@@ -82,11 +82,11 @@ window.addEventListener('load', () => {
         if (!res.success)
           return throwError(res.error);
 
-          return createConfirm({
-            title: 'Translation is Updated',
-            text: 'Turkish translation is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
+        return createConfirm({
+          title: 'Translation is Updated',
+          text: 'Turkish translation is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
       });
     }
 
@@ -104,7 +104,7 @@ window.addEventListener('load', () => {
 
       for (let i = 0; i < socialAccountInputs.length; i++)
         if (socialAccountInputs[i].value && socialAccountInputs[i].value.trim().length)
-          socialMediaAccounts[socialAccountInputs[i].id.replace('russian-', '')]= socialAccountInputs[i].value.trim();
+          socialMediaAccounts[socialAccountInputs[i].id.replace('russian-', '')] = socialAccountInputs[i].value.trim();
 
       if (!title || !title.trim().length)
         return error.innerHTML = 'Please enter a title for the member.';
@@ -119,11 +119,11 @@ window.addEventListener('load', () => {
         if (!res.success)
           return throwError(res.error);
 
-          return createConfirm({
-            title: 'Translation is Updated',
-            text: 'Russian translation is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
+        return createConfirm({
+          title: 'Translation is Updated',
+          text: 'Russian translation is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
       });
     }
   });
@@ -132,31 +132,23 @@ window.addEventListener('load', () => {
     if (event.target.id == 'image') {
       const file = event.target.files[0];
       const wrapper = event.target.parentNode;
-  
+
       wrapper.style.cursor = 'progress';
       wrapper.childNodes[1].innerHTML = 'Loading...';
       wrapper.childNodes[0].type = 'text';
-  
-      const formdata = new FormData();
-      formdata.append('file', file);
-    
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/member/image?id=' + member._id);
-      xhr.send(formdata);
-    
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.responseText) {
-          const res = JSON.parse(xhr.responseText);
-    
-          if (!res.success) return throwError(res.error);
-    
-          return createConfirm({
-            title: 'Member Image is Updated',
-            text: 'Member image is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
-        }
-      };
+
+      serverRequest('/member/image?id=' + member._id, 'FILE', {
+        file,
+      }, res => {
+        if (!res.success)
+          return throwError(res.error);
+
+        return createConfirm({
+          title: 'Member Image is Updated',
+          text: 'Member image is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
+      });
     }
   });
 });
