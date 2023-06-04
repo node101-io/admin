@@ -6,13 +6,20 @@ module.exports = (req, res) => {
     if (err) return res.status(500).json({ error: err });
 
     const local_data = JSON.parse(file);
+    let github_data = null;
+    let latest_version = null;
 
-    let github_data = {};
+    try {
+      const response = await fetch('https://api.github.com/repos/node101-io/node-wizard/tags');
+      const tags = await response.json();
+      latest_version = tags[0].name;
 
-    const response = await fetch(`https://github.com/node101-io/node-wizard/releases/download/${local_data.version}/latest.json`).catch(err => {
-      console.error('Failed to fetch latest release:', err);
-    });
-    github_data = await response.json();
+      const latestJsonResponse = await fetch(`https://github.com/node101-io/node-wizard/releases/download/${latest_version}/latest.json`);
+      github_data = await latestJsonResponse.json();
+    } catch (err) {
+      github_data = null;
+    }
+
 
     return res.render('wizard/edit', {
       page: 'wizard/edit',
@@ -23,7 +30,11 @@ module.exports = (req, res) => {
           js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'page', 'serverRequest']
         }
       },
-      data: github_data ? github_data : local_data
+      data: github_data || local_data,
+      status: {
+        is_synced: !!github_data,
+        is_new: !!github_data && local_data.version !== latest_version
+      }
     });
   });
 };

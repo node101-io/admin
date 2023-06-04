@@ -6,6 +6,8 @@ block main
       .general-header-subtitle= __('View the current version & publish a new version for the wizard app to use.')
   .all-content-inner-wrapper
     .general-create-wrapper
+      input.display-none#is-synced(type='checkbox' checked=status.is_synced)
+      input.display-none#is-new(type='checkbox' checked=status.is_new)
       if !admin.roles.includes('wizard_edit')
         .general-create-info= __('IMPORTANT! Your account does not have the required permission to publish a new version. You may view but cannot change the current version.')
         .general-create-input-grid-wrapper

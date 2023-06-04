@@ -122,5 +122,19 @@
 	"Reset Password": "Reset Password",
 	"Reset the password of the admin": "Reset the password of the admin",
 	"Confirm Password": "Confirm Password",
-	"Confirm the new password of the admin": "Confirm the new password of the admin"
+	"Confirm the new password of the admin": "Confirm the new password of the admin",
+	"Edit Wizard App Data": "Edit Wizard App Data",
+	"View the current version & publish a new version for the wizard app to use.": "View the current version & publish a new version for the wizard app to use.",
+	"Version": "Version",
+	"Please make sure to match the version format conventions.": "Please make sure to match the version format conventions.",
+	"Version Notes": "Version Notes",
+	"Your notes on this new version.": "Your notes on this new version.",
+	"Platform Name": "Platform Name",
+	"Name of the platform": "Name of the platform",
+	"Platform Signature": "Platform Signature",
+	"Signature of the platform": "Signature of the platform",
+	"Platform URL": "Platform URL",
+	"URL of the platform": "URL of the platform",
+	"Publish": "Publish",
+	"Are you sure you want to publish this version?": "Are you sure you want to publish this version?"
 }
