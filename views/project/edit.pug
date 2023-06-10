@@ -45,6 +45,10 @@ block main
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Project')} #{socialAccounts[social]} 
             input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=project.social_media_accounts[social])
+        each requirement in Object.keys(systemRequirements)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Project')} #{systemRequirements[requirement]} 
+            input.general-input.system-requirement-input(type='text' id=requirement placeholder=__('Requirement') value=project.system_requirements[requirement])
       .general-create-button-wrapper
         span.general-create-error#update-error
         .general-create-button#update-button= __('Update')
