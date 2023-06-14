@@ -23,15 +23,21 @@ window.addEventListener('load', () => {
       const description = document.getElementById('description').value;
       const rating = document.getElementById('rating').value;
       const socialMediaAccounts = {};
+      const systemRequirements = {};
       const wizardKey = document.getElementById('wizard-key').value;
       const network = document.getElementById('network').value;
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
+      const systemRequirementInputs = document.querySelectorAll('.system-requirement-input');
 
       for (let i = 0; i < socialAccountInputs.length; i++)
         if (socialAccountInputs[i].value && socialAccountInputs[i].value.trim().length)
           socialMediaAccounts[socialAccountInputs[i].id]= socialAccountInputs[i].value.trim();
 
+      for (let i = 0; i < systemRequirementInputs.length; i++)
+        if (systemRequirementInputs[i].value && systemRequirementInputs[i].value.trim().length)
+          systemRequirements[systemRequirementInputs[i].id]= systemRequirementInputs[i].value.trim();
+      
       if (!name || !name.trim().length)
         return error.innerHTML = 'Please enter a name for the project.';
 
@@ -50,6 +56,7 @@ window.addEventListener('load', () => {
         rating: parseInt(rating),
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
+        system_requirements: systemRequirements
         is_mainnet: network == 'mainnet'
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')

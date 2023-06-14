@@ -18,6 +18,7 @@ module.exports = (project, language, callback) => {
     is_completed: project.is_completed,
     social_media_accounts: translation.social_media_accounts,
     wizard_key: project.wizard_key,
+    system_requirements: project.system_requirements,
     is_mainnet: project.is_mainnet
   });
 }
