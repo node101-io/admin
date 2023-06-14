@@ -60,6 +60,13 @@ const WritingSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
+  parent_title: {
+    type: String,
+    required: true,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
   writer_id: {
     type: mongoose.Types.ObjectId,
     default: null
@@ -164,33 +171,34 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
 
       Writing.findWritingCountByParentIdAndFilters(parent_id, { is_deleted: false }, (err, order) => {
         if (err) return callback(err);
-  
+
         const newWritingData = {
           title: data.title.trim(),
           identifiers: [ identifier ],
           identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
           type: data.type,
           parent_id,
+          parent_title: data.parent_title,
           writer_id: writer._id,
           created_at: new Date(),
           order
         };
-    
+
         const newWriting = new Writing(newWritingData);
-    
+
         newWriting.save((err, writing) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
-  
+
           writing.translations = formatTranslations(writing, 'tr');
           writing.translations = formatTranslations(writing, 'ru');
-  
+
           Writing.findByIdAndUpdate(writing._id, {$set: {
-            translations: writing.translations
+              translations: writing.translations
           }}, err => {
             if (err) return callback('database_error');
-  
+
             return callback(null, writing._id.toString());
           });
         });
@@ -229,6 +237,7 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
 
       const newWritingData = {
         title: data.title.trim(),
+        parent_title: data.title.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
         type: data.type,
@@ -236,9 +245,9 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         created_at: new Date(),
         order
       };
-  
+
       const newWriting = new Writing(newWritingData);
-  
+
       newWriting.save((err, writing) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
@@ -248,7 +257,7 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         writing.translations = formatTranslations(writing, 'ru');
 
         Writing.findByIdAndUpdate(writing._id, {$set: {
-          translations: writing.translations
+            translations: writing.translations
         }}, err => {
           if (err) return callback('database_error');
 
@@ -282,7 +291,7 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
       });
 
     Writing.findByIdAndUpdate(writing._id, {$set: {
-      is_completed: isWritingComplete(writing)
+        is_completed: isWritingComplete(writing)
     }}, { new: true }, (err, writing) => {
       if (err) return callback('database_error');
 
@@ -340,9 +349,9 @@ WritingSchema.statics.findWritingByIdAndParentIdUpdateLogo = function (id, paren
       is_used: true
     }, (err, url) => {
       if (err) return callback(err);
-  
+
       Writing.findByIdAndUpdate(writing._id, { $set: {
-        logo: url
+          logo: url
       }}, { new: false }, (err, writing) => {
         if (err) return callback(err);
 
@@ -389,12 +398,12 @@ WritingSchema.statics.findWritingByIdAndParentIdUpdateLogoTranslation = function
       if (err) return callback(err);
 
       translations[language].logo = url;
-  
+
       Writing.findByIdAndUpdate(writing._id, { $set: {
-        translations
+          translations
       }}, { new: false }, err => {
         if (err) return callback(err);
-        
+
         deleteFile(file, err => {
           if (err) return callback(err);
 
@@ -402,10 +411,10 @@ WritingSchema.statics.findWritingByIdAndParentIdUpdateLogoTranslation = function
 
           if (!oldLogo || oldLogo.split('/')[oldLogo.split('/').length-1] == url.split('/')[url.split('/').length-1])
             return callback(null, url);
-  
+
           Image.findImageByUrlAndDelete(oldLogo, err => {
             if (err) return callback(err);
-  
+
             return callback(null, url);
           });
         });
@@ -431,9 +440,9 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateCover = function (id, p
       is_used: true
     }, (err, url) => {
       if (err) return callback(err);
-  
+
       Writing.findByIdAndUpdate(writing._id, { $set: {
-        cover: url
+          cover: url
       }}, { new: false }, (err, writing) => {
         if (err) return callback(err);
 
@@ -480,12 +489,12 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateCoverTranslation = func
       if (err) return callback(err);
 
       translations[language].cover = url;
-  
+
       Writing.findByIdAndUpdate(writing._id, { $set: {
-        translations
+          translations
       }}, { new: false }, err => {
         if (err) return callback(err);
-        
+
         deleteFile(file, err => {
           if (err) return callback(err);
 
@@ -493,10 +502,10 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateCoverTranslation = func
 
           if (!oldCover || oldCover.split('/')[oldCover.split('/').length-1] == url.split('/')[url.split('/').length-1])
             return callback(null, url);
-  
+
           Image.findImageByUrlAndDelete(oldCover, err => {
             if (err) return callback(err);
-  
+
             return callback(null, url);
           });
         });
@@ -514,7 +523,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
 
     const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
 
-     if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+    if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
     const newIdentifier = toURLString(data.title);
@@ -540,30 +549,30 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
 
       Writer.findWriterByIdAndFormat(data.writer_id, (writer_err, writer) => {
         Writing.findByIdAndUpdate(writing._id, {$set: {
-          title: data.title.trim(),
-          identifiers,
-          identifier_languages,
-          created_at: data.created_at && !isNaN(new Date(data.created_at)) ? new Date(data.created_at) : writing.created_at,
-          writer_id: !writer_err && writer ? writer._id : writing.writer_id,
-          subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
-          label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : writing.label,
-          flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
-          social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
-          content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
-          is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
+            title: data.title.trim(),
+            identifiers,
+            identifier_languages,
+            created_at: data.created_at && !isNaN(new Date(data.created_at)) ? new Date(data.created_at) : writing.created_at,
+            writer_id: !writer_err && writer ? writer._id : writing.writer_id,
+            subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
+            label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : writing.label,
+            flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
+            social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
+            content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
+            is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
         }}, { new: true }, (err, writing) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
-    
+
           writing.translations = formatTranslations(writing, 'tr', writing.translations.tr);
           writing.translations = formatTranslations(writing, 'ru', writing.translations.ru);
 
           Writing.findByIdAndUpdate(writing._id, {$set: {
-            translations: writing.translations
+              translations: writing.translations
           }}, { new: true }, (err, writing) => {
             if (err) return callback('database_error');
-  
+
             const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
             const newImages = writing.content
               .concat(writing.translations.tr.content)
@@ -610,7 +619,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
     data.cover = writing.translations[data.language] ? writing.translations[data.language].cover : null;
 
     const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
-      
+
     const translations = formatTranslations(writing, data.language, data);
     let oldIdentifier = toURLString(writing.translations[data.language]?.title);
     const newIdentifier = toURLString(translations[data.language].title);
@@ -631,19 +640,19 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
       const identifier_languages = {
         [newIdentifier]: data.language
       };
-  
+
       Object.keys(writing.identifier_languages).forEach(key => {
         if (key != oldIdentifier)
           identifier_languages[key] = writing.identifier_languages[key]
       });
-  
+
       Writing.findByIdAndUpdate(writing._id, {$set: {
-        identifiers,
-        identifier_languages,
-        translations
+          identifiers,
+          identifier_languages,
+          translations
       }}, { new: true }, (err, writing) => {
         if (err) return callback('database_error');
-  
+
         const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
         const newImages = writing.content
           .concat(writing.translations.tr.content)
@@ -674,7 +683,7 @@ WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, da
 
   if (!parent_id || !validator.isMongoId(parent_id.toString()))
     return callback('bad_request');
-    
+
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
@@ -719,7 +728,7 @@ WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, da
     Writing
       .find(filters)
       .sort({
-        score: { $meta: 'textScore' }, 
+        score: { $meta: 'textScore' },
         order: -1
       })
       .limit(limit)
@@ -786,11 +795,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
     if (writing.is_deleted) return callback(null);
 
     Writing.findByIdAndUpdate(writing._id, {$set: {
-      title: writing.title + writing._id.toString(),
-      identifiers: [],
-      identifier_languages: {},
-      is_deleted: true,
-      order: null
+        title: writing.title + writing._id.toString(),
+        identifiers: [],
+        identifier_languages: {},
+        is_deleted: true,
+        order: null
     }}, err => {
       if (err) return callback('database_error');
 
@@ -803,7 +812,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
         async.timesSeries(
           writings.length,
           (time, next) => Writing.findByIdAndUpdate(writings[time]._id, {$inc: {
-            order: -1
+              order: -1
           }}, err => next(err)),
           err => {
             if (err) return callback('database_error');
@@ -832,7 +841,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
       const languageIdentifier = toURLString(lang.title);
       if (!identifiers.includes(languageIdentifier)) {
         identifiers.push(languageIdentifier);
-        identifierLanguages[languageIdentifier] = Object.keys(writing.translations)[index]; 
+        identifierLanguages[languageIdentifier] = Object.keys(writing.translations)[index];
       }
     });
 
@@ -858,7 +867,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, paren
             order
           }, err => {
             if (err) return callback('database_error');
-  
+
             return callback(null);
           });
         });
@@ -882,12 +891,12 @@ WritingSchema.statics.findWritingByIdAndParentIdAndIncOrderByOne = function (id,
       if (!prev_writing) return callback(null);
 
       Writing.findByIdAndUpdate(writing._id, {$inc: {
-        order: 1
+          order: 1
       }}, err => {
         if (err) return callback('database_error');
 
         Writing.findByIdAndUpdate(prev_writing._id, {$inc: {
-          order: -1
+            order: -1
         }}, err => {
           if (err) return callback('database_error');
 

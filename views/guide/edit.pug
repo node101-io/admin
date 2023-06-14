@@ -20,7 +20,7 @@ block main
           span.general-create-subtitle.general-create-required= __('Project')
           .general-select-input-wrapper
             input.general-select-input-real-value#project-id(value=(guide.project ? guide.project._id : ''))
-            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(guide.project ? guide.project.name : ''))
+            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(guide.project ? `${guide.project.name} (${guide.project.is_mainnet ? 'mainnet' : 'testnet'})` : ''))
             .general-select-input-choices-wrapper#project-choices
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Guide Subtitle')

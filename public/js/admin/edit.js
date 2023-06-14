@@ -52,7 +52,7 @@ window.addEventListener('load', () => {
 
       if (!password || password.length < 8)
         return error.innerHTML = 'The new password must be at least 8 characters long.';
-      
+
       if (password != confirmPassword)
         return error.innerHTML = 'Please confirm the new password.';
 
@@ -71,29 +71,29 @@ window.addEventListener('load', () => {
     }
   });
 
-  const image = document.getElementById('image');
+  document.addEventListener('change', event => {
+    if (event.target.id == 'image') {
+      event.preventDefault();
+      const file = event.target.files[0];
 
-  image.onchange = event => {
-    event.preventDefault();
-    const file = event.target.files[0];
+      if (!file) return;
 
-    if (!file) return;
+      event.target.parentNode.style.cursor = 'progress';
+      event.target.parentNode.childNodes[0].type = 'text';
+      event.target.parentNode.childNodes[1].innerHTML = 'Uploading...';
 
-    event.target.parentNode.style.cursor = 'progress';
-    event.target.parentNode.childNodes[0].type = 'text';
-    event.target.parentNode.childNodes[1].innerHTML = 'Uploading...';
+      serverRequest('/admin/image?id=' + admin._id, 'FILE', {
+        file,
+      }, res => {
+        if (!res.success)
+          return throwError(res.error);
 
-    serverRequest('/admin/image?id=' + admin._id, 'FILE', {
-      file,
-    }, res => {
-      if (!res.success)
-        return throwError(res.error);
-
-      return createConfirm({
-        title: 'Image Updated',
-        text: 'Admin profile image is updated. Close to reload the page.',
-        accept: 'Close'
-      }, _ => window.location.reload());
-    });
-  }
+        return createConfirm({
+          title: 'Image Updated',
+          text: 'Admin profile image is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
+      });
+    }
+  })
 });

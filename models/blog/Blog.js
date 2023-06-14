@@ -9,6 +9,7 @@ const Image = require('../image/Image');
 const Project = require('../project/Project');
 const Writer = require('../writer/Writer');
 const Writing = require('../writing/Writing')
+const WritingFilter = require('../writing_filter/WritingFilter');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts')
@@ -263,27 +264,27 @@ BlogSchema.statics.findBlogByIdAndUpdate = function (id, data, callback) {
       Project.findProjectById(data.project_id, (project_err, project) => {
         Writer.findWriterById(data.writer_id, (writer_err, writer) => {
           Blog.findByIdAndUpdate(blog._id, {$set: {
-            title: data.title.trim(),
-            identifiers,
-            identifier_languages,
-            subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : blog.subtitle,
-            type: data.type && TYPE_VALUES.includes(data.type) ? data.type : blog.type,
-            project_id: data.type == 'project' && !project_err ? project._id : blog.project_id,
-            writer_id: !writer_err ? writer._id : blog.writer_id,
-            social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
+              title: data.title.trim(),
+              identifiers,
+              identifier_languages,
+              subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : blog.subtitle,
+              type: data.type && TYPE_VALUES.includes(data.type) ? data.type : blog.type,
+              project_id: data.type == 'project' && !project_err ? project._id : blog.project_id,
+              writer_id: !writer_err ? writer._id : blog.writer_id,
+              social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
           }}, { new: true }, (err, blog) => {
             if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
               return callback('duplicated_unique_field');
             if (err) return callback('database_error');
-    
+
             blog.translations = formatTranslations(blog, 'tr', blog.translations.tr);
             blog.translations = formatTranslations(blog, 'ru', blog.translations.ru);
-      
+
             Blog.findByIdAndUpdate(blog._id, {$set: {
-              translations: blog.translations
+                translations: blog.translations
             }}, { new: true }, (err, blog) => {
               if (err) return callback('database_error');
-    
+
               const searchTitle = new Set();
               const searchSubtitle = new Set();
 
@@ -295,8 +296,8 @@ BlogSchema.statics.findBlogByIdAndUpdate = function (id, data, callback) {
               blog.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
 
               Blog.findByIdAndUpdate(blog._id, {$set: {
-                search_title: Array.from(searchTitle).join(' '),
-                search_subtitle: Array.from(searchSubtitle).join(' ')
+                  search_title: Array.from(searchTitle).join(' '),
+                  search_subtitle: Array.from(searchSubtitle).join(' ')
               }}, err => {
                 if (err) return callback('database_error');
 
@@ -304,11 +305,56 @@ BlogSchema.statics.findBlogByIdAndUpdate = function (id, data, callback) {
                   .createIndex(
                     { search_title: 'text', search_subtitle: 'text' },
                     { weights: {
-                      search_title: 10,
-                      search_subtitle: 1
+                        search_title: 10,
+                        search_subtitle: 1
                     } }
                   )
-                  .then(() => callback(null))
+                  .then(() => {
+                    Writing.find({ parent_id: id }, (err, writings) => {
+                      if (err) callback(err);
+
+                      async.timesSeries(
+                        writings.length,
+                        (time, next) => {
+                          Writing.findByIdAndUpdate(mongoose.Types.ObjectId(writings[time]._id), {
+                            $set: { parent_title: blog.title }
+                          }, err => {
+                            if (err) callback(err);
+
+                            next(null);
+                          });
+                        },
+                        err => {
+                          if (err) callback(err);
+
+                          WritingFilter.find({ parent_id: id }, (err, writingFilters) => {
+                            if (err) callback(err);
+
+                            async.timesSeries(
+                              writingFilters.length,
+                              (time, next) => {
+                                const writingFilter = writingFilters[time];
+
+                                WritingFilter.findByIdAndUpdate(mongoose.Types.ObjectId(writingFilter._id), {
+                                  $set: { parent_title: blog.title }
+                                }, err => {
+                                  if (err) callback(err);
+
+                                  next(null);
+                                });
+                              },
+                              err => {
+                                if (err) callback(err);
+                                
+                                callback(null);
+                              }
+                            );
+                          });
+                        }
+                      );
+                    });
+                  })
+                  .then(() => { callback(null, blog); })
                   .catch(_ => callback('index_error'));
               });
             });
@@ -333,9 +379,9 @@ BlogSchema.statics.findBlogByIdAndUpdateImage = function (id, file, callback) {
       is_used: true
     }, (err, url) => {
       if (err) return callback(err);
-  
+
       Blog.findByIdAndUpdate(blog._id, { $set: {
-        image: url
+          image: url
       }}, err => {
         if (err) return callback(err);
 
@@ -391,19 +437,19 @@ BlogSchema.statics.findBlogByIdAndUpdateTranslations = function (id, data, callb
       const identifier_languages = {
         [newIdentifier]: data.language
       };
-  
+
       Object.keys(blog.identifier_languages).forEach(key => {
         if (key != oldIdentifier)
           identifier_languages[key] = blog.identifier_languages[key]
       });
-  
+
       Blog.findByIdAndUpdate(blog._id, {$set: {
-        identifiers,
-        identifier_languages,
-        translations
+          identifiers,
+          identifier_languages,
+          translations
       }}, { new: true }, (err, blog) => {
         if (err) return callback('database_error');
-  
+
         const searchTitle = new Set();
         const searchSubtitle = new Set();
 
@@ -415,8 +461,8 @@ BlogSchema.statics.findBlogByIdAndUpdateTranslations = function (id, data, callb
         blog.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
 
         Blog.findByIdAndUpdate(blog._id, {$set: {
-          search_title: Array.from(searchTitle).join(' '),
-          search_subtitle: Array.from(searchSubtitle).join(' ')
+            search_title: Array.from(searchTitle).join(' '),
+            search_subtitle: Array.from(searchSubtitle).join(' ')
         }}, err => {
           if (err) return callback('database_error');
 
@@ -424,8 +470,8 @@ BlogSchema.statics.findBlogByIdAndUpdateTranslations = function (id, data, callb
             .createIndex(
               { search_title: 'text', search_subtitle: 'text' },
               { weights: {
-                search_title: 10,
-                search_subtitle: 1
+                  search_title: 10,
+                  search_subtitle: 1
               } }
             )
             .then(() => callback(null))
@@ -478,7 +524,7 @@ BlogSchema.statics.findBlogsByFilters = function (data, callback) {
     Blog
       .find(filters)
       .sort({
-        score: { $meta: 'textScore' }, 
+        score: { $meta: 'textScore' },
         order: -1
       })
       .limit(limit)
@@ -537,11 +583,11 @@ BlogSchema.statics.findBlogByIdAndDelete = function (id, callback) {
     if (blog.is_deleted) return callback(null);
 
     Blog.findByIdAndUpdate(blog._id, {$set: {
-      title: blog.title + blog._id.toString(),
-      identifiers: [],
-      identifier_languages: {},
-      is_deleted: true,
-      order: null
+        title: blog.title + blog._id.toString(),
+        identifiers: [],
+        identifier_languages: {},
+        is_deleted: true,
+        order: null
     }}, err => {
       if (err) return callback('database_error');
 
@@ -553,7 +599,7 @@ BlogSchema.statics.findBlogByIdAndDelete = function (id, callback) {
         async.timesSeries(
           blogs.length,
           (time, next) => Blog.findByIdAndUpdate(blogs[time]._id, {$inc: {
-            order: -1
+              order: -1
           }}, err => next(err)),
           err => {
             if (err) return callback('database_error');
@@ -582,7 +628,7 @@ BlogSchema.statics.findBlogByIdAndRestore = function (id, callback) {
       const languageIdentifier = toURLString(lang.title);
       if (!identifiers.includes(languageIdentifier)) {
         identifiers.push(languageIdentifier);
-        identifierLanguages[languageIdentifier] = Object.keys(blog.translations)[index]; 
+        identifierLanguages[languageIdentifier] = Object.keys(blog.translations)[index];
       }
     });
 
@@ -608,7 +654,7 @@ BlogSchema.statics.findBlogByIdAndRestore = function (id, callback) {
             order
           }, err => {
             if (err) return callback('database_error');
-  
+
             return callback(null);
           });
         });
@@ -632,12 +678,12 @@ BlogSchema.statics.findBlogByIdAndIncOrderByOne = function (id, callback) {
         return callback(null);
 
       Blog.findByIdAndUpdate(blog._id, {$inc: {
-        order: 1
+          order: 1
       }}, err => {
         if (err) return callback('database_error');
 
         Blog.findByIdAndUpdate(prev_blog._id, {$inc: {
-          order: -1
+            order: -1
         }}, err => {
           if (err) return  callback('database_error');
 
@@ -662,6 +708,7 @@ BlogSchema.statics.findBlogByIdAndCreateWriting = function (id, data, callback) 
     Writing.createWritingByParentId(blog._id, {
       type: 'blog',
       parent_id: blog._id,
+      parent_title: blog.title,
       title: data.title,
       writer_id: blog.writer_id
     }, (err, writing_id) => {

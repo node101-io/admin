@@ -1,4 +1,17 @@
 window.addEventListener('load', () => {
+  const isSynced = document.getElementById('is-synced').checked;
+  const isNew = document.getElementById('is-new').checked;
+
+  if (isSynced) {
+    createConfirm({
+      title: 'Synced with GitHub',
+      text: isNew ? 'New version detected. You can publish the new version.' : 'No new version detected on GitHub.',
+      accept: 'Close'
+    }, _ => null);
+  } else {
+    throwError('github_sync_error');
+  }
+
   document.addEventListener('focusout', () => {
     const wrapper = document.querySelector('.general-create-wrapper');
     const platformNodes = document.querySelectorAll('.each-platform-input-wrapper');
