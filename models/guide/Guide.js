@@ -558,6 +558,9 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
         (err, guides) => {
           if (err) return callback(err);
 
+          if ('is_mainnet' in data)
+            guides = guides.filter(guide => guide.project.is_mainnet == data.is_mainnet);
+
           return callback(null, {
             search: null,
             limit,

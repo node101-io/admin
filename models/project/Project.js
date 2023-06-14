@@ -303,7 +303,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
         rating: data.rating && data.rating >= PROJECT_RATING_MIN_VALUE && data.rating <= PROJECT_RATING_MAX_VALUE ? data.rating : project.rating,
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
         wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null,
-        is_mainnet: data.is_mainnet && typeof data.is_mainnet == 'boolean' ? data.is_mainnet : project.is_mainnet
+        is_mainnet: typeof data.is_mainnet == 'boolean' ? data.is_mainnet : project.is_mainnet
       }}, { new: true }, (err, project) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');

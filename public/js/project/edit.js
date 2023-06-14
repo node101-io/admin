@@ -50,7 +50,7 @@ window.addEventListener('load', () => {
         rating: parseInt(rating),
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
-        is_mainnet: network == 'Mainnet'
+        is_mainnet: network == 'mainnet'
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
           return error.innerHTML = 'There is already a project with this name.'
