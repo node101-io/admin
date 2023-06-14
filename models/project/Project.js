@@ -116,8 +116,7 @@ const ProjectSchema = new Schema({
   },
   is_mainnet: {
     type: Boolean,
-    default: false,
-    required: true
+    default: false
   },
 });
 

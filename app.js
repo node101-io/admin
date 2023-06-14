@@ -33,7 +33,7 @@ if (cluster.isMaster) {
   const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/node101';
   const MAX_SERVER_UPLOAD_LIMIT = 52428800;
   const MAX_SERVER_PARAMETER_LIMIT = 50000;
-  const QUERY_LIMIT = 12;
+  const QUERY_LIMIT = 20;
 
   const adminRouteController = require('./routes/adminRoute');
   const apiRouteController = require('./routes/apiRoute');
@@ -56,6 +56,7 @@ if (cluster.isMaster) {
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'pug');
 
+  mongoose.set('strictQuery', false);
   mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
