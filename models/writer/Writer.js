@@ -31,7 +31,7 @@ const WriterSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-  identifier: {
+  link: {
     type: String,
     required: true,
     unique: true,
@@ -90,7 +90,7 @@ WriterSchema.statics.createWriter = function (data, callback) {
 
     const newWriterData = {
       name: data.name.trim(),
-      identifier: toURLString(data.name),
+      link: toURLString(data.name),
       created_at: new Date(),
       order
     };
@@ -186,7 +186,7 @@ WriterSchema.statics.findWriterByIdAndUpdate = function (id, data, callback) {
 
     Writer.findByIdAndUpdate(writer._id, {$set: {
       name: data.name.trim(),
-      identifier: toURLString(data.name),
+      link: toURLString(data.name),
       title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writer.title,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
     }}, err => {
@@ -332,7 +332,7 @@ WriterSchema.statics.findWriterByIdAndDelete = function (id, callback) {
     if (writer.is_deleted) return callback(null);
 
     Writer.findByIdAndUpdate(writer._id, { $set: {
-      identifier: writer.identifier + writer._id.toString(),
+      link: writer.link + writer._id.toString(),
       is_deleted: true,
       order: null
     } }, err => {
@@ -370,7 +370,7 @@ WriterSchema.statics.findWriterByIdAndRestore = function (id, callback) {
       if (err) return callback(err);
 
       Writer.findByIdAndUpdate(writer._id, {
-        identifier: writer.identifier.replace(writer._id.toString(), ''),
+        link: writer.link.replace(writer._id.toString(), ''),
         is_deleted: false,
         order
       }, err => {

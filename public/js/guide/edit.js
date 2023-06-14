@@ -227,14 +227,14 @@ window.addEventListener('load', () => {
       if (!event.target.value?.trim().length)
         return;
 
-      serverRequest('/project/filter?name=' + event.target.value?.trim(), 'GET', {}, res => {
+      serverRequest('/project/filter?name=' + event.target.value?.trim().replace(/\(|\)/g, ''), 'GET', {}, res => {
         if (!res.success)
           return throwError(res.error);
 
         document.getElementById('project-choices').innerHTML = '';
         document.getElementById('project-id').value = '';
         res.projects.forEach(project => {
-          document.getElementById('project-choices').appendChild(createSelectionItem(project._id, project.name))
+          document.getElementById('project-choices').appendChild(createSelectionItem(project._id, `${project.name} (${project.is_mainnet ? 'mainnet' : 'testnet'})`));
           if (event.target.value?.trim().toLocaleLowerCase() == project.name.toLocaleLowerCase())
             document.getElementById('project-id').value = project._id.toString();
         });

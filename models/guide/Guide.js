@@ -177,6 +177,10 @@ const GuideSchema = new Schema({
   writing_id: {
     type: mongoose.Types.ObjectId,
     default: null
+  },
+  is_mainnet: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -347,7 +351,8 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
           ram: data.ram && typeof data.ram == 'string' && data.ram.trim().length && data.ram.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.ram.trim() : null,
           os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
           network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
-          frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions)
+          frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions),
+          is_mainnet: !project_err ? (project.is_mainnet ? true : false) : guide.is_mainnet
         }}, { new: true }, (err, guide) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
@@ -545,6 +550,9 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
 
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
+
+  if ('is_mainnet' in data)
+    filters.is_mainnet = data.is_mainnet ? true : false;
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Guide

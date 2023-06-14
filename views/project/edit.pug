@@ -28,6 +28,14 @@ block main
               - for (let i = 1; i <= 5; i++)
                 .general-select-each-input-choice(id='select-input-' + i)= i
         .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Network')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#network(type='text' value=project.is_mainnet ? 'mainnet' : 'testnet')
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=project.is_mainnet ? 'Mainnet' : 'Testnet')
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-mainnet') Mainnet
+              .general-select-each-input-choice(id='select-input-testnet') Testnet
+        .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Project Image')
           if project.image
             label.general-image-input-wrapper(style='cursor: default')

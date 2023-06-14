@@ -118,7 +118,11 @@ const ProjectSchema = new Schema({
   system_requirements: {
     type: Object,
     default: {}
-  }
+  },
+  is_mainnet: {
+    type: Boolean,
+    default: false
+  },
 });
 
 ProjectSchema.statics.createProject = function (data, callback) {
@@ -304,6 +308,7 @@ ProjectSchema.statics.findProjectByIdAndUpdate = function (id, data, callback) {
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
         wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null,
         system_requirements: getSystemRequirements(data.system_requirements),
+        is_mainnet: typeof data.is_mainnet == 'boolean' ? data.is_mainnet : project.is_mainnet
       }}, { new: true }, (err, project) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');

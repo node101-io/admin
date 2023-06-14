@@ -25,6 +25,7 @@ window.addEventListener('load', () => {
       const socialMediaAccounts = {};
       const systemRequirements = {};
       const wizardKey = document.getElementById('wizard-key').value;
+      const network = document.getElementById('network').value;
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
       const systemRequirementInputs = document.querySelectorAll('.system-requirement-input');
@@ -45,6 +46,9 @@ window.addEventListener('load', () => {
 
       if (!rating || isNaN(parseInt(rating)) || parseInt(rating) < 1 || parseInt(rating) > 5)
         return error.innerHTML = 'Please choose a rating for the project.';
+      
+      if (!network || !network.trim().length)
+        return error.innerHTML = 'Please choose a network for the project.';
 
       serverRequest('/project/edit?id=' + project._id, 'POST', {
         name,
@@ -53,6 +57,7 @@ window.addEventListener('load', () => {
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
         system_requirements: systemRequirements
+        is_mainnet: network == 'mainnet'
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
           return error.innerHTML = 'There is already a project with this name.'

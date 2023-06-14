@@ -237,6 +237,7 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
 
       const newWritingData = {
         title: data.title.trim(),
+        parent_title: data.title.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
         type: data.type,

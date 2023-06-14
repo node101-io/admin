@@ -6,6 +6,7 @@ const isAPIAuthenticated = require('../middleware/isAPIAuthenticated');
 
 const projectsGetController = require('../controllers/api/projects/get');
 const testnetsGetController = require('../controllers/api/testnets/get');
+const mainnetsGetController = require('../controllers/api/mainnets/get');
 const wizardGetController = require('../controllers/api/wizard/get');
 
 const authenticatePostController = require('../controllers/api/authenticate/post');
@@ -18,6 +19,10 @@ router.get(
 router.get(
   '/testnets',
     testnetsGetController
+);
+router.get(
+  '/mainnets',
+  mainnetsGetController
 );
 router.get(
   '/wizard',
