@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = (req, res) => {
   fs.readFile(path.join(__dirname, '../../data/wizard.json'), async (err, file) => {
-    if (err) return res.status(500).json({ error: err });
+    if (err) return res.status(500).json({ error: err, success: false });
 
     const local_data = JSON.parse(file);
     let github_data = null;
@@ -19,7 +19,6 @@ module.exports = (req, res) => {
     } catch (err) {
       github_data = null;
     }
-
 
     return res.render('wizard/edit', {
       page: 'wizard/edit',
