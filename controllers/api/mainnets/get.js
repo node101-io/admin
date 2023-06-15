@@ -18,7 +18,7 @@ module.exports = (req, res) => {
 
       return res.json({
         success: true,
-        testnets: data.guides,
+        mainnets: data.guides,
         count,
         limit: data.limit,
         page: data.page,

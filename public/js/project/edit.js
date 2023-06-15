@@ -56,7 +56,7 @@ window.addEventListener('load', () => {
         rating: parseInt(rating),
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
-        system_requirements: systemRequirements
+        system_requirements: systemRequirements,
         is_mainnet: network == 'mainnet'
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
