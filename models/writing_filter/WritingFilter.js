@@ -180,4 +180,19 @@ WritingFilterSchema.statics.findWritingFilterByIdAndDelete = function (id, callb
   });
 };
 
+WritingFilterSchema.statics.findWritingFilterByWritingIdAndDeleteAll = function (writing_id, callback) {
+  const WritingFilter = this;
+
+  if (!writing_id || !validator.isMongoId(writing_id.toString()))
+    return callback('bad_request');
+  
+  WritingFilter.deleteMany({
+    writing_id: mongoose.Types.ObjectId(writing_id.toString())
+  }, err => {
+    if (err) return callback('database_error');
+
+    return callback(null);
+  });
+};
+
 module.exports = mongoose.model('WritingFilter', WritingFilterSchema);

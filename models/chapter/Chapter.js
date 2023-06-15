@@ -2,7 +2,9 @@ const async = require('async');
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const Book = require('../book/Book');
+const toURLString = require('../../utils/toURLString');
+
+const Writer = require('../writer/Writer');
 const Writing = require('../writing/Writing');
 
 const formatTranslations = require('./functions/formatTranslations');
@@ -10,6 +12,7 @@ const getChapter = require('./functions/getChapter');
 
 const CHILDREN_TYPE_VALUES = ['chapter', 'writing'];
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 1e3;
+const DEFAULT_LANGUAGE = 'en';
 const MAX_CHILDREN_COUNT = 1e3;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e3;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
@@ -17,13 +20,13 @@ const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const Schema = mongoose.Schema;
 
 const ChapterSchema = new Schema({
-  book_id: {
+  parent_id: { // This is the ID of the book or chapter holding this document. Order is determined from the array
     type: mongoose.Types.ObjectId,
     required: true
   },
-  parent_id: {
+  writer_id: {
     type: mongoose.Types.ObjectId,
-    default: null // If null, this is a root chapter.
+    required: true
   },
   title: {
     type: String,
@@ -32,13 +35,17 @@ const ChapterSchema = new Schema({
     minlength: 0,
     maxlenght: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-  translations: {
+  identifiers: {
+    type: Array,
+    default: []
+  },
+  identifier_languages: {
     type: Object,
     default: {}
   },
-  order: { // Not as same as other models, only valid for root chapters
-    type: Number,
-    default: null
+  translations: {
+    type: Object,
+    default: {}
   },
   children: {
     type: Array,
@@ -59,44 +66,39 @@ ChapterSchema.statics.createChapter = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
+  if (!data.parent_id || !validator.isMongoId(data.parent_id.toString()))
+    return callback('bad_request');
+
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  Book.findBookById(data.book_id, (err, book) => {
+  const identifier = toURLString(data.title);
+
+  Writer.findWriterById(data.writer_id, (err, writer) => {
     if (err) return callback(err);
-    if (!book.is_completed)
-      return callback('not_authenticated_request');
 
-    Chapter.findChapterCountByFilters({
-      book_id: book._id,
-      is_root: true
-    }, (err, order) => {
-      if (err) return callback(err);
-
-      const newChapterData = {
-        book_id: book._id,
-        parent_id: null,
-        title: data.title.trim(),
-        order
-      };
+    const newChapterData = {
+      parent_id: mongoose.Types.ObjectId(data.parent_id.toString()),
+      writer_id: writer._id,
+      title: data.title.trim(),
+      identifiers: [ identifier ],
+      identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
+    };
   
-      const newChapter = new Chapter(newChapterData);
+    const newChapter = new Chapter(newChapterData);
   
-      newChapter.save((err, chapter) => {
+    newChapter.save((err, chapter) => {
+      if (err) return callback('database_error');
+  
+      chapter.translations = formatTranslations(chapter, 'tr');
+      chapter.translations = formatTranslations(chapter, 'ru');
+  
+      Chapter.findByIdAndUpdate(chapter._id, {$set: {
+        translations: chapter.translations
+      }}, err => {
         if (err) return callback('database_error');
-
-        chapter.translations = formatTranslations(chapter, 'tr');
-        chapter.translations = formatTranslations(chapter, 'ru');
-
-        Chapter.findByIdAndUpdate(chapter._id, {$set: {
-          translations: chapter.translations
-        }}, err => {
-          if (err) return callback('database_error');
-
-          // Book.
-
-          return callback(null, chapter._id);
-        });
+  
+        return callback(null, chapter._id);
       });
     });
   });
@@ -130,7 +132,287 @@ ChapterSchema.statics.findChapterByIdAndFormat = function (id, callback) {
   });
 };
 
-ChapterSchema.statics.findChapterByIdAndGetChildren = function (id, callback) {
+ChapterSchema.statics.findChapterByIdAndGetChildrenByFilters = function (id, data, callback) {
+  const Chapter = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    async.timesSeries(
+      Math.min(limit, chapter.children.length - skip),
+      (time, next) => {
+        const child = chapter.children[skip + time];
+
+        if (child.type == 'chapter')
+          Chapter.findChapterByIdAndFormat(child._id, (err, chapter) => {
+            if (err) return next(err);
+
+            return next(null, {
+              _id: chapter._id,
+              type: 'chapter',
+              title: chapter.title
+            });
+          });
+        else
+          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+            if (err) return next(err);
+
+            return next(null, {
+              _id: writing._id,
+              type: 'writing',
+              title: writing.title
+            });
+          });
+      },
+      (err, children) => {
+        if (err) return callback(err);
+
+        return callback(null, {
+          search: null,
+          limit,
+          page,
+          children,
+        });
+      }
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndCreateChapter = function (id, data, callback) {
+  const Chapter = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  Chapter.findChapterById(id, (err, parent) => {
+    if (err) return callback(err);
+
+    Chapter.createChapter({
+      parent_id: parent._id,
+      writer_id: parent.writer_id,
+      title: data.title
+    }, (err, chapter_id) => {
+      if (err) return callback(err);
+
+      Chapter.findByIdAndUpdate(parent._id, {$push: {
+        children: {
+          _id: chapter_id.toString(),
+          type: 'chapter'
+        }
+      }}, err => {
+        if (err) return callback('database_error');
+    
+        return callback(null, chapter_id);
+      });
+    });
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndCreateWriting = function (id, data, callback) {
+  const Chapter = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  Chapter.findChapterById(id, (err, parent) => {
+    if (err) return callback(err);
+
+    Writing.createWritingByParentId(parent._id, {
+      type: 'book',
+      title: data.title,
+      writer_id: parent.writer_id
+    }, (err, writing_id) => {
+      if (err) return callback(err);
+
+      Chapter.findByIdAndUpdate(parent._id, {$push: {
+        children: {
+          _id: writing_id.toString(),
+          type: 'writing'
+        }
+      }}, err => {
+        if (err) return callback('database_error');
+
+        return callback(null, writing_id);
+      });
+    })
+  })
+};
+
+ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
+  const Chapter = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+    return callback('bad_request');
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    const newIdentifier = toURLString(data.title);
+    const oldIdentifier = toURLString(chapter.title);
+
+    Chapter.findOne({
+      _id: { $ne: chapter._id },
+      identifiers: newIdentifier
+    }, (err, duplicate) => {
+      if (err) return callback('database_error');
+      if (duplicate) return callback('duplicated_unique_field');
+
+      const identifiers = writing.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+
+      const identifier_languages = {
+        identifier: DEFAULT_LANGUAGE
+      };
+
+      Object.keys(writing.identifier_languages).forEach(key => {
+        if (key != oldIdentifier)
+          identifier_languages[key] = chapter.identifier_languages[key]
+      });
+
+      Writer.findWriterById(data.writer_id, (err, writer) => {
+        if (err) return callback(err);
+
+        Chapter.findByIdAndUpdate(chapter._id, {$set: {
+          writer_id: writer._id,
+          title: data.title.trim(),
+          identifiers,
+          identifier_languages
+        }}, err => {
+          if (err) return callback('database_error');
+        })
+      });
+    });
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndUpdateTranslations = function (id, data, callback) {
+  const Chapter = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
+    return callback('bad_request');
+
+  Chapter.findChapterByIdAndParentId(id, parent_id, (err, chapter) => {
+    if (err) return callback(err);
+
+    const translations = formatTranslations(chapter, data.language, data);
+    let oldIdentifier = toURLString(chapter.translations[data.language]?.title);
+    const newIdentifier = toURLString(translations[data.language].title);
+
+    if (oldIdentifier == toURLString(chapter.title))
+      oldIdentifier = null;
+
+    Chapter.findOne({
+      _id: { $ne: chapter._id },
+      identifiers: newIdentifier
+    }, (err, duplicate) => {
+      if (err) return callback('database_error');
+      if (duplicate) return callback('duplicated_unique_field');
+
+      const identifiers = chapter.identifiers.filter(each => each != oldIdentifier);
+      if (!identifiers.includes(newIdentifier))
+        identifiers.push(newIdentifier);
+      const identifier_languages = {
+        [newIdentifier]: data.language
+      };
+  
+      Object.keys(chapter.identifier_languages).forEach(key => {
+        if (key != oldIdentifier)
+          identifier_languages[key] = chapter.identifier_languages[key]
+      });
+  
+      Chapter.findByIdAndUpdate(chapter._id, {$set: {
+        identifiers,
+        identifier_languages,
+        translations
+      }}, { new: true }, err => {
+        if (err) return callback('database_error');
+  
+        return callback(null);
+      });
+    });
+  });
+};
+
+ChapterSchema.statics.findChapterChildByIdAndParentIdAndIncOrderByOne = function (id, parent_id, callback) {
+  const Chapter = this;
+
+  if (!id || !validator.isMongoId(id.toString()))
+    return callback('bad_request');
+
+  Chapter.findChapterById(parent_id, (err, parent) => {
+    if (err) return callback(err);
+
+    const index = parent.children.indexOf(each => each._id == id.toString());
+
+    if (index < 0) return callback('document_not_found');
+    if (index == 0) return callback(null);
+
+    let newChildren = parent.children;
+    newChildren.splice(index, 2, newChildren[index], newChildren[index - 1]);
+
+    Chapter.findByIdAndUpdate(parent._id, {$set: {
+      children: newChildren
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+ChapterSchema.statics.findChapterChildByIdAndParentIdAndMoveToSameLevelWithParent = function (id, parent_id, callback) {
+  const Chapter = this;
+
+  if (!id || !validator.isMongoId(id.toString()))
+    return callback('bad_request');
+
+  Chapter.findChapterById(parent_id, (err, parent) => {
+    if (err) return callback(err);
+
+    const child = parent.children.find(each => each._id == id.toString());
+
+    if (!child) return callback('document_not_found');
+
+    Chapter.findChapterById(parent.parent_id, (err, grand_parent) => {
+      if (err) return callback(err);
+
+      Chapter.findByIdAndUpdate(parent._id, {$pull: {
+        children: child
+      }}, err => {
+        if (err) return callback('database_error');
+
+        Chapter.findChapterById(grand_parent._id, {$push: {
+          children: child
+        }}, err => {
+          if (err) return callback('database_error');
+
+          if (child.type == 'chapter')
+            return callback(null);
+
+          Writing.findWritingByIdAndUpdateParentId(child._id, grand_parent._id, err => {
+            if (err) return callback(err);
+
+            return callback(null);
+          });
+        });
+      });
+    });
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndDelete = function (id, callback) {
   const Chapter = this;
 
   Chapter.findChapterById(id, (err, chapter) => {
@@ -142,352 +424,21 @@ ChapterSchema.statics.findChapterByIdAndGetChildren = function (id, callback) {
         const child = chapter.children[time];
 
         if (child.type == 'chapter')
-          Chapter.findChapterByIdAndFormat(child._id, (err, chapter) => next(err, chapter));
+          Chapter.findChapterByIdAndDelete(child._id, err => next(err));
         else
-          Writing.findWritingByIdAndFormat(child._id, (err, writing) => next(err, writing));
+          Writing.findWritingByIdAndForceDelete(child._id, err => next(err));
       },
-      (err, children) => {
+      err => {
         if (err) return callback(err);
 
-        return callback(null, children.reverse());
-      }
-    );
-  });
-};
-
-ChapterSchema.statics.findChaptersByFilters = function (data, callback) {
-  const Chapter = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  const filters = {};
-
-  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
-  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
-  const skip = page * limit;
-
-  if (data.book_id && validator.isMongoId(data.book_id.toString()))
-    filters.book_id == mongoose.Types.ObjectId(data.book_id.toString());
-
-  if ('is_root' in data)
-    filters.parent_id = data.is_root ? null : { $ne: null };
-
-  if (data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.title = { $regex: data.title.trim(), $options: 'i' };
-
-  Chapter
-    .find(filters)
-    .sort({ order: -1 })
-    .limit(limit)
-    .skip(skip)
-    .then(chapters => async.timesSeries(
-      chapters.length,
-      (time, next) => Chapter.findChapterByIdAndFormat(chapters[time]._id, (err, chapter) => next(err, chapter)),
-      (err, chapters) => {
-        if (err) return callback(err);
-
-        return callback(null, {
-          search: null,
-          limit,
-          page,
-          chapters
-        });
-      }
-    ))
-    .catch(err => callback('database_error'));
-};
-
-ChapterSchema.statics.findChapterCountByFilters = function (data, callback) {
-  const Chapter = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  const filters = {};
-
-  if (data.book_id && validator.isMongoId(data.book_id.toString()))
-    filters.book_id == mongoose.Types.ObjectId(data.book_id.toString());
-
-  if ('is_root' in data)
-    filters.parent_id = data.is_root ? null : { $ne: null };
-
-  if (data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.title = { $regex: data.title.trim(), $options: 'i' };
-
-  Chapter
-    .find(filters)
-    .countDocuments()
-    .then(count => callback(null, count))
-    .catch(_ => callback('database_error'));
-};
-
-ChapterSchema.statics.findChapterByIdAndCreateChapter = function (id, data, callback) {
-  const Chapter = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
-
-  Chapter.findChapterById(id, (err, parent) => {
-    if (err) return callback(err);
-
-    const newChapterData = {
-      book_id: parent.book_id,
-      parent_id: parent._id,
-      title: data.title.trim()
-    };
-
-    const newChapter = new Chapter(newChapterData);
-  
-    newChapter.save((err, chapter) => {
-      if (err) return callback('database_error');
-
-      chapter.translations = formatTranslations(chapter, 'tr');
-      chapter.translations = formatTranslations(chapter, 'ru');
-
-      Chapter.findByIdAndUpdate(chapter._id, {$set: {
-        translations: chapter.translations
-      }}, err => {
-        if (err) return callback('database_error');
-
-        Chapter.findByIdAndUpdate(parent._id, {$push: {
-          children: {
-            _id: chapter._id,
-            type: 'chapter'
-          }
-        }}, err => {
-          if (err) return callback('database_error');
-
-          return callback(null, chapter._id);
-        });
-      });
-    });
-  })
-};
-
-ChapterSchema.statics.findChapterByIdAndCreateWriting = function (id, data, callback) {
-  const Chapter = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
-
-  Chapter.findChapterById(id, (err, parent) => {
-    if (err) return callback(err);
-
-    Book.findBookById(parent.book_id, (err, book) => {
-      if (err) return callback(err);
-
-      Writing.createWritingByParentId(parent._id, {
-        type: 'book',
-        title: data.title,
-        writer_id: book.writer_id
-      }, (err, writing) => {
-        if (err) return callback(err);
-
-        Chapter.findByIdAndUpdate(parent._id, {$push: {
-          children: {
-            _id: writing._id,
-            type: 'writing'
-          }
-        }}, err => {
-          if (err) return callback('database_error');
-
-          return callback(null, chapter._id);
-        });
-      })
-    })
-  })
-};
-
-ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
-  const Chapter = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  Chapter.findChapterById(id, (err, chapter) => {
-    if (err) return callback(err);
-
-    Chapter.findByIdAndUpdate(chapter._id, {$set: {
-      // title: 
-    }})
-  })
-};
-
-ChapterSchema.statics.findChapterByIdAndUpdateTranslations = function (id, data, callback) {
-
-};
-
-ChapterSchema.statics.findChapterChildByIdAndIncOrderByOne = function (id, callback) {
-  const Chapter = this;
-
-  Chapter.findChapterById(id, (err, chapter) => {
-    if (err && err != 'document_not_found') return callback(err);
-
-    if (err || !chapter) {
-      Writing.findWritingById(id, (err, writing) => {
-        if (err) return callback(err);
-
-        Chapter.findOne({ children: {
-          _id: writing._id,
-          type: 'writing'
-        } }, (err, parent) => {
-          if (err) return callback('database_error');
-          if (!parent) return callback('document_not_found');
-
-          const index = parent.children.indexOf({
-            _id: writing._id,
-            type: 'writing'
-          });
-
-          if (index <= 0) return callback(null);
-
-          let newChildren = parent.children;
-          newChildren.splice(index, 2, newChildren[index], newChildren[index - 1]);
-
-          Chapter.findByIdAndUpdate(parent._id, {$set: {
-            children: newChildren
-          }}, err => {
-            if (err) return callback('database_error');
-
-            return callback(null);
-          });
-        });
-      });
-    } else {
-      Chapter.findChapterById(chapter.parent_id, (err, parent) => {
-        if (err) return callback('database_error');
-        if (!parent) return callback('document_not_found');
-
-        const index = parent.children.indexOf({
-          _id: chapter._id,
-          type: 'chapter'
-        });
-
-        if (index <= 0) return callback(null);
-
-        let newChildren = parent.children;
-        newChildren.splice(index, 2, newChildren[index], newChildren[index - 1]);
-
-        Chapter.findByIdAndUpdate(parent._id, {$set: {
-          children: newChildren
-        }}, err => {
+        Chapter.findByIdAndDelete(chapter._id, err => {
           if (err) return callback('database_error');
 
           return callback(null);
         });
-      });
-    }
-  })
-};
-
-ChapterSchema.statics.findChapterChildByIdAndMoveToSameLevelWithParent = function (id, callback) {
-  const Chapter = this;
-
-  Chapter.findChapterById(id, (err, chapter) => {
-    if (err && err != 'document_not_found') return callback(err);
-
-    if (err || !chapter) {
-      Writing.findWritingById(id, (err, writing) => {
-        if (err) return callback(err);
-
-        Chapter.findOne({ children: {
-          _id: writing._id,
-          type: 'writing'
-        } }, (err, parent) => {
-          if (err) return callback('database_error');
-          if (!parent) return callback('document_not_found');
-
-          Chapter.findByIdAndUpdate(parent._id, {$pull: {
-            children: {
-              _id: writing._id,
-              type: 'writing'
-            }
-          }}, err => {
-            if (err) return callback('database_error');
-
-            if (parent.parent_id) {
-              Chapter.findByIdAndUpdate(parent.parent_id, {$push: {
-                children: {
-                  _id: writing._id,
-                  type: 'writing'
-                }
-              }}, err => {
-                if (err) return callback('database_error');
-
-                return callback(null);
-              });
-            } else {
-              Book.findBookByIdAndPushChildren(parent.book_id, {$push: {
-                children: {
-                  _id: writing._id,
-                  type: 'writing'
-                }
-              }}, err => {
-                if (err) return callback('database_error');
-
-                return callback(null);
-              });
-            };
-          });
-        });
-      });
-    } else {
-      Chapter.findChapterById(chapter.parent_id, (err, parent) => {
-        if (err) return callback('database_error');
-        if (!parent) return callback('document_not_found');
-
-        Chapter.findByIdAndUpdate(parent._id, {$pull: {
-          children: {
-            _id: chapter._id,
-            type: 'chapter'
-          }
-        }}, err => {
-          if (err) return callback('database_error');
-
-          Chapter.findByIdAndUpdate(chapter._id, {$set: {
-            parent_id: parent.parent_id
-          }}, err => {
-            if (err) return callback('database_error');
-
-            if (parent.parent_id) {
-              Chapter.findByIdAndUpdate(parent.parent_id, {$push: {
-                children: {
-                  _id: chapter._id,
-                  type: 'chapter'
-                }
-              }}, err => {
-                if (err) return callback('database_error');
-  
-                return callback(null);
-              });
-            } else {
-              Book.findBookByIdAndPushChildren(parent.book_id, {$push: {
-                children: {
-                  _id: chapter._id,
-                  type: 'chapter'
-                }
-              }}, err => {
-                if (err) return callback('database_error');
-  
-                return callback(null);
-              });
-            };
-          });
-        });
-      });
-    }
+      }
+    );
   });
-};
-
-ChapterSchema.statics.findChapterByIdAndDelete = function (id, callback) {
-
 };
 
 module.exports = mongoose.model('Chapter', ChapterSchema);

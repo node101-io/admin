@@ -5,8 +5,7 @@ const getChapter = (chapter, callback) => {
   return callback(null, {
     _id: chapter._id.toString(),
     title: chapter.title,
-    translations: chapter.translations,
-    children: chapter.children.reverse()
+    translations: chapter.translations
   });
 };
 

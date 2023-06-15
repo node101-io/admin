@@ -916,4 +916,45 @@ WritingSchema.statics.uploadWritingContentImage = function (file, callback) {
   }, (err, url) => callback(err, url));
 };
 
+WritingSchema.statics.findWritingByIdAndUpdateParentId = function (id, parent_id, callback) { // This function is only to be used by Book / Chapter model, as these models do not make use of the Writing model's order field.
+  const Writing = this;
+
+  if (!id || !validator.isMongoId(id.toString()))
+    return callback('bad_request');
+
+  if (!parent_id || !validator.isMongoId(parent_id.toString()))
+    return callback('bad_request');
+
+  Writing.findById(mongoose.Types.ObjectId(id.toString()), (err, writing) => {
+    if (err) return callback('database_error');
+    if (!writing) return callback('document_not_found');
+
+    Writing.findByIdAndUpdate(writing._id, {$set: {
+      parent_id: mongoose.Types.ObjectId(parent_id.toString())
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+WritingSchema.statics.findWritingByIdAndForceDelete = function (id, callback) { // This function is only to be used by Book / Chapter model
+  const Writing = this;
+
+  Writing.findWritingById(id, (err, writing) => {
+    if (err) return callback(err);
+
+    WritingFilter.findWritingFilterByWritingIdAndDeleteAll(writing._id, err => {
+      if (err) return callback(err);
+
+      Writing.findByIdAndDelete(writing._id, err => {
+        if (err) return callback('database_error');
+  
+        return callback(null);
+      });
+    });
+  });
+};
+
 module.exports = mongoose.model('Writing', WritingSchema);

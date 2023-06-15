@@ -5,6 +5,7 @@ const validator = require('validator');
 const deleteFile = require('../../utils/deleteFile');
 const toURLString =require('../../utils/toURLString');
 
+const Chapter = require('../chapter/Chapter');
 const Image = require('../image/Image');
 const Project = require('../project/Project');
 const Writer = require('../writer/Writer');
@@ -55,19 +56,6 @@ const BookSchema = new Schema({
     default: null,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-  },
-  search_name: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 1,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
-  },
-  search_description: {
-    type: String,
-    default: null,
-    trim: true,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   image: {
     type: String,
@@ -138,7 +126,6 @@ BookSchema.statics.createBook = function (data, callback) {
 
       const newBookData = {
         name: data.name.trim(),
-        search_name: data.name.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
         created_at: new Date(),
@@ -148,7 +135,6 @@ BookSchema.statics.createBook = function (data, callback) {
       const newBook = new Book(newBookData);
     
       newBook.save((err, book) => {
-        console.log(err)
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
@@ -159,19 +145,9 @@ BookSchema.statics.createBook = function (data, callback) {
         Book.findByIdAndUpdate(book._id, {$set: {
           translations: book.translations
         }}, err => {
-          console.log(err);
           if (err) return callback('database_error');
 
-          Book.collection
-            .createIndex(
-              { search_name: 'text', search_description: 'text' },
-              { weights: {
-                search_name: 10,
-                search_description: 1
-              } }
-            )
-            .then(() => callback(null, book._id.toString()))
-            .catch(_ => callback('index_error'));
+          return callback(null, book._id.toString());
         });
       });
     });
@@ -287,30 +263,17 @@ BookSchema.statics.findBookByIdAndUpdate = function (id, data, callback) {
             }}, err => {
               if (err) return callback('database_error');
   
-              Book.collection
-                .createIndex(
-                  { search_name: 'text', search_description: 'text' },
-                  { weights: {
-                    search_name: 10,
-                    search_description: 1
-                  } }
-                )
-                .then(() => {
-                  if (!data.project_id) return callback(null);
-  
-                  Project.findProjectById(data.project_id, (err, project) => {
-                    if (err) return callback(err);
-  
-                    Book.findByIdAndUpdate(book._id, {$set: {
-                      project_id: project._id
-                    }}, err => {
-                      if (err) return callback('database_error');
-  
-                      return callback(null);
-                    });
-                  });
-                })
-                .catch(_ => callback('index_error'));
+              Project.findProjectById(data.project_id, (err, project) => {
+                if (err) return callback(err);
+
+                Book.findByIdAndUpdate(book._id, {$set: {
+                  project_id: project._id
+                }}, err => {
+                  if (err) return callback('database_error');
+
+                  return callback(null);
+                });
+              });
             });
           });
         });
@@ -655,32 +618,123 @@ BookSchema.statics.findBookByIdAndIncOrderByOne = function (id, callback) {
   });
 };
 
-BookSchema.statics.findBookByIdAndPushChildren = function (id, data, callback) {
+BookSchema.statics.findBookByIdAndGetChildrenByFilters = function (id, data, callback) {
   const Book = this;
 
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  if (!data.type || !CHILDREN_TYPE_VALUES.includes(data.type))
-    return callback('bad_request');
+  const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
+  const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
+  const skip = page * limit;
 
-  if (!data._id || !validator.isMongoId(data._id.toString()))
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    async.timesSeries(
+      Math.min(limit, book.children.length - skip),
+      (time, next) => {
+        const child = book.children[skip + time];
+
+        if (child.type == 'chapter')
+          Chapter.findChapterByIdAndFormat(child._id, (err, chapter) => {
+            if (err) return next(err);
+
+            return next(null, {
+              _id: chapter._id,
+              type: 'chapter',
+              title: chapter.title
+            });
+          });
+        else
+          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+            if (err) return next(err);
+
+            return next(null, {
+              _id: writing._id,
+              type: 'writing',
+              title: writing.title
+            });
+          });
+      },
+      (err, children) => {
+        if (err) return callback(err);
+
+        return callback(null, {
+          search: null,
+          limit,
+          page,
+          children,
+        });
+      }
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndCreateChapter = function (id, data, callback) {
+  const Book = this;
+
+  if (!data || typeof data != 'object')
     return callback('bad_request');
 
   Book.findBookById(id, (err, book) => {
     if (err) return callback(err);
 
-    Book.findByIdAndUpdate(book._id, {$push: {
-      children: {
-        _id: mongoose.Types.ObjectId(data._id.toString()),
-        type: data.type
-      }
-    }}, err => {
-      if (err) return callback('database_error');
+    if (!book.is_completed)
+      return callback('bad_request');
 
-      return callback(null);
+    Chapter.createChapter({
+      parent_id: book._id,
+      writer_id: book.writer_id,
+      title: data.title
+    }, (err, chapter_id) => {
+      if (err) return callback(err);
+
+      Book.findByIdAndUpdate(book._id, {$push: {
+        children: {
+          _id: chapter_id.toString(),
+          type: 'chapter'
+        }
+      }}, err => {
+        if (err) return callback('database_error');
+    
+        return callback(null, chapter_id);
+      });
     });
   });
-},
+};
+
+BookSchema.statics.findBookByIdAndCreateWriting = function (id, data, callback) {
+  const Book = this;
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    if (!book.is_completed)
+      return callback('bad_request');
+
+    Writing.createWritingByParentId(book._id, {
+      type: 'book',
+      title: data.title,
+      writer_id: book.writer_id
+    }, (err, writing_id) => {
+      if (err) return callback(err);
+
+      Book.findByIdAndUpdate(book._id, {$push: {
+        children: {
+          _id: writing_id.toString(),
+          type: 'writing'
+        }
+      }}, err => {
+        if (err) return callback('database_error');
+
+        return callback(null, writing_id);
+      });
+    })
+  })
+};
 
 module.exports = mongoose.model('Book', BookSchema);
