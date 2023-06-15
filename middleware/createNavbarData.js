@@ -15,7 +15,7 @@ module.exports = (req, res, next) => {
       { permission: 'project_create', name: res.__('New Project'), link: '/project/create' },
       { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/project/delete' }
     ],
-    'Testnet Guides': [
+    'Guides': [
       { permission: 'guide_view', name: res.__('All Guides'), link: '/guide' },
       { permission: 'guide_create', name: res.__('New Guide'), link: '/guide/create' },
       { permission: 'guide_delete', name: res.__('Deleted Guides'), link: '/guide/delete' }

@@ -85,7 +85,7 @@ window.addEventListener('load', () => {
       event.preventDefault();
 
       createFormPopUp({
-        title: 'Create a New Testnet Guide',
+        title: 'Create a New Guide',
         url: '/guide/create',
         method: 'POST',
         description: 'You will be asked to complete blog details once you create it.',
