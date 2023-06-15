@@ -16,13 +16,6 @@ module.exports = (req, res) => {
     'facebook': 'Facebook'
   };
 
-  const systemRequirements = {
-    'cpu': 'CPU',
-    'ram': 'RAM',
-    'storage': 'Storage',
-    'os': 'Operating System'
-  };
-
   Project.findProjectByIdAndFormat(req.query.id, (err, project) => {
     if (err) return res.redirect('/error?message=' + err);
 
@@ -36,8 +29,7 @@ module.exports = (req, res) => {
         }
       },
       project,
-      socialAccounts,
-      systemRequirements
+      socialAccounts
     });
   });
 };

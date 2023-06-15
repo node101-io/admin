@@ -7,6 +7,13 @@ module.exports = (req, res) => {
     'spotify': 'Spotify'
   };
 
+  const systemRequirements = {
+    'cpu': 'CPU',
+    'ram': 'RAM',
+    'storage': 'Storage',
+    'os': 'Operating System'
+  };
+
   Guide.findGuideByIdAndFormat(req.query.id, (err, guide) => {
     if (err) return res.redirect('/error?message=' + err);
 
@@ -20,7 +27,8 @@ module.exports = (req, res) => {
         }
       },
       guide,
-      socialAccounts
+      socialAccounts,
+      systemRequirements
     });
   });
 };

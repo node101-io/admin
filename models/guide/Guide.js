@@ -14,6 +14,7 @@ const getFrequentlyAskedQuestions = require('./functions/getFrequentlyAskedQuest
 const getGuide = require('./functions/getGuide');
 const getGuideByLanguage = require('./functions/getGuideByLanguage');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
+const getSystemRequirements = require('./functions/getSystemRequirements');
 const isGuideComplete = require('./functions/isGuideComplete');
 
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
@@ -178,10 +179,21 @@ const GuideSchema = new Schema({
     type: mongoose.Types.ObjectId,
     default: null
   },
+  wizard_key: {
+    type: String,
+    default: null,
+    trim: true,
+    minlength: 0,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  system_requirements: {
+    type: Object,
+    default: {}
+  },
   is_mainnet: {
     type: Boolean,
     default: false
-  }
+  },
 });
 
 GuideSchema.statics.createGuide = function (data, callback) {
@@ -268,6 +280,7 @@ GuideSchema.statics.findGuideById = function (id, callback) {
     Guide.findByIdAndUpdate(guide._id, {$set: {
       is_completed: isGuideComplete(guide)
     }}, { new: true }, (err, guide) => {
+      console.log(err);
       if (err) return callback('database_error');
 
       return callback(null, guide);
@@ -352,7 +365,9 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
           os: data.os && typeof data.os == 'string' && data.os.trim().length && data.os.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.os.trim() : null,
           network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
           frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions),
-          is_mainnet: !project_err ? (project.is_mainnet ? true : false) : guide.is_mainnet
+          wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null,
+          is_mainnet: data.is_mainnet && typeof data.is_mainnet == 'boolean' ? data.is_mainnet : guide.is_mainnet,
+          system_requirements: getSystemRequirements(data.system_requirements)
         }}, { new: true }, (err, guide) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
             return callback('duplicated_unique_field');
@@ -553,6 +568,9 @@ GuideSchema.statics.findGuidesByFilters = function (data, callback) {
 
   if ('is_mainnet' in data)
     filters.is_mainnet = data.is_mainnet ? true : false;
+  
+  if ('is_completed' in data)
+    filters.is_completed = data.is_completed ? true : false;
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Guide
@@ -614,6 +632,9 @@ GuideSchema.statics.findGuideCountByFilters = function (data, callback) {
 
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
+  
+  if ('is_completed' in data)
+    filters.is_completed = data.is_completed ? true : false;
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Guide

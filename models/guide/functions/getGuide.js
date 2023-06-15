@@ -32,6 +32,9 @@ module.exports = (guide, callback) => {
           social_media_accounts: guide.social_media_accounts,
           translations: guide.translations,
           is_active: guide.is_active,
+          is_mainnet: guide.is_mainnet,
+          wizard_key: guide.wizard_key,
+          system_requirements: guide.system_requirements,
           writing
         });
       });
@@ -56,6 +59,9 @@ module.exports = (guide, callback) => {
         social_media_accounts: guide.social_media_accounts,
         translations: guide.translations,
         is_active: guide.is_active,
+        is_mainnet: guide.is_mainnet,
+        wizard_key: guide.wizard_key,
+        system_requirements: guide.system_requirements,
         writing
       });
     }
