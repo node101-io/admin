@@ -311,42 +311,42 @@ BlogSchema.statics.findBlogByIdAndUpdate = function (id, data, callback) {
                   )
                   .then(() => {
                     Writing.find({ parent_id: id }, (err, writings) => {
-                      if (err) callback(err);
+                      if (err) return callback(err);
 
                       async.timesSeries(
                         writings.length,
                         (time, next) => {
-                          Writing.findByIdAndUpdate(mongoose.Types.ObjectId(writings[time]._id), {
+                          Writing.findByIdAndUpdate(writings[time]._id, {
                             $set: { parent_title: blog.title }
                           }, err => {
-                            if (err) callback(err);
+                            if (err) return next(err);
 
-                            next(null);
+                            return next(null);
                           });
                         },
                         err => {
-                          if (err) callback(err);
+                          if (err) return callback(err);
 
                           WritingFilter.find({ parent_id: id }, (err, writingFilters) => {
-                            if (err) callback(err);
+                            if (err) return callback(err);
 
                             async.timesSeries(
                               writingFilters.length,
                               (time, next) => {
                                 const writingFilter = writingFilters[time];
 
-                                WritingFilter.findByIdAndUpdate(mongoose.Types.ObjectId(writingFilter._id), {
+                                WritingFilter.findByIdAndUpdate(writingFilter._id, {
                                   $set: { parent_title: blog.title }
                                 }, err => {
-                                  if (err) callback(err);
+                                  if (err) return next(err);
 
                                   next(null);
                                 });
                               },
                               err => {
-                                if (err) callback(err);
+                                if (err) return callback(err);
                                 
-                                callback(null);
+                                return callback(null);
                               }
                             );
                           });

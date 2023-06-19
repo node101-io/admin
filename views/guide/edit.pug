@@ -49,7 +49,7 @@ block main
           input.general-input#wizard-key(type='text' placeholder=__('Enter the wizard key for the usage in wizard application.') value=guide.wizard_key)
         each requirement in Object.keys(systemRequirements)
           .general-create-input-grid-each-item-wrapper
-            span.general-create-subtitle #{__('Project')} #{systemRequirements[requirement]} 
+            span.general-create-subtitle #{systemRequirements[requirement]} #{__('Requirement')} 
             input.general-input.system-requirement-input(type='text' id=requirement placeholder=__('Requirement') value=guide.system_requirements[requirement])
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle= __('Guide Mainnet Explorer URL')
@@ -63,18 +63,6 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle= __('Guide Lock Period')
           input.general-input#lock-period(type='text' placeholder=__('Enter the guide lock period.') value=guide.lock_period)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide CPU')
-          input.general-input#cpu(type='text' placeholder=__('Enter the guide CPU requirements.') value=guide.cpu)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide RAM')
-          input.general-input#ram(type='text' placeholder=__('Enter the guide RAM requirements.') value=guide.ram)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide OS')
-          input.general-input#os(type='text' placeholder=__('Enter the guide OS requirements.') value=guide.os)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide Network')
-          input.general-input#network(type='text' placeholder=__('Enter the guide network requirements.') value=guide.network)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Guide')} #{socialAccounts[social]} 
