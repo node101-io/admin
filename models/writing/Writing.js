@@ -60,6 +60,14 @@ const WritingSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
+  parent_identifiers: {
+    type: Array,
+    default: []
+  },
+  parent_identifier_languages: {
+    type: Object,
+    default: {}
+  },
   parent_title: {
     type: String,
     default: null,
@@ -67,7 +75,7 @@ const WritingSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-   parent_image: {
+  parent_image: {
     type: String,
     default: null,
     trim: true,
@@ -188,6 +196,8 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
           identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
           type: data.type,
           parent_id,
+          parent_identifiers: data.parent_info.identifiers && Array.isArray(data.parent_info.identifiers) && data.parent_info.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifiers : [],
+          parent_identifier_languages: data.parent_info.identifier_languages && typeof data.parent_info.identifier_languages == 'object' && Object.keys(data.parent_info.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifier_languages : {},
           parent_title: data.parent_info.title && typeof data.parent_info.title == 'string' && data.parent_info.title.trim().length && data.parent_info.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.title.trim() : null,
           parent_image: data.parent_info.image && typeof data.parent_info.image == 'string' && data.parent_info.image.trim().length && data.parent_info.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.image.trim() : null,
           writer_id: writer._id,
@@ -265,6 +275,8 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
         type: data.type,
         parent_id,
+        parent_identifiers: data.parent_info.identifiers && Array.isArray(data.parent_info.identifiers) && data.parent_info.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifiers : [],
+        parent_identifier_languages: data.parent_info.identifier_languages && typeof data.parent_info.identifier_languages == 'object' && Object.keys(data.parent_info.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifier_languages : {},
         parent_title: data.parent_info.title && typeof data.parent_info.title == 'string' && data.parent_info.title.trim().length && data.parent_info.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.title.trim() : null,
         parent_image: data.parent_info.image && typeof data.parent_info.image == 'string' && data.parent_info.image.trim().length && data.parent_info.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.image.trim() : null,
         created_at: new Date(),
@@ -748,6 +760,8 @@ WritingSchema.statics.findWritingsByParentIdAndUpdateParentInfo = function (pare
                     });
 
                   Writing.findByIdAndUpdate(writing._id, {$set: {
+                    parent_identifiers: data.identifiers && Array.isArray(data.identifiers) && data.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.identifiers : [],
+                    parent_identifier_languages: data.identifier_languages && typeof data.identifier_languages == 'object' && Object.keys(data.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.identifier_languages : {},
                     parent_title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writing.parent_title,
                     parent_image: data.image && typeof data.image == 'string' && data.image.trim().length && data.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.image.trim() : writing.parent_image,
                     translations: JSON.parse(JSON.stringify(writing.translations))
@@ -765,7 +779,7 @@ WritingSchema.statics.findWritingsByParentIdAndUpdateParentInfo = function (pare
         err => callback(err)
       )
     )
-    .catch(err => {console.log(err);callback('database_error')});
+    .catch(_ => callback('database_error'));
 };
 
 WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, data, callback) {

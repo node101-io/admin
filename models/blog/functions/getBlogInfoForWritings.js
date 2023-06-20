@@ -6,6 +6,8 @@ module.exports = blog => {
     return {};
 
   const data = {
+    identifiers: blog.identifiers,
+    identifier_languages: blog.identifier_languages,
     translations: {}
   };
 
