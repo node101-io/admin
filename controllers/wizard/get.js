@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
 
 module.exports = (req, res) => {
   fs.readFile(path.join(__dirname, '../../data/wizard.json'), async (err, file) => {
-    if (err) return res.status(500).json({ error: err });
+    if (err) return res.status(500).json({ error: err, success: false });
 
     const local_data = JSON.parse(file);
     let github_data = null;
@@ -17,9 +18,9 @@ module.exports = (req, res) => {
       const latestJsonResponse = await fetch(`https://github.com/node101-io/node-wizard/releases/download/${latest_version}/latest.json`);
       github_data = await latestJsonResponse.json();
     } catch (err) {
+      console.error(err);
       github_data = null;
     }
-
 
     return res.render('wizard/edit', {
       page: 'wizard/edit',

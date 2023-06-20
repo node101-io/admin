@@ -37,14 +37,21 @@ window.addEventListener('load', () => {
       const cpu = document.getElementById('cpu').value;
       const ram = document.getElementById('ram').value;
       const os = document.getElementById('os').value;
-      const network = document.getElementById('network').value;
       const socialMediaAccounts = {};
+      const systemRequirements = {};
+      const wizardKey = document.getElementById('wizard-key').value;
+      const network = document.getElementById('network').value;
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
+      const systemRequirementInputs = document.querySelectorAll('.system-requirement-input');
 
       for (let i = 0; i < socialAccountInputs.length; i++)
         if (socialAccountInputs[i].value && socialAccountInputs[i].value.trim().length)
-          socialMediaAccounts[socialAccountInputs[i].id]= socialAccountInputs[i].value.trim();
+          socialMediaAccounts[socialAccountInputs[i].id] = socialAccountInputs[i].value.trim();
+      
+      for (let i = 0; i < systemRequirementInputs.length; i++)
+        if (systemRequirementInputs[i].value && systemRequirementInputs[i].value.trim().length)
+          systemRequirements[systemRequirementInputs[i].id]= systemRequirementInputs[i].value.trim();
 
       if (!title || !title.trim().length)
         return error.innerHTML = 'Please enter a title for the guide.';
@@ -54,6 +61,9 @@ window.addEventListener('load', () => {
 
       if (!subtitle || !subtitle.trim().length)
         return error.innerHTML = 'Please enter a subtitle for the guide.';
+      
+      if (!network || !network.trim().length)
+        return error.innerHTML = 'Please choose a network for the project.';
 
       serverRequest('/guide/edit?id=' + guide._id, 'POST', {
         title,
@@ -67,7 +77,10 @@ window.addEventListener('load', () => {
         ram,
         os,
         network,
-        social_media_accounts: socialMediaAccounts
+        social_media_accounts: socialMediaAccounts,
+        wizard_key: wizardKey,
+        system_requirements: systemRequirements,
+        is_mainnet: network == 'mainnet'
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
           return error.innerHTML = 'There is already a guide with this title.'
@@ -227,14 +240,14 @@ window.addEventListener('load', () => {
       if (!event.target.value?.trim().length)
         return;
 
-      serverRequest('/project/filter?name=' + event.target.value?.trim().replace(/\(|\)/g, ''), 'GET', {}, res => {
+      serverRequest('/project/filter?name=' + event.target.value?.trim(), 'GET', {}, res => {
         if (!res.success)
           return throwError(res.error);
 
         document.getElementById('project-choices').innerHTML = '';
         document.getElementById('project-id').value = '';
         res.projects.forEach(project => {
-          document.getElementById('project-choices').appendChild(createSelectionItem(project._id, `${project.name} (${project.is_mainnet ? 'mainnet' : 'testnet'})`));
+          document.getElementById('project-choices').appendChild(createSelectionItem(project._id, project.name));
           if (event.target.value?.trim().toLocaleLowerCase() == project.name.toLocaleLowerCase())
             document.getElementById('project-id').value = project._id.toString();
         });

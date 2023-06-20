@@ -3,7 +3,7 @@ const Guide = require('../../../models/guide/Guide');
 module.exports = (req, res) => {
   req.query.is_deleted = false;
   req.query.is_completed = true;
-  req.query.is_mainnet = false;
+  req.query.is_mainnet = true;
 
   Guide.findGuideCountByFilters(req.query, (err, count) => {
     if (err) return res.json({
@@ -19,7 +19,7 @@ module.exports = (req, res) => {
 
       return res.json({
         success: true,
-        testnets: data.guides,
+        mainnets: data.guides,
         count,
         limit: data.limit,
         page: data.page,

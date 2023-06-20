@@ -12,7 +12,5 @@ module.exports = (project, callback) => {
     is_completed: project.is_completed,
     social_media_accounts: project.social_media_accounts,
     translations: project.translations,
-    wizard_key: project.wizard_key,
-    is_mainnet: project.is_mainnet
   });
 }

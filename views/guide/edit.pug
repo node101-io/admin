@@ -3,7 +3,7 @@ block main
   input.display-none#guide-json(type='text' value=JSON.stringify(guide))
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title #{__('Edit Testnet Guide')} - #{guide.title}
+      .general-header-title #{__('Edit Guide')} - #{guide.title}
       .general-header-subtitle= __('Edit the guide information and translate the guide.')
     input.general-header-search-input#guide-search-input(autocomplete='search' name='new-password' placeholder='Search by title or subtitle' value='')
   .all-content-inner-wrapper
@@ -20,11 +20,19 @@ block main
           span.general-create-subtitle.general-create-required= __('Project')
           .general-select-input-wrapper
             input.general-select-input-real-value#project-id(value=(guide.project ? guide.project._id : ''))
-            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(guide.project ? `${guide.project.name} (${guide.project.is_mainnet ? 'mainnet' : 'testnet'})` : ''))
+            input.general-select-input-selected-value.do-not-listen#project-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(guide.project ? guide.project.name : ''))
             .general-select-input-choices-wrapper#project-choices
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Guide Subtitle')
           input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on guide preview.') value=guide.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Guide Network')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#network(type='text' value=guide.is_mainnet ? 'mainnet' : 'testnet')
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search.') value=guide.is_mainnet ? 'Mainnet' : 'Testnet')
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-mainnet') Mainnet
+              .general-select-each-input-choice(id='select-input-testnet') Testnet
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Guide Image')
           if guide.image
@@ -37,6 +45,13 @@ block main
               input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
         .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Project Wizard Key')
+          input.general-input#wizard-key(type='text' placeholder=__('Enter the wizard key for the usage in wizard application.') value=guide.wizard_key)
+        each requirement in Object.keys(systemRequirements)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{systemRequirements[requirement]} #{__('Requirement')} 
+            input.general-input.system-requirement-input(type='text' id=requirement placeholder=__('Requirement') value=guide.system_requirements[requirement])
+        .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle= __('Guide Mainnet Explorer URL')
           input.general-input#mainnet-explorer-url(type='text' placeholder=__('Enter the guide mainnet explorer URL.') value=guide.mainnet_explorer_url)
         .general-create-input-grid-each-item-wrapper
@@ -48,18 +63,6 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle= __('Guide Lock Period')
           input.general-input#lock-period(type='text' placeholder=__('Enter the guide lock period.') value=guide.lock_period)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide CPU')
-          input.general-input#cpu(type='text' placeholder=__('Enter the guide CPU requirements.') value=guide.cpu)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide RAM')
-          input.general-input#ram(type='text' placeholder=__('Enter the guide RAM requirements.') value=guide.ram)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide OS')
-          input.general-input#os(type='text' placeholder=__('Enter the guide OS requirements.') value=guide.os)
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle= __('Guide Network')
-          input.general-input#network(type='text' placeholder=__('Enter the guide network requirements.') value=guide.network)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Guide')} #{socialAccounts[social]} 
