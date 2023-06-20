@@ -11,6 +11,7 @@ module.exports = (writing, language, data) => {
 
   translations[language.toString().trim()] = {
     title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writing.title,
+    parent_title: data.parent_title && typeof data.parent_title == 'string' && data.parent_title.trim().length && data.parent_title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_title.trim() : writing.parent_title,
     subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
     logo: data.logo && typeof data.logo == 'string' && data.logo.trim().length && data.logo.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH  ? data.logo.trim() : writing.logo,
     cover: data.cover && typeof data.cover == 'string' && data.cover.trim().length && data.cover.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH  ? data.cover.trim() : writing.cover,

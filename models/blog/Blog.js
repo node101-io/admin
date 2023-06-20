@@ -15,6 +15,7 @@ const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts')
 const getBlog = require('./functions/getBlog');
 const getBlogByLanguage = require('./functions/getBlogByLanguage');
+const getBlogInfoForWritings = require('./functions/getBlogInfoForWritings');
 const isBlogComplete = require('./functions/isBlogComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
@@ -66,19 +67,6 @@ const BlogSchema = new Schema({
     trim: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-  },
-  search_title: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 1,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
-  },
-  search_subtitle: {
-    type: String,
-    default: '',
-    trim: true,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
   image: {
     type: String,
@@ -285,77 +273,10 @@ BlogSchema.statics.findBlogByIdAndUpdate = function (id, data, callback) {
             }}, { new: true }, (err, blog) => {
               if (err) return callback('database_error');
 
-              const searchTitle = new Set();
-              const searchSubtitle = new Set();
+              Writing.findWritingsByParentIdAndUpdateParentInfo(blog._id, getBlogInfoForWritings(blog), err => {
+                if (err) return callback(err);
 
-              blog.title.split(' ').forEach(word => searchTitle.add(word));
-              blog.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
-              blog.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
-              blog.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-              blog.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-              blog.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-
-              Blog.findByIdAndUpdate(blog._id, {$set: {
-                  search_title: Array.from(searchTitle).join(' '),
-                  search_subtitle: Array.from(searchSubtitle).join(' ')
-              }}, err => {
-                if (err) return callback('database_error');
-
-                Blog.collection
-                  .createIndex(
-                    { search_title: 'text', search_subtitle: 'text' },
-                    { weights: {
-                        search_title: 10,
-                        search_subtitle: 1
-                    } }
-                  )
-                  .then(() => {
-                    Writing.find({ parent_id: id }, (err, writings) => {
-                      if (err) callback(err);
-
-                      async.timesSeries(
-                        writings.length,
-                        (time, next) => {
-                          Writing.findByIdAndUpdate(mongoose.Types.ObjectId(writings[time]._id), {
-                            $set: { parent_title: blog.title }
-                          }, err => {
-                            if (err) callback(err);
-
-                            next(null);
-                          });
-                        },
-                        err => {
-                          if (err) callback(err);
-
-                          WritingFilter.find({ parent_id: id }, (err, writingFilters) => {
-                            if (err) callback(err);
-
-                            async.timesSeries(
-                              writingFilters.length,
-                              (time, next) => {
-                                const writingFilter = writingFilters[time];
-
-                                WritingFilter.findByIdAndUpdate(mongoose.Types.ObjectId(writingFilter._id), {
-                                  $set: { parent_title: blog.title }
-                                }, err => {
-                                  if (err) callback(err);
-
-                                  next(null);
-                                });
-                              },
-                              err => {
-                                if (err) callback(err);
-                                
-                                callback(null);
-                              }
-                            );
-                          });
-                        }
-                      );
-                    });
-                  })
-                  .then(() => { callback(null, blog); })
-                  .catch(_ => callback('index_error'));
+                return callback(null);
               });
             });
           });
@@ -381,20 +302,26 @@ BlogSchema.statics.findBlogByIdAndUpdateImage = function (id, file, callback) {
       if (err) return callback(err);
 
       Blog.findByIdAndUpdate(blog._id, { $set: {
-          image: url
+        image: url
       }}, err => {
         if (err) return callback(err);
 
-        deleteFile(file, err => {
+        Writing.findWritingsByParentIdAndUpdateParentInfo(blog._id, {
+          image: url
+        }, err => {
           if (err) return callback(err);
 
-          if (!blog.image || blog.image.split('/')[blog.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
-            return callback(null, url);
-
-          Image.findImageByUrlAndDelete(blog.image, err => {
+          deleteFile(file, err => {
             if (err) return callback(err);
-
-            return callback(null, url);
+  
+            if (!blog.image || blog.image.split('/')[blog.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+              return callback(null, url);
+  
+            Image.findImageByUrlAndDelete(blog.image, err => {
+              if (err) return callback(err);
+  
+              return callback(null, url);
+            });
           });
         });
       });
@@ -450,32 +377,10 @@ BlogSchema.statics.findBlogByIdAndUpdateTranslations = function (id, data, callb
       }}, { new: true }, (err, blog) => {
         if (err) return callback('database_error');
 
-        const searchTitle = new Set();
-        const searchSubtitle = new Set();
+        Writing.findWritingsByParentIdAndUpdateParentInfo(blog._id, getBlogInfoForWritings(blog), err => {
+          if (err) return callback(err);
 
-        blog.title.split(' ').forEach(word => searchTitle.add(word));
-        blog.translations.tr.title.split(' ').forEach(word => searchTitle.add(word));
-        blog.translations.ru.title.split(' ').forEach(word => searchTitle.add(word));
-        blog.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-        blog.translations.tr.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-        blog.translations.ru.subtitle.split(' ').forEach(word => searchSubtitle.add(word));
-
-        Blog.findByIdAndUpdate(blog._id, {$set: {
-            search_title: Array.from(searchTitle).join(' '),
-            search_subtitle: Array.from(searchSubtitle).join(' ')
-        }}, err => {
-          if (err) return callback('database_error');
-
-          Blog.collection
-            .createIndex(
-              { search_title: 'text', search_subtitle: 'text' },
-              { weights: {
-                  search_title: 10,
-                  search_subtitle: 1
-              } }
-            )
-            .then(() => callback(null))
-            .catch(_ => callback('index_error'));
+          return callback(null);
         });
       });
     });
@@ -493,58 +398,36 @@ BlogSchema.statics.findBlogsByFilters = function (data, callback) {
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
   const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
   const skip = page * limit;
+  let search = null;
 
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
 
-  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
-    Blog
-      .find(filters)
-      .sort({ order: -1 })
-      .limit(limit)
-      .skip(skip)
-      .then(blogs => async.timesSeries(
-        blogs.length,
-        (time, next) => Blog.findBlogByIdAndFormat(blogs[time]._id, (err, blog) => next(err, blog)),
-        (err, blogs) => {
-          if (err) return callback(err);
-
-          return callback(null, {
-            search: null,
-            limit,
-            page,
-            blogs
-          });
-        })
-      )
-      .catch(_ => callback('database_error'));
-  } else {
-    filters.$text = { $search: data.search.trim() };
-
-    Blog
-      .find(filters)
-      .sort({
-        score: { $meta: 'textScore' },
-        order: -1
-      })
-      .limit(limit)
-      .skip(skip)
-      .then(blogs => async.timesSeries(
-        blogs.length,
-        (time, next) => Blog.findBlogByIdAndFormat(blogs[time]._id, (err, blog) => next(err, blog)),
-        (err, blogs) => {
-          if (err) return callback(err);
-
-          return callback(null, {
-            search: data.search.trim(),
-            limit,
-            page,
-            blogs
-          });
-        })
-      )
-      .catch(_ => callback('database_error'));
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+    search = data.search.trim();
+    filters.name = { $regex: search, $options: 'i' };
   };
+
+  Blog
+    .find(filters)
+    .sort({ order: -1 })
+    .limit(limit)
+    .skip(skip)
+    .then(blogs => async.timesSeries(
+      blogs.length,
+      (time, next) => Blog.findBlogByIdAndFormat(blogs[time]._id, (err, blog) => next(err, blog)),
+      (err, blogs) => {
+        if (err) return callback(err);
+
+        return callback(null, {
+          search,
+          limit,
+          page,
+          blogs
+        });
+      })
+    )
+    .catch(_ => callback('database_error'));
 };
 
 BlogSchema.statics.findBlogCountByFilters = function (data, callback) {
@@ -558,21 +441,14 @@ BlogSchema.statics.findBlogCountByFilters = function (data, callback) {
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
 
-  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
-    Blog
-      .find(filters)
-      .countDocuments()
-      .then(count => callback(null, count))
-      .catch(_ => callback('database_error'));
-  } else {
-    filters.$text = { $search: data.search.trim() };
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.name = { $regex: search, $options: 'i' };
 
-    Blog
-      .find(filters)
-      .countDocuments()
-      .then(count => callback(null, count))
-      .catch(_ => callback('database_error'));
-  };
+  Blog
+    .find(filters)
+    .countDocuments()
+    .then(count => callback(null, count))
+    .catch(_ => callback('database_error'));
 };
 
 BlogSchema.statics.findBlogByIdAndDelete = function (id, callback) {
@@ -708,7 +584,7 @@ BlogSchema.statics.findBlogByIdAndCreateWriting = function (id, data, callback) 
     Writing.createWritingByParentId(blog._id, {
       type: 'blog',
       parent_id: blog._id,
-      parent_title: blog.title,
+      parent_info: getBlogInfoForWritings(blog),
       title: data.title,
       writer_id: blog.writer_id
     }, (err, writing_id) => {

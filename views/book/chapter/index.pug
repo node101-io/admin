@@ -44,6 +44,9 @@ block main
             .general-each-item-third-button.order-each-children-button= __('Move Up')
             .general-each-item-second-button.delete-each-children-button= __('Delete')
             if child.type == 'chapter'
-              a.general-each-item-fourth-button.show-each-children-chilren-button(href=`${breadcrumps[breadcrumps.length - 1].link},${child._id}`)= __('Chapters')
+              if chapter
+                a.general-each-item-fourth-button.show-each-children-chilren-button(href=`${breadcrumps[breadcrumps.length - 1].link},${child._id}`)= __('Chapters')
+              else
+                a.general-each-item-fourth-button.show-each-children-chilren-button(href=`/book/chapter?book_id=${book._id}&chapter_id=${child._id}`)= __('Chapters')
             .general-each-item-first-button.edit-child-button= __('Edit & Translate')
             
