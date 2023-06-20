@@ -60,9 +60,24 @@ const WritingSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
+  parent_identifiers: {
+    type: Array,
+    default: []
+  },
+  parent_identifier_languages: {
+    type: Object,
+    default: {}
+  },
   parent_title: {
     type: String,
-    required: true,
+    default: null,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  parent_image: {
+    type: String,
+    default: null,
     trim: true,
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
@@ -156,6 +171,9 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
+  if (!data.parent_info || typeof data.parent_info != 'object')
+    data.parent_info = {};
+
   const identifier = toURLString(data.title);
   const parent_id = mongoose.Types.ObjectId(_parent_id.toString());
 
@@ -178,7 +196,10 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
           identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
           type: data.type,
           parent_id,
-          parent_title: data.parent_title,
+          parent_identifiers: data.parent_info.identifiers && Array.isArray(data.parent_info.identifiers) && data.parent_info.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifiers : [],
+          parent_identifier_languages: data.parent_info.identifier_languages && typeof data.parent_info.identifier_languages == 'object' && Object.keys(data.parent_info.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifier_languages : {},
+          parent_title: data.parent_info.title && typeof data.parent_info.title == 'string' && data.parent_info.title.trim().length && data.parent_info.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.title.trim() : null,
+          parent_image: data.parent_info.image && typeof data.parent_info.image == 'string' && data.parent_info.image.trim().length && data.parent_info.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.image.trim() : null,
           writer_id: writer._id,
           created_at: new Date(),
           order
@@ -194,8 +215,17 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
           writing.translations = formatTranslations(writing, 'tr');
           writing.translations = formatTranslations(writing, 'ru');
 
+          if (data.parent_info.translations && typeof data.parent_info.translations == 'object')
+            Object.keys(data.parent_info.translations).forEach(language => {
+              const eachParentInfo = data.parent_info.translations[language];
+
+              Object.keys(eachParentInfo).forEach(key => {
+                writing.translations[language][`parent_${key}`] = eachParentInfo[key];
+              });
+            });
+
           Writing.findByIdAndUpdate(writing._id, {$set: {
-              translations: writing.translations
+            translations: writing.translations
           }}, err => {
             if (err) return callback('database_error');
 
@@ -222,6 +252,9 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
+  if (!data.parent_info || typeof data.parent_info != 'object')
+    data.parent_info = {};
+
   const identifier = toURLString(data.title);
   const parent_id = mongoose.Types.ObjectId(_parent_id.toString());
 
@@ -242,6 +275,10 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         identifier_languages: { [identifier]: DEFAULT_LANGUAGE },
         type: data.type,
         parent_id,
+        parent_identifiers: data.parent_info.identifiers && Array.isArray(data.parent_info.identifiers) && data.parent_info.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifiers : [],
+        parent_identifier_languages: data.parent_info.identifier_languages && typeof data.parent_info.identifier_languages == 'object' && Object.keys(data.parent_info.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.parent_info.identifier_languages : {},
+        parent_title: data.parent_info.title && typeof data.parent_info.title == 'string' && data.parent_info.title.trim().length && data.parent_info.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.title.trim() : null,
+        parent_image: data.parent_info.image && typeof data.parent_info.image == 'string' && data.parent_info.image.trim().length && data.parent_info.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.parent_info.image.trim() : null,
         created_at: new Date(),
         order
       };
@@ -256,8 +293,17 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
         writing.translations = formatTranslations(writing, 'tr');
         writing.translations = formatTranslations(writing, 'ru');
 
+        if (data.parent_info.translations && typeof data.parent_info.translations == 'object')
+          Object.keys(data.parent_info.translations).forEach(language => {
+            const eachParentInfo = data.parent_info.translations[language];
+
+            Object.keys(eachParentInfo).forEach(key => {
+              writing.translations[language][`parent_${key}`] = eachParentInfo[key];
+            });
+          });
+
         Writing.findByIdAndUpdate(writing._id, {$set: {
-            translations: writing.translations
+          translations: writing.translations
         }}, err => {
           if (err) return callback('database_error');
 
@@ -678,6 +724,64 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
   });
 };
 
+WritingSchema.statics.findWritingsByParentIdAndUpdateParentInfo = function (parent_id, data, callback) {
+  const Writing = this;
+
+  if (!parent_id || !validator.isMongoId(parent_id.toString()))
+    return callback('bad_request');
+
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  Writing
+    .find({ parent_id })
+    .countDocuments()
+    .then(count =>
+      async.timesSeries(
+        parseInt(count / MAX_DOCUMENT_COUNT_PER_QUERY + (count % MAX_DOCUMENT_COUNT_PER_QUERY ? 1 : 0)),
+        (time, next) => 
+          Writing
+            .find({ parent_id })
+            .skip(time * MAX_DOCUMENT_COUNT_PER_QUERY)
+            .limit(MAX_DOCUMENT_COUNT_PER_QUERY)
+            .then(writings => 
+              async.timesSeries(
+                writings.length,
+                (time, next) => {
+                  const writing = writings[time];
+
+                  if (data.translations && typeof data.translations == 'object')
+                    Object.keys(data.translations).forEach(language => {
+                      const eachParentInfo = data.translations[language];
+
+                      Object.keys(eachParentInfo).forEach(key => {
+                        writing.translations[language][`parent_${key}`] = eachParentInfo[key];
+                      });
+                    });
+
+                  Writing.findByIdAndUpdate(writing._id, {$set: {
+                    parent_identifiers: data.identifiers && Array.isArray(data.identifiers) && data.identifiers.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.identifiers : [],
+                    parent_identifier_languages: data.identifier_languages && typeof data.identifier_languages == 'object' && Object.keys(data.identifier_languages).length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.identifier_languages : {},
+                    parent_title: data.title && typeof data.title == 'string' && data.title.trim().length && data.title.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.title.trim() : writing.parent_title,
+                    parent_image: data.image && typeof data.image == 'string' && data.image.trim().length && data.image.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.image.trim() : writing.parent_image,
+                    translations: JSON.parse(JSON.stringify(writing.translations))
+                  }}, err => {
+                    if (err) return next('database_error');
+
+                    return next(null);
+                  })
+                },
+                err => next(err)
+              )
+            )
+            .catch(_ => next('database_error'))
+        ,
+        err => callback(err)
+      )
+    )
+    .catch(_ => callback('database_error'));
+};
+
 WritingSchema.statics.findWritingsByParentIdAndFilters = function (parent_id, data, callback) {
   const Writing = this;
 
@@ -914,6 +1018,47 @@ WritingSchema.statics.uploadWritingContentImage = function (file, callback) {
     width: IMAGE_WIDTH,
     is_used: true
   }, (err, url) => callback(err, url));
+};
+
+WritingSchema.statics.findWritingByIdAndUpdateParentId = function (id, parent_id, callback) { // This function is only to be used by Book / Chapter model, as these models do not make use of the Writing model's order field.
+  const Writing = this;
+
+  if (!id || !validator.isMongoId(id.toString()))
+    return callback('bad_request');
+
+  if (!parent_id || !validator.isMongoId(parent_id.toString()))
+    return callback('bad_request');
+
+  Writing.findById(mongoose.Types.ObjectId(id.toString()), (err, writing) => {
+    if (err) return callback('database_error');
+    if (!writing) return callback('document_not_found');
+
+    Writing.findByIdAndUpdate(writing._id, {$set: {
+      parent_id: mongoose.Types.ObjectId(parent_id.toString())
+    }}, err => {
+      if (err) return callback('database_error');
+
+      return callback(null);
+    });
+  });
+};
+
+WritingSchema.statics.findWritingByIdAndForceDelete = function (id, callback) { // This function is only to be used by Book / Chapter model
+  const Writing = this;
+
+  Writing.findWritingById(id, (err, writing) => {
+    if (err) return callback(err);
+
+    WritingFilter.findWritingFilterByWritingIdAndDeleteAll(writing._id, err => {
+      if (err) return callback(err);
+
+      Writing.findByIdAndDelete(writing._id, err => {
+        if (err) return callback('database_error');
+  
+        return callback(null);
+      });
+    });
+  });
 };
 
 module.exports = mongoose.model('Writing', WritingSchema);

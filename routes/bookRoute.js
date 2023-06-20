@@ -23,7 +23,6 @@ const restorePostController = require('../controllers/book/restore/post');
 const translatePostController = require('../controllers/book/translate/post');
 
 const chapterCreatePostController = require('../controllers/book/chapter/create/post');
-const chapterPushPostController = require('../controllers/book/chapter/push/post');
 
 router.get(
   '/',
@@ -112,13 +111,6 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     chapterCreatePostController
-);
-router.post(
-  '/chapter/push',
-    isAdmin,
-    checkAdminPermission,
-    createNavbarData,
-    chapterPushPostController
 );
 
 module.exports = router;

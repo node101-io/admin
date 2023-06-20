@@ -35,5 +35,5 @@ block main
             .general-each-item-third-button.order-each-book-button= __('Move Up')
             .general-each-item-second-button.delete-each-book-button= __('Delete')
             if book.is_completed
-              a.general-each-item-fourth-button(href='/book/chapter?id=' + book._id)= __('Chapters')
+              a.general-each-item-fourth-button(href='/book/chapter?book_id=' + book._id)= __('Chapters')
             a.general-each-item-first-button(href='/book/edit?id=' + book._id)= __('Edit & Translate')

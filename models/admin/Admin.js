@@ -155,7 +155,7 @@ AdminSchema.statics.createAdmin = function (data, callback) {
         } }
       )
       .then(() => callback(null, admin._id.toString()))
-      .catch(err => callback('index_error'));
+      .catch(_ => callback('index_error'));
   });
 };
 

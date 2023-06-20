@@ -1,43 +1,52 @@
 extends ../../partials/navbar
 block main
   input.display-none#book-json(value=JSON.stringify(book))
+  if (chapter)
+    input.display-none#chapter-json(value=JSON.stringify(chapter))
   .general-header-wrapper
     .general-header-text-wrapper
-      .general-header-title #{__('Chapters')} - #{book.name}
-      .general-header-subtitle= __('Add chapters & writings to this book.')
-    input.general-header-search-input#chapter-search-input(type='text' placeholder='Search by title' value=chapters_search)
+      .general-header-title #{__('Chapters')} - #{chapter ? chapter.title : book.name}
+      .general-header-subtitle= __('Add children & writings to this book.')
+    input.general-header-search-input#children-search-input(type='text' placeholder='Search by title' value=children_search)
     .general-header-create-button#create-writing-button= __('Add Writing')
     .general-header-create-button#create-chapter-button= __('Add Chapter')
   .all-content-inner-wrapper
+    .general-breadcrump-wrapper
+      each crump, i in breadcrumps
+        if i > 0
+          .general-each-breadcrump-arrow >
+        a.general-each-breadcrump(href=crump.link)= crump.name
     .general-page-wrapper
-      if writings_search
-        span.general-page-search-text #{__('Showing results of the search:')} "#{chapters_search}"
+      if children_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{children_search}"
       .general-page-inner-wrapper
         .general-page-buttons-wrapper
-          if chapters_page > 0
-            a.general-page-prev-button(href=`/chapter?page=${chapters_page-1}${chapters_search ? '&search=' + chapters_search : ''}`) < #{__('Previous')}
+          if children_page > 0
+            a.general-page-prev-button(href=`/children?page=${children_page-1}${children_search ? '&search=' + children_search : ''}`) < #{__('Previous')}
           else
             span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
-          - for (let i = 0; i < parseInt(chapters_count / chapters_limit) + (chapters_count % chapters_limit ? 1 : 0); i += 1)
-            if i != chapters_page
-              a.general-each-page-button(href=`/chapter?page=${i}${chapters_search ? '&search=' + chapters_search : ''}`)= i+1
+          - for (let i = 0; i < parseInt(children_count / children_limit) + (children_count % children_limit ? 1 : 0); i += 1)
+            if i != children_page
+              a.general-each-page-button(href=`/children?page=${i}${children_search ? '&search=' + children_search : ''}`)= i+1
             else
               span.general-each-page-button.general-each-page-button-selected= i+1
-          if (chapters_page + 1) * chapters_limit < chapters_count
-            a.general-page-next-button(href=`/chapter?page=${chapters_page+1}${chapters_search ? '&search=' + chapters_search : ''}`) #{__('Next')} >
+          if (children_page + 1) * children_limit < children_count
+            a.general-page-next-button(href=`/children?page=${children_page+1}${children_search ? '&search=' + children_search : ''}`) #{__('Next')} >
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
-        span.general-page-info #{__('Showing')} #{chapters_limit} #{__('results per page.')}
+        span.general-page-info #{__('Showing')} #{children_limit} #{__('results per page.')}
     .general-items-wrapper
-      each chapter in chapters
-        .general-each-item-wrapper(id=chapter._id)
+      each child in children
+        .general-each-item-wrapper(id=child._id)
           .general-each-item-title-wrapper
-            span.general-each-item-title= chapter.title
-            span.general-each-item-subtitle(style=(chapter.is_completed ? '' : 'color: var(--warning-color)')) #{chapter.is_completed ? '' : `(${__('not completed')})`}
+            span.general-each-item-title= child.title
           .general-each-item-buttons-wrapper
-            .general-each-item-third-button.order-each-chapter-button= __('Move Up')
-            .general-each-item-second-button.delete-each-chapter-button= __('Delete')
-            if chapter.children && chapter.children.length
-              .general-each-item-fourth-button.show-each-chapter-chilren-button= __('Show Children')
-            a.general-each-item-first-button.create-writing-button(style='margin-right: 10px')= __('Add Writing')
-            a.general-each-item-first-button.create-chapter-button= __('Add Chapter')
+            .general-each-item-third-button.order-each-children-button= __('Move Up')
+            .general-each-item-second-button.delete-each-children-button= __('Delete')
+            if child.type == 'chapter'
+              if chapter
+                a.general-each-item-fourth-button.show-each-children-chilren-button(href=`${breadcrumps[breadcrumps.length - 1].link},${child._id}`)= __('Chapters')
+              else
+                a.general-each-item-fourth-button.show-each-children-chilren-button(href=`/book/chapter?book_id=${book._id}&chapter_id=${child._id}`)= __('Chapters')
+            .general-each-item-first-button.edit-child-button= __('Edit & Translate')
+            

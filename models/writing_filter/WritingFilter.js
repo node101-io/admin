@@ -37,13 +37,6 @@ const WritingFilterSchema = new Schema({
     type: mongoose.Types.ObjectId,
     required: true
   },
-  parent_title: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 1,
-    maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
-  },
   writer_id: {
     type: mongoose.Types.ObjectId,
     default: null
@@ -89,7 +82,6 @@ WritingFilterSchema.statics.createWritingFilter = function (data, callback) {
     title: data.title,
     type: data.type,
     parent_id: data.parent_id,
-    parent_title: data.parent_title,
     writer_id: data.writer_id,
     created_at: data.created_at,
     subtitle: data.subtitle,
@@ -151,7 +143,6 @@ WritingFilterSchema.statics.findWritingFilterByIdAndUpdate = function (id, data,
       title: data.title && typeof data.title == 'string' && data.title.trim().length ? data.title.trim() : writing_filter.title,
       type: data.type && typeof data.type == 'string' && data.type.trim().length ? data.type.trim() : writing_filter.type,
       parent_id: data.parent_id ? data.parent_id : writing_filter.parent_id,
-      parent_title: data.parent_title && typeof data.parent_title == 'string' && data.parent_title.trim().length ? data.parent_title.trim() : writing_filter.parent_title,
       writer_id: data.writer_id ? data.writer_id : writing_filter.writer_id,
       created_at: data.created_at ? data.created_at : writing_filter.created_at,
       subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length ? data.subtitle.trim() : writing_filter.subtitle,
@@ -177,6 +168,21 @@ WritingFilterSchema.statics.findWritingFilterByIdAndDelete = function (id, callb
 
       return callback(null);
     });
+  });
+};
+
+WritingFilterSchema.statics.findWritingFilterByWritingIdAndDeleteAll = function (writing_id, callback) {
+  const WritingFilter = this;
+
+  if (!writing_id || !validator.isMongoId(writing_id.toString()))
+    return callback('bad_request');
+  
+  WritingFilter.deleteMany({
+    writing_id: mongoose.Types.ObjectId(writing_id.toString())
+  }, err => {
+    if (err) return callback('database_error');
+
+    return callback(null);
   });
 };
 
