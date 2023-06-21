@@ -22,6 +22,9 @@ module.exports = (req, res) => {
       github_data = null;
     }
 
+    if (!github_data?.platforms['darwin-aarch64'])
+      github_data.platforms['darwin-aarch64'] = local_data.platforms['darwin-aarch64'];
+
     return res.render('wizard/edit', {
       page: 'wizard/edit',
       title: res.__('Edit Klein Data'),
