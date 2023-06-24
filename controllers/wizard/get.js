@@ -7,24 +7,22 @@ module.exports = (req, res) => {
     if (err) return res.status(500).json({ error: err, success: false });
 
     const local_data = JSON.parse(file);
-    let github_data = null;
-    let latest_version = null;
 
-    try {
-      const response = await fetch('https://api.github.com/repos/node101-io/node-wizard/tags');
-      const tags = await response.json();
-      latest_version = tags[0].name;
+    const latest_version = await fetch('https://api.github.com/repos/node101-io/klein/tags')
+      .then(res => res.json())
+      .then(json => json[0].name.replace('v', ''))
+      .catch(console.log);
 
-      const latestJsonResponse = await fetch(`https://github.com/node101-io/node-wizard/releases/download/${latest_version}/latest.json`);
-      github_data = await latestJsonResponse.json();
-    } catch (err) {
-      console.error(err);
-      github_data = null;
-    }
+    const github_data = await fetch(`https://github.com/node101-io/klein/releases/download/v${latest_version}/latest.json`)
+      .then(res => res.json())
+      .catch(console.log);
+
+    if (github_data)
+      github_data.platforms['darwin-aarch64'] = github_data.platforms['darwin-x86_64'];
 
     return res.render('wizard/edit', {
       page: 'wizard/edit',
-      title: res.__('Edit Wizard App Data'),
+      title: res.__('Edit Klein Data'),
       includes: {
         external: {
           css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
@@ -33,8 +31,8 @@ module.exports = (req, res) => {
       },
       data: github_data || local_data,
       status: {
-        is_synced: !!github_data,
-        is_new: !!github_data && local_data.version !== latest_version
+        is_synced: github_data,
+        is_new: github_data && local_data.version !== latest_version
       }
     });
   });

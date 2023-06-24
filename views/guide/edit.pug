@@ -45,8 +45,8 @@ block main
               input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Project Wizard Key')
-          input.general-input#wizard-key(type='text' placeholder=__('Enter the wizard key for the usage in wizard application.') value=guide.wizard_key)
+          span.general-create-subtitle.general-create-required= __('Project Klein Key')
+          input.general-input#wizard-key(type='text' placeholder=__('Enter the Klein key for the usage in application.') value=guide.wizard_key)
         each requirement in Object.keys(systemRequirements)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{systemRequirements[requirement]} #{__('Requirement')} 

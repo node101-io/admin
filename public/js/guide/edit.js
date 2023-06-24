@@ -76,7 +76,7 @@ window.addEventListener('load', () => {
         cpu,
         ram,
         os,
-        network,
+        network, // useless for now
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
         system_requirements: systemRequirements,
