@@ -364,6 +364,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormat = function (id, parent
   });
 };
 
+
 WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (id, parent_id, language, callback) {
   const Writing = this;
 
@@ -734,7 +735,9 @@ WritingSchema.statics.findWritingsByParentIdAndUpdateParentInfo = function (pare
     return callback('bad_request');
 
   Writing
-    .find({ parent_id })
+    .find({
+      parent_id: mongoose.Types.ObjectId(parent_id.toString())
+    })
     .countDocuments()
     .then(count =>
       async.timesSeries(
@@ -928,6 +931,46 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
     });
   });
 };
+
+WritingSchema.statics.findWritingsByParentIdAndDelete = function (parent_id, callback) {
+  const Writing = this;
+
+  if (!parent_id || !validator.isMongoId(parent_id.toString()))
+    return callback('bad_request');
+
+  Writing
+    .find({
+      parent_id: mongoose.Types.ObjectId(parent_id.toString())
+    })
+    .countDocuments()
+    .then(count =>
+      async.timesSeries(
+        parseInt(count / MAX_DOCUMENT_COUNT_PER_QUERY + (count % MAX_DOCUMENT_COUNT_PER_QUERY ? 1 : 0)),
+        (time, next) => 
+          Writing
+            .find({ parent_id })
+            .skip(time * MAX_DOCUMENT_COUNT_PER_QUERY)
+            .limit(MAX_DOCUMENT_COUNT_PER_QUERY)
+            .then(writings => 
+              async.timesSeries(
+                writings.length,
+                (time, next) =>
+                  Writing.findWritingByIdAndParentIdAndDelete(
+                    writings[time]._id,
+                    parent_id,
+                    err => next(err)
+                  )
+                ,
+                err => next(err)
+              )
+            )
+            .catch(_ => next('database_error'))
+        ,
+        err => callback(err)
+      )
+    )
+    .catch(_ => callback('database_error'));
+}
 
 WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, parent_id, callback) {
   const Writing = this;

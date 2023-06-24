@@ -49,7 +49,7 @@ block main
               each label in Object.keys(labels)
                 .general-select-each-input-choice(id='select-input-' + label)= labels[label]
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Flag')
+          span.general-create-subtitle= __('Flag')
           input.general-input#flag(type='text' placeholder=__('Add a custom flag to writing') value=writing.flag)
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Is Visible')
@@ -80,7 +80,7 @@ block main
           span.general-create-subtitle.general-create-required= __('Writing Turkish Subtitle')
           input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the writing subtitle.') value=writing.translations.tr.subtitle)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Turkish Flag')
+          span.general-create-subtitle= __('Turkish Flag')
           input.general-input#turkish-flag(type='text' placeholder=__('Translate the custom flag to turkish') value=writing.translations.tr.flag)
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Is Turkish Visible')
@@ -118,7 +118,7 @@ block main
           span.general-create-subtitle.general-create-required= __('Writing Russian Subtitle')
           input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the writing subtitle.') value=writing.translations.ru.subtitle)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Russian Flag')
+          span.general-create-subtitle= __('Russian Flag')
           input.general-input#russian-flag(type='text' placeholder=__('Translate the custom flag to russian') value=writing.translations.ru.flag)
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Is Russian Visible')

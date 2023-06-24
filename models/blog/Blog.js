@@ -9,7 +9,6 @@ const Image = require('../image/Image');
 const Project = require('../project/Project');
 const Writer = require('../writer/Writer');
 const Writing = require('../writing/Writing')
-const WritingFilter = require('../writing_filter/WritingFilter');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts')
@@ -480,7 +479,11 @@ BlogSchema.statics.findBlogByIdAndDelete = function (id, callback) {
           err => {
             if (err) return callback('database_error');
 
-            return callback(null);
+            Writing.findWritingsByParentIdAndDelete(blog._id, err => {
+              if (err) return callback(err);
+
+              return callback(null);
+            });
           }
         );
       });

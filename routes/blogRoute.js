@@ -57,6 +57,7 @@ router.get(
     createNavbarData,
     editGetController
 );
+
 router.get(
   '/writing',
     isAdmin,
@@ -136,6 +137,7 @@ router.post(
     createNavbarData,
     translatePostController
 );
+
 router.post(
   '/writing/cover',
     upload.single('file'),
