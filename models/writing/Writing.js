@@ -364,7 +364,6 @@ WritingSchema.statics.findWritingByIdAndParentIdAndFormat = function (id, parent
   });
 };
 
-
 WritingSchema.statics.findWritingByIdAndParentIdAndFormatByLanguage = function (id, parent_id, language, callback) {
   const Writing = this;
 
@@ -907,7 +906,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
         identifier_languages: {},
         is_deleted: true,
         order: null
-    }}, err => {
+    }}, { new: true }, (err, writing) => {
       if (err) return callback('database_error');
 
       Writing.find({
@@ -924,7 +923,11 @@ WritingSchema.statics.findWritingByIdAndParentIdAndDelete = function (id, parent
           err => {
             if (err) return callback('database_error');
 
-            return callback(null);
+            checkAndUpdateWritingFilter(writing, err => {
+              if (err) return callback(err);
+      
+              return callback(null);
+            });
           }
         );
       });
@@ -970,7 +973,7 @@ WritingSchema.statics.findWritingsByParentIdAndDelete = function (parent_id, cal
       )
     )
     .catch(_ => callback('database_error'));
-}
+};
 
 WritingSchema.statics.findWritingByIdAndParentIdAndRestore = function (id, parent_id, callback) {
   const Writing = this;
