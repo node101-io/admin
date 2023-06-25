@@ -7,6 +7,7 @@ const isAdmin = require('../middleware/isAdmin');
 
 const errorGetController = require('../controllers/index/error/get');
 const indexGetController = require('../controllers/index/index/get');
+const sitemapGetController = require('../controllers/index/sitemap/get');
 
 router.get(
   '/',
@@ -17,6 +18,10 @@ router.get(
 router.get(
   '/error',
     errorGetController
+);
+router.get(
+  '/sitemap',
+    sitemapGetController
 );
 
 module.exports = router;
