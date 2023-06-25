@@ -6,6 +6,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const updateSitemap = require('../../utils/updateSitemap');
+
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
@@ -28,6 +30,13 @@ const WritingFilterSchema = new Schema({
     trim: true,
     minlength: 1,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
+  },
+  parent_title: {
+    type: String,
+    default: null,
+    trim: true,
+    minlength: 1,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   type: {
     type: String,
@@ -82,6 +91,7 @@ WritingFilterSchema.statics.createWritingFilter = function (data, callback) {
     title: data.title,
     type: data.type,
     parent_id: data.parent_id,
+    parent_title: data.parent_title,
     writer_id: data.writer_id,
     created_at: data.created_at,
     subtitle: data.subtitle,
@@ -98,8 +108,12 @@ WritingFilterSchema.statics.createWritingFilter = function (data, callback) {
     if (err)
       return callback('database_error');
 
-    return callback(null, writing_filter._id);
-  })
+    updateSitemap(writing_filter, 'create', err => {
+      if (err) return callback(err);
+
+      return callback(null, writing_filter._id);
+    });
+  });
 };
 
 WritingFilterSchema.statics.findWritingFilterById = function (id, callback) {
@@ -143,16 +157,21 @@ WritingFilterSchema.statics.findWritingFilterByIdAndUpdate = function (id, data,
       title: data.title && typeof data.title == 'string' && data.title.trim().length ? data.title.trim() : writing_filter.title,
       type: data.type && typeof data.type == 'string' && data.type.trim().length ? data.type.trim() : writing_filter.type,
       parent_id: data.parent_id ? data.parent_id : writing_filter.parent_id,
+      parent_title: data.parent_title && typeof data.parent_title == 'string' && data.parent_title.trim().length ? data.parent_title.trim() : writing_filter.parent_title,
       writer_id: data.writer_id ? data.writer_id : writing_filter.writer_id,
       created_at: data.created_at ? data.created_at : writing_filter.created_at,
       subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length ? data.subtitle.trim() : writing_filter.subtitle,
       label: data.label && typeof data.label == 'string' && data.label.trim().length ? data.label.trim() : writing_filter.label,
       flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length ? data.flag.trim() : writing_filter.flag,
       order: data.order ? data.order : writing_filter.order
-    }}, err => {
+    }}, { new: true }, (err, writing_filter) => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      updateSitemap(writing_filter, 'update', err => {
+        if (err) return callback(err);
+
+        return callback(null);
+      });
     });
   });
 };
@@ -166,7 +185,11 @@ WritingFilterSchema.statics.findWritingFilterByIdAndDelete = function (id, callb
     WritingFilter.findByIdAndDelete(writing_filter._id, err => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      updateSitemap(writing_filter, 'delete', err => {
+        if (err) return callback(err);
+
+        return callback(null);
+      });
     });
   });
 };
@@ -182,7 +205,13 @@ WritingFilterSchema.statics.findWritingFilterByWritingIdAndDeleteAll = function 
   }, err => {
     if (err) return callback('database_error');
 
-    return callback(null);
+    updateSitemap({
+      _id: writing_id
+    }, 'delete_many', err => {
+      if (err) return callback(err);
+
+      return callback(null);
+    });
   });
 };
 

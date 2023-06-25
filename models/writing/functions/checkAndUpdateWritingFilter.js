@@ -19,6 +19,7 @@ function generateWritingFilterData(writing, language) {
       title: Array.from(title).join(' '),
       type: writing.type,
       parent_id: writing.parent_id,
+      parent_title: writing.parent_title,
       writer_id: writing.writer_id,
       created_at: writing.created_at,
       subtitle: Array.from(subtitle).join(' '),
@@ -36,6 +37,7 @@ function generateWritingFilterData(writing, language) {
       title: Array.from(title).join(' '),
       type: writing.type,
       parent_id: writing.parent_id,
+      parent_title: writing.translations[language].parent_title,
       writer_id: writing.writer_id,
       created_at: writing.created_at,
       subtitle: Array.from(subtitle).join(' '),
@@ -47,6 +49,9 @@ function generateWritingFilterData(writing, language) {
 };
 
 module.exports = (writing, callback) => {
+  if (writing.type != 'blog')
+    return callback(null);
+
   async.timesSeries(
     LANGUAGE_VALUES.length,
     (time, next) => {
