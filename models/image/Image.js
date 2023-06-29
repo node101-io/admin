@@ -5,7 +5,6 @@ const toURLString = require('../../utils/toURLString');
 
 const copyImage = require('./functions/copyImage');
 const deleteImage = require('./functions/deleteImage');
-const renameImage = require('./functions/renameImage');
 const uploadImage = require('./functions/uploadImage');
 
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;

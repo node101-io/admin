@@ -1,4 +1,4 @@
-const STATIC_LINK_URL = 'https://library.node101.io/link?id='
+const STATIC_LINK_URL = 'https://library.node101.io/stable/'
 
 window.addEventListener('load', () => {
   const blog = JSON.parse(document.getElementById('blog-json').value);
@@ -63,21 +63,12 @@ window.addEventListener('load', () => {
     }
 
     if (event.target.classList.contains('order-each-writing-button')) {
-      createConfirm({
-        title: 'Are you sure you want to increase the order of this writing?',
-        text: 'Writings are sorted by their under in the blog. You may change the order of a writing whenever you like.',
-        reject: 'Cancel',
-        accept: 'Move Up'
+      serverRequest('/blog/writing/order?id=' + blog._id, 'POST', {
+        id: event.target.parentNode.parentNode.id
       }, res => {
-        if (res) {
-          serverRequest('/blog/writing/order?id=' + blog._id, 'POST', {
-            id: event.target.parentNode.parentNode.id
-          }, res => {
-            if (!res.success) return throwError(res.error);
+        if (!res.success) return throwError(res.error);
 
-            return location.reload();
-          });
-        };
+        return location.reload();
       });
     };
 

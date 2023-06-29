@@ -11,41 +11,21 @@ module.exports = (blog, language, callback) => {
       social_media_accounts: blog.social_media_accounts
     };
 
-  if (blog.type == 'project') {
-    Project.findProjectByIdAndFormatByLanguage(blog.project_id, language, (err, project) => {
-      if (err) return callback(err);
-
-      Writer.findWriterByIdAndFormatByLanguage(blog.writer_id, language, (err, writer) => {
-        if (err) return callback(err);
-
-        return callback(null, {
-          _id: blog._id.toString(),
-          title: translation.title,
-          type: blog.type,
-          project,
-          writer,
-          subtitle: translation.subtitle,
-          image: blog.image,
-          social_media_accounts: translation.social_media_accounts,
-          is_completed: blog.is_completed
-        });
-      });
-    });
-  } else {
-    Writer.findWriterByIdAndFormatByLanguage(blog.writer_id, language, (err, writer) => {
-      if (err) return callback(err);
-
+  Project.findProjectByIdAndFormatByLanguage(blog.project_id, language, (project_err, project) => {
+    Writer.findWriterByIdAndFormatByLanguage(blog.writer_id, language, (writer_err, writer) => {
       return callback(null, {
         _id: blog._id.toString(),
         title: translation.title,
         type: blog.type,
-        project,
-        writer,
+        project: project_err ? null : project,
+        writer: writer_err ? null : writer,
         subtitle: translation.subtitle,
         image: blog.image,
+        is_completed: blog.is_completed,
         social_media_accounts: translation.social_media_accounts,
-        is_completed: blog.is_completed
+        writing_count: blog.writing_count,
+        translations: blog.translations
       });
     });
-  };
+  });
 };
