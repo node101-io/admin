@@ -3,11 +3,12 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
+const toMongoId = require('../../utils/toMongoId');
 
 const Image = require('../image/Image');
 
 const generateRandomHex = require('./functions/generateRandomHex');
-const getAdmin = require('./functions/getAdmin');
+const formatAdmin = require('./functions/formatAdmin');
 const hashPassword = require('./functions/hashPassword');
 const verifyPassword = require('./functions/verifyPassword');
 
@@ -22,8 +23,7 @@ const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const RANDOM_PASSWORD_LENGTH = 16;
-
-const role_values = [
+const ROLE_VALUES = [
   'blog_view', 'blog_create', 'blog_edit', 'blog_order', 'blog_delete',
   'book_view', 'book_create', 'book_edit', 'book_order', 'book_delete',
   'guide_view', 'guide_create', 'guide_edit', 'guide_order', 'guide_delete',
@@ -48,6 +48,7 @@ const AdminSchema = new Schema({
   },
   password: {
     type: String,
+    trim: true,
     required: true,
     minlength: MIN_PASSWORD_LENGTH,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
@@ -79,7 +80,13 @@ AdminSchema.pre('save', hashPassword);
 AdminSchema.statics.findAdminByEmailAndVerifyPassword = function (data, callback) {
   const Admin = this;
 
-  if (!data || !data.email || !validator.isEmail(data.email) || !data.password)
+  if (!data || typeof data != 'object')
+    return callback('bad_request');
+
+  if (!data.email || typeof data.email != 'string')
+    return callback('bad_request');
+
+  if (!data.password || typeof data.password != 'string')
     return callback('bad_request');
 
   Admin.findOne({
@@ -91,32 +98,23 @@ AdminSchema.statics.findAdminByEmailAndVerifyPassword = function (data, callback
     verifyPassword(data.password.trim(), admin.password, res => {
       if (!res) return callback('password_verification');
 
-      return callback(null, admin);
+      formatAdmin(admin, (err, admin) => {
+        if (err) return callback(err);
+
+        return callback(null, admin);
+      });
     });
-  });
-};
-
-AdminSchema.statics.findAdminById = function (id, callback) {
-  const Admin = this;
-
-  if (!id || !validator.isMongoId(id.toString()))
-    return callback('bad_request');
-
-  Admin.findById(mongoose.Types.ObjectId(id.toString()), (err, admin) => {
-    if (err) return callback('database_error');
-    if (!admin) return callback('document_not_found');
-
-    return callback(null, admin);
   });
 };
 
 AdminSchema.statics.findAdminByIdAndFormat = function (id, callback) {
   const Admin = this;
 
-  Admin.findAdminById(id, (err, admin) => {
-    if (err) return callback(err);
+  Admin.findById(toMongoId(id), (err, admin) => {
+    if (err) return callback('database_error');
+    if (!admin) return callback('document_not_found');
 
-    getAdmin(admin, (err, admin) => {
+    formatAdmin(admin, (err, admin) => {
       if (err) return callback(err);
 
       return callback(null, admin);
@@ -130,15 +128,13 @@ AdminSchema.statics.createAdmin = function (data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  if (!data.email || !validator.isEmail(data.email.toString()))
-    return callback('email_validation');
+  if (!data.email || typeof data.email != 'string' || !data.email.trim().length || data.email.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH || !validator.isEmail(data.email.trim()))
+    return callback('bad_request');
 
-  const newAdminData = {
-    email: data.email.toString().trim(),
+  const newAdmin = new Admin({
+    email: data.email.trim(),
     password: generateRandomHex(RANDOM_PASSWORD_LENGTH)
-  };
-
-  const newAdmin = new Admin(newAdminData);
+  });
 
   newAdmin.save((err, admin) => {
     if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
@@ -146,29 +142,25 @@ AdminSchema.statics.createAdmin = function (data, callback) {
     if (err)
       return callback('database_error');
 
-    Admin.collection
-      .createIndex(
-        { email: 'text', name: 'text' },
-        { weights: {
-          email: 2,
-          name: 1
-        } }
-      )
-      .then(() => callback(null, admin._id.toString()))
-      .catch(_ => callback('index_error'));
+    formatAdmin(admin, (err, admin) => {
+      if (err) return callback(err);
+
+      return callback(null, admin);
+    });
   });
 };
 
 AdminSchema.statics.findAdminByIdAndDelete = function (id, callback) {
   const Admin = this;
 
-  Admin.findAdminById(id, (err, admin) => {
-    if (err) return callback(err);
+  Admin.findByIdAndDelete(toMongoId(id), (err, admin) => {
+    if (err) return callback('database_error');
+    if (!admin) return callback('document_not_found');
 
-    Admin.findByIdAndDelete(admin._id, err => {
-      if (err) return callback('database_error');
+    formatAdmin(admin, (err, admin) => {
+      if (err) return callback(err);
 
-      return callback(null);
+      return callback(null, admin);
     });
   });
 };
@@ -179,34 +171,25 @@ AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
-    return callback('bad_request');
+  const update = {};
 
-  let roles = [];
+  if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    update.name = data.name.trim();
 
   if (data.roles && Array.isArray(data.roles))
-    roles = data.roles.filter(each => role_values.includes(each));
+    update.roles = data.roles.filter(each => ROLE_VALUES.includes(each));
 
-  Admin.findAdminById(id, (err, admin) => {
-    if (err) return callback(err);
+  if (!update || !Object.keys(update).length)
+    return callback('bad_request');
 
-    Admin.findByIdAndUpdate(admin._id, {$set: {
-      name: data.name,
-      roles,
-      is_completed: true
-    }}, err => {
-      if (err) return callback('database_error');
+  Admin.findByIdAndUpdate(toMongoId(id), { $set: update }, { new: true }, (err, admin) => {
+    if (err) return callback('database_error');
+    if (!admin) return callback('document_not_found');
 
-      Admin.collection
-        .createIndex(
-          { email: 'text', name: 'text' },
-          { weights: {
-            email: 2,
-            name: 1
-          } }
-        )
-        .then(() => callback(null))
-        .catch(err => callback('index_error'));
+    formatAdmin(admin, (err, admin) => {
+      if (err) return callback(err);
+
+      return callback(null, admin);
     });
   });
 };
@@ -220,15 +203,20 @@ AdminSchema.statics.findAdminByIdAndResetPassword = function (id, data, callback
   if (!data.password || typeof data.password != 'string' || data.password.trim().length < MIN_PASSWORD_LENGTH || data.password.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  Admin.findAdminById(id, (err, admin) => {
-    if (err) return callback(err);
+  Admin.findById(toMongoId(id), (err, admin) => {
+    if (err) return callback('database_error');
+    if (!admin) return callback('document_not_found');
 
     admin.password = data.password;
 
-    admin.save(err => {
+    admin.save((err, admin) => {
       if (err) return callback('database_error');
 
-      return callback(null);
+      formatAdmin(admin, (err, admin) => {
+        if (err) return callback(err);
+  
+        return callback(null, admin);
+      });
     });
   });
 };
@@ -236,36 +224,41 @@ AdminSchema.statics.findAdminByIdAndResetPassword = function (id, data, callback
 AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) {
   const Admin = this;
 
-  Admin.findAdminById(id, (err, admin) => {
-    if (err) return callback(err);
+  Admin.findById(toMongoId(id), (err, old_admin) => {
+    if (err) return callback('database_error');
+    if (!old_admin) return callback('document_not_found');
 
-    if (!admin.name || !admin.name.length)
-      return callback('bad_request');
+    if (!old_admin.is_completed)
+      return callback('not_authenticated_request');
 
     Image.createImage({
       file_name: file.filename,
-      original_name: IMAGE_NAME_PREFIX + admin.name,
+      original_name: IMAGE_NAME_PREFIX + old_admin.name,
       width: IMAGE_WIDTH,
       height: IMAGE_HEIGHT,
       is_used: true
     }, (err, url) => {
       if (err) return callback(err);
     
-      Admin.findByIdAndUpdate(admin._id, { $set: {
+      Admin.findByIdAndUpdate(old_admin._id, { $set: {
         image: url
-      }}, { new: false }, (err, admin) => {
+      }}, { new: true }, (err, admin) => {
         if (err) return callback(err);
 
         deleteFile(file, err => {
           if (err) return callback(err);
 
-          if (!admin.image || admin.image == DEFAULT_IMAGE_ROUTE || admin.image == url)
-            return callback(null, url);
+          if (!old_admin.image || old_admin.image == DEFAULT_IMAGE_ROUTE || old_admin.image == url)
+            return callback(null, admin);
 
-          Image.findImageByUrlAndDelete(admin.image, err => {
+          Image.findImageByUrlAndDelete(old_admin.image, err => {
             if (err) return callback(err);
 
-            return callback(null, url);
+            formatAdmin(admin, (err, admin) => {
+              if (err) return callback(err);
+        
+              return callback(null, admin);
+            });
           });
         });
       });
@@ -282,53 +275,38 @@ AdminSchema.statics.findAdminsByFilters = function (data, callback) {
   const limit = data.limit && !isNaN(parseInt(data.limit)) && parseInt(data.limit) > 0 && parseInt(data.limit) < MAX_DOCUMENT_COUNT_PER_QUERY ? parseInt(data.limit) : DEFAULT_DOCUMENT_COUNT_PER_QUERY;
   const page = data.page && !isNaN(parseInt(data.page)) && parseInt(data.page) > 0 ? parseInt(data.page) : 0;
   const skip = page * limit;
+  let search = null;
 
-  if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
-    Admin
-      .find({})
-      .sort({ email: 1 })
-      .limit(limit)
-      .skip(skip)
-      .then(admins => async.timesSeries(
-        admins.length,
-        (time, next) => Admin.findAdminByIdAndFormat(admins[time]._id, (err, admin) => next(err, admin)),
-        (err, admins) => {
-          if (err) return callback(err);
+  const filters = {};
 
-          return callback(null, {
-            search: null,
-            limit,
-            page,
-            admins
-          });
-        })
-      )
-      .catch(_ => callback('database_error'));
-  } else {
-    Admin
-      .find({ $text: { $search: data.search.trim() } })
-      .sort({
-        score: { $meta: 'textScore' }, 
-        email: 1
-      })
-      .limit(limit)
-      .skip(skip)
-      .then(admins => async.timesSeries(
-        admins.length,
-        (time, next) => Admin.findAdminByIdAndFormat(admins[time]._id, (err, admin) => next(err, admin)),
-        (err, admins) => {
-          if (err) return callback(err);
-
-          return callback(null, {
-            search: data.search.trim(),
-            limit,
-            page,
-            admins
-          });
-        })
-      )
-      .catch(_ => callback('database_error'));
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH) {
+    search = data.search.trim();
+    filters.$or = [
+      { name: { $regex: data.search.trim(), $options: 'i' } },
+      { email: { $regex: data.search.trim(), $options: 'i' } }
+    ];
   }
+
+  Admin
+    .find(filters)
+    .sort({ email: 1 })
+    .limit(limit)
+    .skip(skip)
+    .then(admins => async.timesSeries(
+      admins.length,
+      (time, next) => formatAdmin(admins[time], (err, admin) => next(err, admin)),
+      (err, admins) => {
+        if (err) return callback(err);
+
+        return callback(null, {
+          search,
+          limit,
+          page,
+          admins
+        });
+      })
+    )
+    .catch(_ => callback('database_error'));
 };
 
 AdminSchema.statics.findAdminCountByFilters = function (data, callback) {
@@ -339,8 +317,11 @@ AdminSchema.statics.findAdminCountByFilters = function (data, callback) {
 
   const filters = {};
 
-  if (data.search && typeof data.search == 'string' && data.search.trim().length)
-    filters.$text = { $search: data.search.trim() };
+  if (data.search && typeof data.search == 'string' && data.search.trim().length && data.search.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.$or = [
+      { name: { $regex: data.search.trim(), $options: 'i' } },
+      { email: { $regex: data.search.trim(), $options: 'i' } }
+    ];
 
   Admin
     .find(filters)

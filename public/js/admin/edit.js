@@ -88,11 +88,13 @@ window.addEventListener('load', () => {
         if (!res.success)
           return throwError(res.error);
 
+        createImage(res.admin.image, event.target.parentNode);
+
         return createConfirm({
           title: 'Image Updated',
-          text: 'Admin profile image is updated. Close to reload the page.',
+          text: 'Admin profile image is updated.',
           accept: 'Close'
-        }, _ => window.location.reload());
+        }, _ => {});
       });
     }
   })

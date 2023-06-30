@@ -13,7 +13,11 @@ window.addEventListener('load', () => {
           }, res => {
             if (!res.success) return throwError(res.error);
 
-            return location.reload();
+            createConfirm({
+              title: 'Admin is Deleted',
+              text: 'Close to reload the page.',
+              accept: 'Close'
+            }, _ => location.reload());
           });
         };
       });
