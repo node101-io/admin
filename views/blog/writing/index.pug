@@ -15,16 +15,16 @@ block main
       .general-page-inner-wrapper
         .general-page-buttons-wrapper
           if writings_page > 0
-            a.general-page-prev-button(href=`/writing?page=${writings_page-1}${writings_search ? '&search=' + writings_search : ''}`) < #{__('Previous')}
+            a.general-page-prev-button(href=`/blog/writing?id=${blog._id}&page=${writings_page-1}${writings_search ? '&search=' + writings_search : ''}`) < #{__('Previous')}
           else
             span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
           - for (let i = 0; i < parseInt(writings_count / writings_limit) + (writings_count % writings_limit ? 1 : 0); i += 1)
             if i != writings_page
-              a.general-each-page-button(href=`/writing?page=${i}${writings_search ? '&search=' + writings_search : ''}`)= i+1
+              a.general-each-page-button(href=`/blog/writing?id=${blog._id}&page=${i}${writings_search ? '&search=' + writings_search : ''}`)= i+1
             else
               span.general-each-page-button.general-each-page-button-selected= i+1
           if (writings_page + 1) * writings_limit < writings_count
-            a.general-page-next-button(href=`/writing?page=${writings_page+1}${writings_search ? '&search=' + writings_search : ''}`) #{__('Next')} >
+            a.general-page-next-button(href=`/blog/writing?id=${blog._id}&page=${writings_page+1}${writings_search ? '&search=' + writings_search : ''}`) #{__('Next')} >
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
         span.general-page-info #{__('Showing')} #{writings_limit} #{__('results per page.')}
