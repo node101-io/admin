@@ -2,7 +2,7 @@ module.exports = str => {
   if (typeof str != 'string') return '';
 
   return str
-    .toString()
+    .trim()
     .toLocaleLowerCase()
     .split('.').join(' ')
     .split(',').join(' ')

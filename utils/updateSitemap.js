@@ -28,7 +28,7 @@ function getToday() {
   return `${(new Date).getFullYear()}-${formatNumberTo2Digits((new Date).getMonth(), true)}-${formatNumberTo2Digits((new Date).getDate())}`;
 };
 
-async function updateLibrarySitemap(callback) {
+function updateLibrarySitemap(callback) {
   fetch('https://library.node101.io/sitemap')
     .then(res => res.json())
     .then(res => {

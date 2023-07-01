@@ -248,7 +248,7 @@ AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) 
         deleteFile(file, err => {
           if (err) return callback(err);
 
-          if (!old_admin.image || old_admin.image == DEFAULT_IMAGE_ROUTE || old_admin.image == url)
+          if (!old_admin.image || old_admin.image == DEFAULT_IMAGE_ROUTE || old_admin.image.split('/').pop() == url.split('/').pop())
             return callback(null, admin);
 
           Image.findImageByUrlAndDelete(old_admin.image, err => {

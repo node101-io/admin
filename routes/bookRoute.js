@@ -14,6 +14,9 @@ const indexGetController = require('../controllers/book/index/get');
 
 const chapterIndexGetController = require('../controllers/book/chapter/index/get');
 
+const writingContentGetController = require('../controllers/book/writing/content/get');
+const writingEditGetController = require('../controllers/book/writing/edit/get');
+
 const createPostController = require('../controllers/book/create/post');
 const deletePostController = require('../controllers/book/delete/post');
 const editPostController = require('../controllers/book/edit/post');
@@ -23,6 +26,15 @@ const restorePostController = require('../controllers/book/restore/post');
 const translatePostController = require('../controllers/book/translate/post');
 
 const chapterCreatePostController = require('../controllers/book/chapter/create/post');
+
+const writingCoverPostController = require('../controllers/book/writing/cover/post');
+const writingCoverTranslatePostController = require('../controllers/book/writing/cover-translate/post');
+const writingCreatePostController = require('../controllers/book/writing/create/post');
+const writingEditPostController = require('../controllers/book/writing/edit/post');
+const writingLogoPostController = require('../controllers/book/writing/logo/post');
+const writingLogoTranslatePostController = require('../controllers/book/writing/logo-translate/post');
+const writingRestorePostController = require('../controllers/book/writing/restore/post');
+const writingTranslatePostController = require('../controllers/book/writing/translate/post');
 
 router.get(
   '/',
@@ -52,6 +64,21 @@ router.get(
     checkAdminPermission,
     createNavbarData,
     chapterIndexGetController
+);
+
+router.get(
+  '/writing/content',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingContentGetController
+);
+router.get(
+  '/writing/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingEditGetController
 );
 
 router.post(
@@ -111,6 +138,67 @@ router.post(
     checkAdminPermission,
     createNavbarData,
     chapterCreatePostController
+);
+
+router.post(
+  '/writing/cover',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCoverPostController
+);
+router.post(
+  '/writing/cover-translate',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCoverTranslatePostController
+);
+router.post(
+  '/writing/create',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingCreatePostController
+);
+router.post(
+  '/writing/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingEditPostController
+);
+router.post(
+  '/writing/logo',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingLogoPostController
+);
+router.post(
+  '/writing/logo-translate',
+    upload.single('file'),
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingLogoTranslatePostController
+);
+router.post(
+  '/writing/restore',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingRestorePostController
+);
+router.post(
+  '/writing/translate',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    writingTranslatePostController
 );
 
 module.exports = router;

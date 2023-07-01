@@ -1,10 +1,13 @@
 const getSocialMediaAccounts = require('./getSocialMediaAccounts');
 
+const LANGUAGE_VALUES = ['tr', 'ru'];
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 
 module.exports = (project, language, data) => {
-  if (!data)
-    data = {};
+  if (!language || !LANGUAGE_VALUES.includes(language))
+    return JSON.parse(JSON.stringify(project.translations));
+
+  if (!data || typeof data != 'object') data = {};
 
   const translations = JSON.parse(JSON.stringify(project.translations));
 

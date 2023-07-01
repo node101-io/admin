@@ -161,7 +161,7 @@ ChapterSchema.statics.findChapterByIdAndGetChildrenByFilters = function (id, dat
             });
           });
         else
-          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+          Writing.findWritingByIdAndParentIdAndFormat(child._id, chapter._id, (err, writing) => {
             if (err) return next(err);
 
             return next(null, {
@@ -437,6 +437,169 @@ ChapterSchema.statics.findChapterByIdAndDelete = function (id, callback) {
           return callback(null);
         });
       }
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingById = function (id, writing_id, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentId(
+      writing_id,
+      chapter._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndFormat = function (id, writing_id, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormat(
+      writing_id,
+      chapter._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndFormatByLanguage = function (id, writing_id, language, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormatByLanguage(
+      writing_id,
+      chapter._id,
+      language,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdate = function (id, writing_id, data, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdate(
+      writing_id,
+      chapter._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdateTranslations = function (id, writing_id, data, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateTranslations(
+      writing_id,
+      chapter._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdateLogo = function (id, writing_id, file, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdUpdateLogo(
+      writing_id,
+      chapter._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdateLogoTranslation = function (id, writing_id, language, file, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdUpdateLogoTranslation(
+      writing_id,
+      chapter._id,
+      language,
+      file,
+      (err, ur) => callback(err, ur)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdateCover = function (id, writing_id, file, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCover(
+      writing_id,
+      chapter._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndUpdateCoverTranslation = function (id, writing_id, language, file, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCoverTranslation(
+      writing_id,
+      chapter._id,
+      language,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndDelete = function (id, writing_id, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndDelete(
+      writing_id,
+      chapter._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+ChapterSchema.statics.findChapterByIdAndGetWritingByIdAndRestore = function (id, writing_id, callback) {
+  const Chapter = this;
+
+  Chapter.findChapterById(id, (err, chapter) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndRestore(
+      writing_id,
+      chapter._id,
+      (err, writing) => callback(err, writing)
     );
   });
 };

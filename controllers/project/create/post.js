@@ -1,13 +1,9 @@
 const Project = require('../../../models/project/Project');
 
 module.exports = (req, res) => {
-  Project.createProject(req.body, (err, id) => {
-    if (err) {
-      res.write(JSON.stringify({ success: false, error: err }));
-      return res.end();
-    }
+  Project.createProject(req.body, (err, project) => {
+    if (err) return res.json({ success: false, error: err })
 
-    res.write(JSON.stringify({ success: true, id }));
-    return res.end();
+    return res.json({ success: true, project });
   });
 };

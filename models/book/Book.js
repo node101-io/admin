@@ -9,6 +9,7 @@ const Chapter = require('../chapter/Chapter');
 const Image = require('../image/Image');
 const Project = require('../project/Project');
 const Writer = require('../writer/Writer');
+const Writing = require('../writing/Writing');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getBook = require('./functions/getBook');
@@ -647,7 +648,7 @@ BookSchema.statics.findBookByIdAndGetChildrenByFilters = function (id, data, cal
             });
           });
         else
-          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+          Writing.findWritingByIdAndParentIdAndFormat(child._id, book._id, (err, writing) => {
             if (err) return next(err);
 
             return next(null, {
@@ -735,6 +736,169 @@ BookSchema.statics.findBookByIdAndCreateWriting = function (id, data, callback) 
       });
     })
   })
+};
+
+BookSchema.statics.findBookByIdAndGetWritingById = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentId(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndFormat = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormat(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndFormatByLanguage = function (id, writing_id, language, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormatByLanguage(
+      writing_id,
+      book._id,
+      language,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdate = function (id, writing_id, data, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdate(
+      writing_id,
+      book._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateTranslations = function (id, writing_id, data, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateTranslations(
+      writing_id,
+      book._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateLogo = function (id, writing_id, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdUpdateLogo(
+      writing_id,
+      book._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateLogoTranslation = function (id, writing_id, language, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdUpdateLogoTranslation(
+      writing_id,
+      book._id,
+      language,
+      file,
+      (err, ur) => callback(err, ur)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateCover = function (id, writing_id, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCover(
+      writing_id,
+      book._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateCoverTranslation = function (id, writing_id, language, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCoverTranslation(
+      writing_id,
+      book._id,
+      language,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndDelete = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndDelete(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndRestore = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndRestore(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
 };
 
 module.exports = mongoose.model('Book', BookSchema);

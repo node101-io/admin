@@ -77,7 +77,7 @@ window.addEventListener('load', () => {
         if (error) return alert(error);
         if (!res) return;
 
-        return window.location = '/project/edit?id=' + res.id;
+        return window.location = '/project/edit?id=' + res.project._id;
       });
     }
 

@@ -44,5 +44,47 @@ window.addEventListener('load', () => {
         }); 
       }
     }
+
+    if (event.target.id == 'create-writing-button') {
+      if (chapter) {
+        createFormPopUp({
+          title: 'Add a New Writing',
+          url: `/book/writing/create?type=chapter&id=${chapter._id}`,
+          method: 'POST',
+          description: 'Add a new writing to this chapter.',
+          inputs: [
+            {
+              name: 'title',
+              placeholder: 'Title'
+            }
+          ],
+          button: 'Add Writing'
+        }, (error, res) => {
+          if (error) return alert(error);
+          if (!res) return;
+  
+          return window.location.reload();
+        });
+      } else {
+        createFormPopUp({
+          title: 'Add a New Writing',
+          url: '/book/writing/create?id=' + book._id,
+          method: 'POST',
+          description: 'Add a new writing to this book. If you want to add a writing to a chapter, use the buttons below each chapter.',
+          inputs: [
+            {
+              name: 'title',
+              placeholder: 'Title'
+            }
+          ],
+          button: 'Add Writing'
+        }, (error, res) => {
+          if (error) return alert(error);
+          if (!res) return;
+  
+          return window.location.reload();
+        }); 
+      }
+    }
   })
 })

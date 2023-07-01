@@ -37,16 +37,31 @@ block main
         span.general-page-info #{__('Showing')} #{children_limit} #{__('results per page.')}
     .general-items-wrapper
       each child in children
-        .general-each-item-wrapper(id=child._id)
-          .general-each-item-title-wrapper
-            span.general-each-item-title= child.title
-          .general-each-item-buttons-wrapper
-            .general-each-item-third-button.order-each-children-button= __('Move Up')
-            .general-each-item-second-button.delete-each-children-button= __('Delete')
-            if child.type == 'chapter'
+        if child.type == 'chapter'
+          .general-each-item-wrapper(id=child._id)
+            .general-each-item-title-wrapper
+              span.general-each-item-title= child.title
+            .general-each-item-buttons-wrapper
+              .general-each-item-third-button.order-each-children-button= __('Move Up')
+              .general-each-item-second-button.delete-each-children-button= __('Delete')
               if chapter
                 a.general-each-item-fourth-button.show-each-children-chilren-button(href=`${breadcrumps[breadcrumps.length - 1].link},${child._id}`)= __('Chapters')
               else
                 a.general-each-item-fourth-button.show-each-children-chilren-button(href=`/book/chapter?book_id=${book._id}&chapter_id=${child._id}`)= __('Chapters')
-            .general-each-item-first-button.edit-child-button= __('Edit & Translate')
-            
+              .general-each-item-first-button.edit-child-button= __('Edit & Translate')
+        else
+          .general-each-item-wrapper(id=child._id)
+            .general-each-item-title-wrapper
+              span.general-each-item-title= child.title
+              span.general-each-item-subtitle(style=(child.is_completed ? '' : 'color: var(--warning-color)')) #{child.is_completed ? '' : `(${__('not completed')})`}
+            .general-each-item-buttons-wrapper
+              .general-each-item-third-button.order-each-writing-button= __('Move Up')
+              .general-each-item-fifth-button.copy-static-link-each-writing-button= __('Copy Static Link')
+              .general-each-item-second-button.delete-each-writing-button= __('Delete')
+              if chapter
+                a.general-each-item-fourth-button(href=`/book/writing/edit?type=chapter&id=${chapter._id}&writing_id=${child._id}`)= __('Informations')
+                a.general-each-item-first-button(href=`/book/writing/content?type=chapter&id=${chapter._id}&writing_id=${child._id}`)= __('Edit Content')
+              else
+                a.general-each-item-fourth-button(href=`/book/writing/edit?id=${book._id}&writing_id=${child._id}`)= __('Informations')
+                a.general-each-item-first-button(href=`/book/writing/content?id=${book._id}&writing_id=${child._id}`)= __('Edit Content')
+              

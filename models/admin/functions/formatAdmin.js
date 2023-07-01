@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Admin = require('../Admin');
 
 const isAdminComplete = require('./isAdminComplete');
@@ -23,6 +25,13 @@ module.exports = (admin, callback) => {
   }}, { new: true }, (err, admin) => {
     if (err) return callback('database_error');
 
-    return callback(null, admin);
+    return callback(null, {
+      _id: admin._id.toString(),
+      email: admin.email,
+      is_completed: admin.is_completed,
+      name: admin.name,
+      roles: admin.roles,
+      image: admin.image
+    });
   });
 };
