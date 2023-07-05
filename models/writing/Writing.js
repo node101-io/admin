@@ -212,8 +212,8 @@ WritingSchema.statics.createWritingByParentId = function (_parent_id, data, call
             return callback('duplicated_unique_field');
           if (err) return callback('database_error');
 
-          writing.translations = formatTranslations(writing, 'tr');
-          writing.translations = formatTranslations(writing, 'ru');
+          writing.translations = formatTranslations(writing, 'tr', writing);
+          writing.translations = formatTranslations(writing, 'ru', writing);
 
           if (data.parent_info.translations && typeof data.parent_info.translations == 'object')
             Object.keys(data.parent_info.translations).forEach(language => {
@@ -290,8 +290,8 @@ WritingSchema.statics.createWritingByParentIdWithoutWriter = function (_parent_i
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
 
-        writing.translations = formatTranslations(writing, 'tr');
-        writing.translations = formatTranslations(writing, 'ru');
+        writing.translations = formatTranslations(writing, 'tr', writing);
+        writing.translations = formatTranslations(writing, 'ru', writing);
 
         if (data.parent_info.translations && typeof data.parent_info.translations == 'object')
           Object.keys(data.parent_info.translations).forEach(language => {
@@ -567,7 +567,7 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
     if (err) return callback(err);
     if (writing.is_deleted) return callback('not_authenticated_request');
 
-    const oldContent = writing.content.concat(writing.translations.tr.content).concat(writing.translations.ru.content);
+    const oldContent = writing.content.concat(writing.translations.tr.content || []).concat(writing.translations.ru.content || []);
 
     if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
@@ -701,8 +701,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdateTranslations = function
 
         const oldImages = oldContent.filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME)).map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
         const newImages = writing.content
-          .concat(writing.translations.tr.content)
-          .concat(writing.translations.ru.content)
+          .concat(writing.translations.tr.content || [])
+          .concat(writing.translations.ru.content || [])
           .filter(each => each.includes(IMAGE_IDENTIFIER_CLASS_NAME))?.map(each => each.split('src="')[1]?.split('"')[0]?.trim())?.filter(each => each.length);
 
         async.timesSeries(

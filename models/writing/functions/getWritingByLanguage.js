@@ -4,21 +4,27 @@ module.exports = (writing, language, callback) => {
   let translation = writing.translations[language];
 
   if (!translation)
-    translation = {
-      title: writing.title.replace(writing._id.toString(), ''),
-      subtitle: writing.subtitle,
-      logo: writing.logo,
-      cover: writing.cover,
-      content: writing.content,
-      flag: writing.flag,
-      social_media_accounts: writing.social_media_accounts,
-      is_hidden: writing.is_hidden
-    };
-
-  if (!translation.logo)
+    translation = {};
+  if (!translation.title || !translation.title.length)
+    translation.title = writing.title;
+  if (!translation.subtitle || !translation.subtitle.length)
+    translation.subtitle = writing.subtitle
+  if (!translation.logo || !translation.logo.length)
     translation.logo = writing.logo;
-  if (!translation.cover)
+  if (!translation.cover || !translation.cover.length)
     translation.cover = writing.cover;
+  if (!translation.content || !translation.content.length)
+    translation.content = writing.content;
+  if (!translation.flag || !translation.flag.length)
+    translation.flag = writing.flag;
+  if (!translation.social_media_accounts || typeof translation.social_media_accounts != 'object')
+    translation.social_media_accounts = {};
+  Object.keys(writing.social_media_accounts).forEach(key => {
+    if (!translation.social_media_accounts[key])
+      translation.social_media_accounts[key] = writing.social_media_accounts[key];
+  });
+  if (!('is_hidden' in translation))
+    translation.is_hidden = writing.is_hidden ? true : false;
 
   if (writing.writer_id) {
     Writer.findWriterByIdAndFormatByLanguage(writing.writer_id, language, (err, writer) => {

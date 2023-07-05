@@ -32,7 +32,7 @@ block main
     .general-items-wrapper
       each writing in writings
         .general-each-item-wrapper(id=writing._id)
-          .general-each-item-title-wrapper
+          .general-each-item-title-wrappergi
             span.general-each-item-title= writing.title
             span.general-each-item-subtitle(style=(writing.is_completed ? '' : 'color: var(--warning-color)')) #{writing.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
