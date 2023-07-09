@@ -38,10 +38,6 @@ const WritingFilterSchema = new Schema({
     minlength: 1,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-  type: {
-    type: String,
-    required: true
-  },
   parent_id: {
     type: mongoose.Types.ObjectId,
     required: true
@@ -89,7 +85,6 @@ WritingFilterSchema.statics.createWritingFilter = function (data, callback) {
     writing_id: data.writing_id,
     language: data.language,
     title: data.title,
-    type: data.type,
     parent_id: data.parent_id,
     parent_title: data.parent_title,
     writer_id: data.writer_id,
@@ -155,7 +150,6 @@ WritingFilterSchema.statics.findWritingFilterByIdAndUpdate = function (id, data,
 
     WritingFilter.findByIdAndUpdate(writing_filter._id, {$set: {
       title: data.title && typeof data.title == 'string' && data.title.trim().length ? data.title.trim() : writing_filter.title,
-      type: data.type && typeof data.type == 'string' && data.type.trim().length ? data.type.trim() : writing_filter.type,
       parent_id: data.parent_id ? data.parent_id : writing_filter.parent_id,
       parent_title: data.parent_title && typeof data.parent_title == 'string' && data.parent_title.trim().length ? data.parent_title.trim() : writing_filter.parent_title,
       writer_id: data.writer_id ? data.writer_id : writing_filter.writer_id,

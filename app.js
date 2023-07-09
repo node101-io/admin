@@ -7,10 +7,9 @@ const favicon = require('serve-favicon');
 const http = require('http');
 const i18n = require('i18n');
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 const session = require('express-session');
-
-const MongoStore = require('connect-mongo');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 const numCPUs = process.env.WEB_CONCURRENCY || require('os').cpus().length;
