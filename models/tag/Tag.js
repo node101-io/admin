@@ -4,9 +4,7 @@ const validator = require('validator');
 
 const toURLString = require('../../utils/toURLString');
 
-const formatTranslations = require('./functions/formatTranslations');
 const getTag = require('./functions/getTag');
-const getTagByLanguage = require('./functions/getTagByLanguage');
 const isTagComplete = require('./functions/isTagComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
@@ -51,12 +49,13 @@ const TagSchema = new Schema({
     type: Boolean,
     default: false
   },
-  translations: {
-    type: Object,
-    default: {}
-  },
   order: {
     type: Number,
+    required: true
+  },
+  language: {
+    type: String,
+    length: 2,
     required: true
   }
 });
@@ -83,29 +82,21 @@ TagSchema.statics.createTag = function (data, callback) {
 
       const newTagData = {
         name: data.name.trim(),
-        identifiers: [ identifier ],
+        identifiers: [identifier],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
         created_at: new Date(),
-        order
+        order,
+        language: DEFAULT_IDENTIFIER_LANGUAGE
       };
-    
+
       const newTag = new Tag(newTagData);
-    
+
       newTag.save((err, tag) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
 
-        tag.translations = formatTranslations(tag, 'tr');
-        tag.translations = formatTranslations(tag, 'ru');
-
-        Tag.findByIdAndUpdate(tag._id, {$set: {
-          translations: tag.translations
-        }}, err => {
-          if (err) return callback('database_error');
-
-          return callback(null, tag._id.toString());
-        });
+        return callback(null, tag._id.toString());
       });
     });
   });
@@ -126,9 +117,11 @@ TagSchema.statics.findTagById = function (id, callback) {
     if (tag.is_completed == is_completed)
       return callback(null, tag);
 
-    Tag.findByIdAndUpdate(tag._id, {$set: {
-      is_completed
-    }}, { new: true }, (err, tag) => {
+    Tag.findByIdAndUpdate(tag._id, {
+      $set: {
+        is_completed
+      }
+    }, { new: true }, (err, tag) => {
       if (err) return callback('database_error');
 
       return callback(null, tag);
@@ -136,7 +129,7 @@ TagSchema.statics.findTagById = function (id, callback) {
   });
 };
 
-TagSchema.statics.findTagByIdentifierAndFormatByLanguage = function (identifier, language, callback) {
+TagSchema.statics.findTagByIdentifier = function (identifier, callback) {
   const Tag = this;
 
   Tag.findOne({
@@ -149,14 +142,7 @@ TagSchema.statics.findTagByIdentifierAndFormatByLanguage = function (identifier,
     if (!tag.is_completed)
       return callback('not_authenticated_request');
 
-    if (!language || !validator.isISO31661Alpha2(language.toString()))
-      language = tag.identifier_languages[identifier];
-
-    getTagByLanguage(tag, language, (err, tag) => {
-      if (err) return callback(err);
-
-      return callback(null, tag);
-    });
+    return callback(null, tag);
   });
 };
 
@@ -167,26 +153,6 @@ TagSchema.statics.findTagByIdAndFormat = function (id, callback) {
     if (err) return callback(err);
 
     getTag(tag, (err, tag) => {
-      if (err) return callback(err);
-
-      return callback(null, tag);
-    });
-  });
-};
-
-TagSchema.statics.findTagByIdAndFormatByLanguage = function (id, language, callback) {
-  const Tag = this;
-
-  if (!language || !validator.isISO31661Alpha2(language.toString()))
-    return callback('bad_request');
-
-  Tag.findTagById(id, (err, tag) => {
-    if (err) return callback(err);
-
-    if (!tag.is_completed)
-      return callback('not_authenticated_request');
-
-    getTagByLanguage(tag, language, (err, tag) => {
       if (err) return callback(err);
 
       return callback(null, tag);
@@ -225,77 +191,17 @@ TagSchema.statics.findTagByIdAndUpdate = function (id, data, callback) {
           identifier_languages[key] = tag.identifier_languages[key]
       });
 
-      Tag.findByIdAndUpdate(tag._id, {$set: {
-        name: data.name.trim(),
-        url: data.url && typeof data.url == 'string' && data.url.trim().length && data.url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.url.trim() : tag.url
-      }}, { new: true }, (err, tag) => {
+      Tag.findByIdAndUpdate(tag._id, {
+        $set: {
+          name: data.name.trim(),
+          url: data.url && typeof data.url == 'string' && data.url.trim().length && data.url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.url.trim() : tag.url,
+          language: data.language && typeof data.language == 'string' && validator.isISO31661Alpha2(data.language.toString()) ? data.language.toString() : tag.language,
+        }
+      }, { new: true }, (err, tag) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
         if (err) return callback('database_error');
 
-        tag.translations = formatTranslations(tag, 'tr', tag.translations.tr);
-        tag.translations = formatTranslations(tag, 'ru', tag.translations.ru);
-  
-        Tag.findByIdAndUpdate(tag._id, {$set: {
-          translations: tag.translations
-        }}, err => {
-          if (err) return callback('database_error');
-
-          return callback(null);
-        });
-      });
-    });
-  });
-};
-
-TagSchema.statics.findTagByIdAndUpdateTranslations = function (id, data, callback) {
-  const Tag = this;
-
-  if (!data || typeof data != 'object')
-    return callback('bad_request');
-
-  if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
-    return callback('bad_request');
-
-  Tag.findTagById(id, (err, tag) => {
-    if (err) return callback(err);
-
-    if (!tag.is_completed)
-      return callback('not_authenticated_request');
-
-    const translations = formatTranslations(tag, data.language, data);
-    let oldIdentifier = toURLString(tag.translations[data.language]?.name);
-    const newIdentifier = toURLString(translations[data.language].name);
-
-    if (oldIdentifier == toURLString(tag.name))
-      oldIdentifier = null;
-
-    Tag.findOne({
-      _id: { $ne: tag._id },
-      identifiers: newIdentifier
-    }, (err, duplicate) => {
-      if (err) return callback('database_error');
-      if (duplicate) return callback('duplicated_unique_field');
-
-      const identifiers = tag.identifiers.filter(each => each != oldIdentifier);
-      if (!identifiers.includes(newIdentifier))
-        identifiers.push(newIdentifier);
-      const identifier_languages = {
-        [newIdentifier]: data.language
-      };
-  
-      Object.keys(tag.identifier_languages).forEach(key => {
-        if (key != oldIdentifier)
-          identifier_languages[key] = tag.identifier_languages[key]
-      });
-  
-      Tag.findByIdAndUpdate(tag._id, {$set: {
-        identifiers,
-        identifier_languages,
-        translations
-      }}, err => {
-        if (err) return callback('database_error');
-  
         return callback(null);
       });
     });
@@ -374,9 +280,11 @@ TagSchema.statics.findTagByIdAndDelete = function (id, callback) {
 
         async.timesSeries(
           tags.length,
-          (time, next) => Tag.findByIdAndUpdate(tags[time]._id, {$inc: {
-            order: -1
-          }}, err => next(err)),
+          (time, next) => Tag.findByIdAndUpdate(tags[time]._id, {
+            $inc: {
+              order: -1
+            }
+          }, err => next(err)),
           err => {
             if (err) return callback('database_error');
 
@@ -402,15 +310,19 @@ TagSchema.statics.findTagByIdAndIncOrderByOne = function (id, callback) {
       if (!prev_tag)
         return callback(null);
 
-      Tag.findByIdAndUpdate(tag._id, {$inc: {
-        order: 1
-      }}, err => {
+      Tag.findByIdAndUpdate(tag._id, {
+        $inc: {
+          order: 1
+        }
+      }, err => {
         if (err) return callback('database_error');
 
-        Tag.findByIdAndUpdate(prev_tag._id, {$inc: {
-          order: -1
-        }}, err => {
-          if (err) return  callback('database_error');
+        Tag.findByIdAndUpdate(prev_tag._id, {
+          $inc: {
+            order: -1
+          }
+        }, err => {
+          if (err) return callback('database_error');
 
           return callback(null);
         });

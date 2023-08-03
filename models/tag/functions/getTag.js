@@ -8,6 +8,6 @@ module.exports = (tag, callback) => {
     identifier: tag.identifiers[0],
     url: tag.url,
     is_completed: tag.is_completed,
-    translations: tag.translations
+    language: tag.language,
   });
 }

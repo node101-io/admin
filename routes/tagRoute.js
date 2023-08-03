@@ -14,7 +14,6 @@ const createPostController = require('../controllers/tag/create/post');
 const deletePostController = require('../controllers/tag/delete/post');
 const editPostController = require('../controllers/tag/edit/post');
 const orderPostController = require('../controllers/tag/order/post');
-const translatePostController = require('../controllers/tag/translate/post');
 
 router.get(
   '/',
@@ -70,8 +69,7 @@ router.post(
   '/translate',
     isAdmin,
     checkAdminPermission,
-    createNavbarData,
-    translatePostController
+    createNavbarData
 );
 
 module.exports = router;

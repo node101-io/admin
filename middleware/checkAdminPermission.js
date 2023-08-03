@@ -71,7 +71,6 @@ module.exports = (req, res, next) => {
     '/tag/edit': 'tag_edit',
     '/tag/filter': 'tag_view',
     '/tag/order': 'tag_edit',
-    '/tag/translate': 'tag_edit',
     '/wizard': 'wizard_view',
     '/wizard/edit': 'wizard_edit',
     '/writer': 'writer_view',

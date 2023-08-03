@@ -21,6 +21,7 @@ window.addEventListener('load', () => {
 
       const name = document.getElementById('name').value;
       const url = document.getElementById('url').value;
+      const language = document.getElementById('language').value;
 
       if (!name || !name.trim().length)
         return error.innerHTML = 'Please enter a name for the tag.';
@@ -28,78 +29,24 @@ window.addEventListener('load', () => {
       if (!url || !url.trim().length)
         return error.innerHTML = 'Please enter a url for the tag.';
 
+      if (!language || !language.trim().length)
+        return error.innerHTML = 'Please enter a language for the tag.';
+
       serverRequest('/tag/edit?id=' + tag._id, 'POST', {
         name,
-        url
+        url,
+        language
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
           return error.innerHTML = 'There is already a tag with this name.'
         if (!res.success)
           return throwError(res.error);
 
-          return createConfirm({
-            title: 'Tag is Updated',
-            text: 'Tag is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
-      });
-    }
-
-    if (event.target.id == 'update-turkish-button') {
-      const error = document.getElementById('update-turkish-error');
-      error.innerHTML = '';
-
-      if (!tag.is_completed)
-        return error.innerHTML = 'Please complete the tag before adding a translation.';
-
-      const name = document.getElementById('turkish-name').value;
-
-      if (!name || !name.trim().length)
-        return error.innerHTML = 'Please enter a name for the tag.';
-
-      serverRequest('/tag/translate?id=' + tag._id, 'POST', {
-        language: 'tr',
-        name
-      }, res => {
-        if (!res.success && res.error == 'duplicated_unique_field')
-          return error.innerHTML = 'There is already a tag with this name.'
-        if (!res.success)
-          return throwError(res.error);
-
-          return createConfirm({
-            title: 'Translation is Updated',
-            text: 'Turkish translation is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
-      });
-    }
-
-    if (event.target.id == 'update-russian-button') {
-      const error = document.getElementById('update-russian-error');
-      error.innerHTML = '';
-
-      if (!tag.is_completed)
-        return error.innerHTML = 'Please complete the tag before adding a translation.';
-
-      const name = document.getElementById('russian-name').value;
-
-      if (!name || !name.trim().length)
-        return error.innerHTML = 'Please enter a name for the tag.';
-
-      serverRequest('/tag/translate?id=' + tag._id, 'POST', {
-        language: 'ru',
-        name
-      }, res => {
-        if (!res.success && res.error == 'duplicated_unique_field')
-          return error.innerHTML = 'There is already a tag with this name.'
-        if (!res.success)
-          return throwError(res.error);
-
-          return createConfirm({
-            title: 'Translation is Updated',
-            text: 'Russian translation is updated. Close to reload the page.',
-            accept: 'Close'
-          }, _ => window.location.reload());
+        return createConfirm({
+          title: 'Tag is Updated',
+          text: 'Tag is updated. Close to reload the page.',
+          accept: 'Close'
+        }, _ => window.location.reload());
       });
     }
   });

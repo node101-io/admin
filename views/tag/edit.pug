@@ -19,29 +19,10 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Tag URL')
           input.general-input#url(type='text' placeholder=__('The URL that the tag will redirect to.') value=tag.url)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Tag Language')
+          input.general-input#language(type='text' placeholder=__('Enter the tag language.') value=tag.language)
       .general-create-button-wrapper
         span.general-create-error#update-error
         .general-create-button#update-button= __('Update')
-      span.general-create-title= __('Translations')
-      .general-create-seperator
-      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
-      .general-create-button-wrapper
-      span.general-create-title= __('Turkish Translation')
-      .general-create-seperator
-      .general-create-input-grid-wrapper
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Tag Turkish Name')
-          input.general-input#turkish-name(type='text' placeholder=__('Enter the tag name.') value=tag.translations.tr.name)
-      .general-create-button-wrapper
-        span.general-create-error#update-turkish-error
-        .general-create-button#update-turkish-button= __('Update Turkish')
-      span.general-create-title= __('Russian Translation')
-      .general-create-seperator
-      .general-create-input-grid-wrapper
-        .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Tag Russian Name')
-          input.general-input#russian-name(type='text' placeholder=__('Enter the tag name.') value=tag.translations.ru.name)
-      .general-create-button-wrapper
-        span.general-create-error#update-russian-error
-        .general-create-button#update-russian-button= __('Update Russian')
       
