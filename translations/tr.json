@@ -475,5 +475,7 @@
 	"View the current version & publish a new version for the Klein app to use.": "View the current version & publish a new version for the Klein app to use.",
 	"Add children & writings to this book.": "Add children & writings to this book.",
 	"Tag Language": "Tag Language",
-	"Enter the tag language.": "Enter the tag language."
+	"Enter the tag language.": "Enter the tag language.",
+	"View Klein Versions": "View Klein Versions",
+	"Publish New Klein Versions": "Publish New Klein Versions"
 }

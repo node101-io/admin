@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Admin = require('../Admin');
 
 const isAdminComplete = require('./isAdminComplete');
@@ -18,7 +20,7 @@ module.exports = (admin, callback) => {
       image: admin.image
     });
 
-  Admin.findByIdAndUpdate(mongoose.Types.ObjectId(admin._id.toString()), {$set: {
+  Admin.findAdminByIdAndUpdate(mongoose.Types.ObjectId(admin._id.toString()), {$set: {
     is_completed: isCompleted
   }}, { new: true }, (err, admin) => {
     if (err) return callback('database_error');

@@ -25,7 +25,7 @@ window.addEventListener('load', () => {
         if (error) return alert(error);
         if (!res) return;
 
-        return window.location = '/admin/edit?id=' + res.id;
+        return window.location = '/admin/edit?id=' + res.admin._id;
       });
     }
   });
