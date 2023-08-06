@@ -98,7 +98,7 @@ AdminSchema.statics.findAdminByEmailAndVerifyPassword = function (data, callback
     verifyPassword(data.password.trim(), admin.password, res => {
       if (!res) return callback('password_verification');
 
-      formatAdmin(admin, (err, admin) => {
+      formatAdmin(Admin, admin, (err, admin) => {
         if (err) return callback(err);
 
         return callback(null, admin);
@@ -114,7 +114,7 @@ AdminSchema.statics.findAdminByIdAndFormat = function (id, callback) {
     if (err) return callback('database_error');
     if (!admin) return callback('document_not_found');
 
-    formatAdmin(admin, (err, admin) => {
+    formatAdmin(Admin, admin, (err, admin) => {
       if (err) return callback(err);
 
       return callback(null, admin);
@@ -142,7 +142,7 @@ AdminSchema.statics.createAdmin = function (data, callback) {
     if (err)
       return callback('database_error');
 
-    formatAdmin(admin, (err, admin) => {
+    formatAdmin(Admin, admin, (err, admin) => {
       if (err) return callback(err);
 
       return callback(null, admin);
@@ -157,7 +157,7 @@ AdminSchema.statics.findAdminByIdAndDelete = function (id, callback) {
     if (err) return callback('database_error');
     if (!admin) return callback('document_not_found');
 
-    formatAdmin(admin, (err, admin) => {
+    formatAdmin(Admin, admin, (err, admin) => {
       if (err) return callback(err);
 
       return callback(null, admin);
@@ -186,7 +186,7 @@ AdminSchema.statics.findAdminByIdAndUpdate = function (id, data, callback) {
     if (err) return callback('database_error');
     if (!admin) return callback('document_not_found');
 
-    formatAdmin(admin, (err, admin) => {
+    formatAdmin(Admin, admin, (err, admin) => {
       if (err) return callback(err);
 
       return callback(null, admin);
@@ -212,7 +212,7 @@ AdminSchema.statics.findAdminByIdAndResetPassword = function (id, data, callback
     admin.save((err, admin) => {
       if (err) return callback('database_error');
 
-      formatAdmin(admin, (err, admin) => {
+      formatAdmin(Admin, admin, (err, admin) => {
         if (err) return callback(err);
   
         return callback(null, admin);
@@ -254,7 +254,7 @@ AdminSchema.statics.findAdminByIdAndUpdateImage = function (id, file, callback) 
           Image.findImageByUrlAndDelete(old_admin.image, err => {
             if (err) return callback(err);
 
-            formatAdmin(admin, (err, admin) => {
+            formatAdmin(Admin, admin, (err, admin) => {
               if (err) return callback(err);
         
               return callback(null, admin);

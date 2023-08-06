@@ -1,10 +1,8 @@
 const mongoose = require('mongoose');
 
-const Admin = require('../Admin');
-
 const isAdminComplete = require('./isAdminComplete');
 
-module.exports = (admin, callback) => {
+module.exports = (Admin, admin, callback) => {
   if (!admin || !admin._id)
     return callback('document_not_found');
 
@@ -20,11 +18,18 @@ module.exports = (admin, callback) => {
       image: admin.image
     });
 
-  Admin.findAdminByIdAndUpdate(mongoose.Types.ObjectId(admin._id.toString()), {$set: {
+  Admin.findByIdAndUpdate(mongoose.Types.ObjectId(admin._id.toString()), {$set: {
     is_completed: isCompleted
   }}, { new: true }, (err, admin) => {
     if (err) return callback('database_error');
 
-    return callback(null, admin);
+    return callback(null, {
+      _id: admin._id.toString(),
+      email: admin.email,
+      is_completed: admin.is_completed,
+      name: admin.name,
+      roles: admin.roles,
+      image: admin.image
+    });
   });
 };
