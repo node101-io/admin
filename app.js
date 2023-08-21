@@ -48,6 +48,7 @@ if (cluster.isMaster) {
   const wizardRouteController = require('./routes/wizardRoute');
   const writerRouteController = require('./routes/writerRoute');
   const writingRouteController = require('./routes/writingRoute');
+  const eventRouteController = require('./routes/eventRoute');
 
   const fromDateToHTMLInputString = require('./utils/fromDateToHTMLInputString');
   // const updateData = require('./utils/updateData');
@@ -117,6 +118,7 @@ if (cluster.isMaster) {
   app.use('/wizard', wizardRouteController);
   app.use('/writer', writerRouteController);
   app.use('/writing', writingRouteController);
+  app.use('/event', eventRouteController);
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);
