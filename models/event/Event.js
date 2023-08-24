@@ -145,7 +145,7 @@ EventSchema.statics.createEvent = function (data, callback) {
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
         created_at: new Date(),
-        order
+        order 
       };
 
       const newEvent = new Event(newEventData);
@@ -502,6 +502,15 @@ EventSchema.statics.findEventCountByFilters = function (data, callback) {
 
   if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.name.trim(), $options: 'i'};
+
+  if (data.date_after && typeof data.date_after == 'string' && !isNaN(new Date(data.date_after)))
+    filters.date = { $gte: new Date(data.date_after) };
+
+  if (data.date_before && typeof data.date_before == 'string' && !isNaN(new Date(data.date_before)))
+    filters.date = { $lte: new Date(data.date_before) };
+
+  if (data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.location = { $regex: data.location.trim(), $options: 'i' };
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Event
