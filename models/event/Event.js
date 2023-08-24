@@ -24,7 +24,6 @@ const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const SORT_BY = ['name', 'date', 'location', 'language']
 
 const Schema = mongoose.Schema;
 
@@ -440,19 +439,10 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
   if (data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.location = { $regex: data.location.trim(), $options: 'i' };
 
-  if (data.language && typeof data.language == 'string' && data.language.trim().length && data.language.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.language = { $regex: data.language.trim(), $options: 'i' };
-
-  const sort_by = 'sort_by' in data && data.sort_by == -1 ? -1 : 1;
-  let sort = { order: sort_by };
-
-  if (data.sort && typeof data.sort == 'string' && SORT_BY.includes(data.sort.trim().toLowerCase()))
-    sort = { [data.sort.trim().toLowerCase()]: sort_by };
-
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Event
       .find(filters)
-      .sort(sort)
+      .sort({ order: -1 })
       .limit(limit)
       .skip(skip)
       .then(events => async.timesSeries(
@@ -477,7 +467,7 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
       .find(filters)
       .sort({
         score: { $meta: 'textScore' },
-        ...sort
+        order: -1
       })
       .limit(limit)
       .skip(skip)
