@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
-const toURLString = require('../../utils/toURLString');
 const getIdentifier = require('../../utils/getIdentifier');
+const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 
@@ -16,14 +16,14 @@ const isEventComplete = require('./functions/isEventComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
-const LOGO_HEIGHT = 300;
-const LOGO_WIDTH = 300;
-const LOGO_NAME_PREFIX = 'node101 event logo ';
-const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
-const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
-const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
-const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const LOGO_HEIGHT = 300;
+const LOGO_NAME_PREFIX = 'node101 event logo ';
+const LOGO_WIDTH = 300;
+const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
+const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
+const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
+const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 
 const Schema = mongoose.Schema;
 
@@ -320,6 +320,47 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
               )
               .then(() => callback(null))
               .catch(_ => callback('index_error'));
+          });
+        });
+      });
+    });
+  });
+};
+
+EventSchema.statics.findEventByIdAndUpdateLogo = function (id, file, callback) {
+  const Event = this;
+
+  if (!file || !file.filename)
+    return callback('bad_request');
+
+  Event.findEventById(id, (err, event) => {
+    if (err) return callback(err);
+    if (event.is_deleted) return callback('not_authenticated_request');
+
+    Image.createImage({
+      file_name: file.filename,
+      original_name: LOGO_NAME_PREFIX + event.name,
+      width: LOGO_WIDTH,
+      height: LOGO_HEIGHT,
+      is_used: true
+    }, (err, url) => {
+      if (err) return callback(err);
+
+      Event.findByIdAndUpdate(event._id, { $set: {
+        logo: url
+      }}, err => {
+        if (err) return callback(err);
+
+        deleteFile(file, err => {
+          if (err) return callback(err);
+
+          if (!event.logo || event.logo.split('/')[project.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+            return callback(null, url);
+
+          Image.findImageByUrlAndDelete(event.logo, err => {
+            if (err) return callback(err);
+
+            return callback(null, url);
           });
         });
       });
