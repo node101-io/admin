@@ -4,7 +4,7 @@ const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
 const toURLString = require('../../utils/toURLString');
-const formatDate = require('../../utils/formatDate');
+const getIdentifier = require('../../utils/getIdentifier');
 
 const Image = require('../image/Image');
 
@@ -24,6 +24,7 @@ const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
+const SORT_BY = ['name', 'date', 'location', 'language']
 
 const Schema = mongoose.Schema;
 
@@ -78,7 +79,7 @@ const EventSchema = new Schema({
 	},
 	created_at: {
 		type: Date,
-		reqiured: true
+		required: true
 	},
 	social_media_accounts: {
 		type: Object,
@@ -122,56 +123,57 @@ EventSchema.statics.createEvent = function (data, callback) {
 
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
-
-  if (!data.date)
+  
+  if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
     return callback('bad_request');
-
-  const identifier = toURLString(data.name);
-
+  
+  const identifier = getIdentifier(data.name, data.date, DEFAULT_IDENTIFIER_LANGUAGE);
+  
   Event.findOne({
-      identifiers: identifier
+    identifiers: identifier
   }, (err, event) => {
-      if (err) return callback('database_error');
-      if (event) return callback('duplicated_unique_field');
+    if (err) return callback('database_error');
+      
+    if (event) return callback('duplicated_unique_field');
 
-      Event.findEventCountByFilters({ is_deleted: false }, (err, order) => {
-        if (err) return callback(err);
+    Event.findEventCountByFilters({ is_deleted: false }, (err, order) => {
+      if (err) return callback(err);
 
-        const newEventData = {
-          name: data.name.trim(),
-          date: data.date,
-					search_name: data.name.trim(),
-          identifiers: [ identifier ],
-          identifier_languages: { [ identifier ]: DEFAULT_IDENTIFIER_LANGUAGE },
-          created_at: new Date(),
-          order
-        };
+      const newEventData = {
+        name: data.name.trim(),
+        date: new Date(data.date),
+				search_name: data.name.trim(),
+        identifiers: [ identifier ],
+        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
+        created_at: new Date(),
+        order
+      };
 
-        const newEvent = new Event(newEventData);
+      const newEvent = new Event(newEventData);
 
-        newEvent.save((err, event) => {
-          if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-            return callback('duplicated_unique_field');
+      newEvent.save((err, event) => {
+        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+          return callback('duplicated_unique_field');
+        if (err) return callback('database_error');
+          
+        event.translations = formatTranslations(event, 'tr');
+        event.translations = formatTranslations(event, 'ru');
+
+        Event.findByIdAndUpdate(event._id, { $set: {
+          translations: event.translations
+        }}, err => {
           if (err) return callback('database_error');
 
-          event.translations = formatTranslations(event, 'tr');
-          event.translations = formatTranslations(event, 'ru');
-
-          Event.findByIdAndUpdate(event._id, { $set: {
-            translations: event.translations
-          }}, err => {
-            if (err) return callback('database_error');
-
-            Event.collection
-            .createIndex(
-              { search_name: 'text', search_description: 'text' },
-              { weights: {
-                search_name: 10,
-                search_description: 1
-              }}
-            )
-            .then(() => callback(null, event._id.toString()))
-            .catch(_ => callback('index_error'));
+          Event.collection
+          .createIndex(
+            { search_name: 'text', search_description: 'text' },
+            { weights: {
+              search_name: 10,
+              search_description: 1
+            }}
+          )
+          .then(() => callback(null, event._id.toString()))
+          .catch(_ => callback('index_error'));
         });
       });
     });
@@ -233,8 +235,8 @@ EventSchema.statics.findEventByIdAndFormatByLanguage = function (id, language, c
       if (err) return callback(err);
 
       return callback(null, event)
-    })
-  })
+    });
+  });
 };
 
 EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
@@ -246,9 +248,12 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
     
     if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
+
+    if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
+      return callback('bad_request');
     
-    const newIdentifier = toURLString(data.name);
-    const oldIdentifier = toURLString(event.name);
+    const newIdentifier = getIdentifier(data.name, data.date, DEFAULT_IDENTIFIER_LANGUAGE);
+    const oldIdentifier = getIdentifier(event.name, event.date, DEFAULT_IDENTIFIER_LANGUAGE);
 
     Event.findOne({
       _id: { $ne: event._id },
@@ -270,13 +275,13 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
       Event.findByIdAndUpdate(event._id, { $set: {
         name: data.name.trim(),
-        date: data.date,
+        date: new Date(data.date),
         identifiers,
         identifier_languages,
         description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.decription,
         register_url: data.register_url,
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
-        location: data.location,
+        location: data.location
       }}, { new: true }, (err, event) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
@@ -329,6 +334,9 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
+  if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
+    return callback('bad_request');
+
   if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
     return callback('bad_request');
 
@@ -337,14 +345,16 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
     
     if (!event.is_completed)
       return callback('not_authenticated_request');
-
+    // const language = data.language ?? DEFAULT_IDENTIFIER_LANGUAGE; can be used here. It's all about your feedback
     const translations = formatTranslations(event, data.language, data);
-    let oldIdentifier = toURLString(event.translations[data.language]?.name);
-    const newIdentifier = toURLString(translations[data.language].name);
+    let oldIdentifier = getIdentifier(event.translations[data.language ?? DEFAULT_IDENTIFIER_LANGUAGE]?.name, event.date, data.language ?? DEFAULT_IDENTIFIER_LANGUAGE);
+    const newIdentifier = getIdentifier(translations[data.language].name, data.date, data.language);
 
-    if (oldIdentifier == toURLString(event.name))
+    const defaultIdentifier = getIdentifier(event.name, event.date, DEFAULT_IDENTIFIER_LANGUAGE);
+  
+    if (oldIdentifier == defaultIdentifier)
       oldIdentifier = null;
-
+  
     Event.findOne({
       _id: { $ne: event._id },
       identifiers: newIdentifier
@@ -355,7 +365,6 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
       const identifiers = event.identifiers.filter(each => each != oldIdentifier);
       if (!identifiers.includes(newIdentifier))
         identifiers.push(newIdentifier);
-
       const identifier_languages = {
         [newIdentifier]: data.language
       };
@@ -402,7 +411,7 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
       });
     });
   });
-};;
+};
 
 EventSchema.statics.findEventsByFilters = function (data, callback) {
   const Event = this;
@@ -422,10 +431,28 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
   if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.name.trim(), $options: 'i' };
 
+  if (data.date_after && typeof data.date_after == 'string' && !isNaN(new Date(data.date_after)))
+    filters.date = { $gte: new Date(data.date_after) };
+
+  if (data.date_before && typeof data.date_before == 'string' && !isNaN(new Date(data.date_before)))
+    filters.date = { $lte: new Date(data.date_before) };
+
+  if (data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.location = { $regex: data.location.trim(), $options: 'i' };
+
+  if (data.language && typeof data.language == 'string' && data.language.trim().length && data.language.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.language = { $regex: data.language.trim(), $options: 'i' };
+
+  const sort_by = 'sort_by' in data && data.sort_by == -1 ? -1 : 1;
+  let sort = { order: sort_by };
+
+  if (data.sort && typeof data.sort == 'string' && SORT_BY.includes(data.sort.trim().toLowerCase()))
+    sort = { [data.sort.trim().toLowerCase()]: sort_by };
+
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Event
       .find(filters)
-      .sort({ order: -1 })
+      .sort(sort)
       .limit(limit)
       .skip(skip)
       .then(events => async.timesSeries(
@@ -450,7 +477,7 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
       .find(filters)
       .sort({
         score: { $meta: 'textScore' },
-        order: -1
+        ...sort
       })
       .limit(limit)
       .skip(skip)
@@ -526,7 +553,7 @@ EventSchema.statics.findEventByIdAndDelete = function (id, callback) {
 
         async.timesSeries(
           events.length,
-          (time, next) => Event.findByIdAndUpdate(events[ time ]._id, { $inc: {
+          (time, next) => Event.findByIdAndUpdate(events[time]._id, { $inc: {
             order: -1
           }}, err => next(err)),
           err => {
@@ -562,7 +589,7 @@ EventSchema.statics.findEventByIdAndRestore = function (id, callback) {
 
     async.timesSeries(
       identifiers.length,
-      (time, next) => Event.findOne({ identifiers: identifiers[ time ] }, (err, event) => {
+      (time, next) => Event.findOne({ identifiers: identifiers[time] }, (err, event) => {
         if (err) return next('database_error');
         if (event) return next('duplicated_unique_field');
 
@@ -611,7 +638,7 @@ EventSchema.statics.findEventByIdAndIncOrderByOne = function (id, callback) {
         if (err) return callback('database_error');
 
         Event.findByIdAndUpdate(prev_event._id, {$inc: {
-            order: -1
+          order: -1
         }}, err => {
           if (err) return  callback('database_error');
 
