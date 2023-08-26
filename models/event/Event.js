@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
-const getIdentifier = require('../../utils/getIdentifier');
 const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
@@ -11,6 +10,7 @@ const Image = require('../image/Image');
 const formatTranslations = require('./functions/formatTranslations');
 const getEvent = require('./functions/getEvent');
 const getEventByLanguage = require('./functions/getEventByLanguage');
+const getIdentifier = require('./functions/getIdentifier');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isEventComplete = require('./functions/isEventComplete');
 
@@ -354,7 +354,7 @@ EventSchema.statics.findEventByIdAndUpdateLogo = function (id, file, callback) {
         deleteFile(file, err => {
           if (err) return callback(err);
 
-          if (!event.logo || event.logo.split('/')[project.image.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          if (!event.logo || event.logo.split('/')[event.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
             return callback(null, url);
 
           Image.findImageByUrlAndDelete(event.logo, err => {

@@ -55,6 +55,36 @@ window.addEventListener('load', () => {
       });
     }
 
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/event/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Event',
+        url: '/event/create',
+        method: 'POST',
+        description: 'You will be asked to complete event details once you create it.',
+        inputs: [
+          {
+            name: 'name',
+            placeholder: 'Name (must be unique)'
+          },
+          {
+            date: 'date',
+            placeholder: 'Date of the event'
+          }
+        ],
+        button: 'Create New Event',
+        errors: {
+          // duplicated_unique_field: 'Each book must have a unique name. Please use edit & translations page to change this book\'s details.'
+        }
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/event/edit?id=' + res.id;
+      });
+    }
+
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/project/create')) {
       event.preventDefault();
 

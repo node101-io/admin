@@ -22,12 +22,12 @@ module.exports = (req, res) => {
     return res.render('event/edit', {
       page: 'event/edit',
       title: event.name,
-    //   includes: {
-    //     external: {
-    //       css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
-    //       js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'navbarListeners', 'page', 'serverRequest']
-    //     }
-    //   },
+      includes: {
+        external: {
+          css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
+          js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'navbarListeners', 'page', 'serverRequest']
+        }
+      },
       event,
       socialAccounts
     });

@@ -110,6 +110,7 @@ if (cluster.isMaster) {
   app.use('/auth', authRouteController);
   app.use('/blog', blogRouteController);
   app.use('/book', bookRouteController);
+  app.use('/event', eventRouteController);
   app.use('/guide', guideRouteController);
   app.use('/member', memberRouteController);
   app.use('/project', projectRouteController);
@@ -118,7 +119,6 @@ if (cluster.isMaster) {
   app.use('/wizard', wizardRouteController);
   app.use('/writer', writerRouteController);
   app.use('/writing', writingRouteController);
-  app.use('/event', eventRouteController);
 
   server.listen(PORT, () => {
     console.log(`Server is on port ${PORT} as Worker ${cluster.worker.id} running @ process ${cluster.worker.process.pid}`);

@@ -1,4 +1,4 @@
-const toURLString = require('./toURLString');
+const toURLString = require('../../../utils/toURLString');
 
 const MONTHS_BY_LANGUAGES = {
     'en': [ 'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august',  'september', 'october', 'november', 'december' ],
