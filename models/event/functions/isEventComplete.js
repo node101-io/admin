@@ -1,7 +1,7 @@
 module.exports = event => {
     return event &&
       event.name &&
-      event.date &&
+      event.start_date &&
       event.description &&
       event.location ? true : false
   };

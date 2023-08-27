@@ -35,12 +35,24 @@ const EventSchema = new Schema({
 		minlength: 1,
 		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
-	date: {
-		type: Date,
-		required: true,
-		trim: true,
-		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-	},
+  start_date: {
+    type: Date,
+    trim: true,
+    default: null,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  end_date: {
+    type: Date,
+    trim: true,
+    default: null,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+	// date: {
+	// 	type: Date,
+	// 	required: true,
+	// 	trim: true,
+	// 	maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+	// },
 	description: {
 		type: String,
 		default: null,
@@ -123,16 +135,18 @@ EventSchema.statics.createEvent = function (data, callback) {
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
   
-  if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
-    return callback('bad_request');
+  // if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
+  //   return callback('bad_request');
+
+  // if (!data.end_date || typeof data.end_date != 'string' || isNaN(new Date(data.end_date)))
+  //   return callback('bad_request');
   
-  const identifier = getIdentifier(data.name, data.date, DEFAULT_IDENTIFIER_LANGUAGE);
-  
+  const identifier = getIdentifier(data);
+
   Event.findOne({
     identifiers: identifier
   }, (err, event) => {
     if (err) return callback('database_error');
-      
     if (event) return callback('duplicated_unique_field');
 
     Event.findEventCountByFilters({ is_deleted: false }, (err, order) => {
@@ -140,7 +154,8 @@ EventSchema.statics.createEvent = function (data, callback) {
 
       const newEventData = {
         name: data.name.trim(),
-        date: new Date(data.date),
+        // start_date: new Date(data.start_date),
+        // end_date: new Date(data.end_date),
 				search_name: data.name.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
@@ -248,7 +263,7 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
     if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
-    if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
+    if (!data.date || typeof data.date != 'string' || isNaN(new Date(data.date)))
       return callback('bad_request');
     
     const newIdentifier = getIdentifier(data.name, data.date, DEFAULT_IDENTIFIER_LANGUAGE);
@@ -387,7 +402,7 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
       return callback('not_authenticated_request');
     // const language = data.language ?? DEFAULT_IDENTIFIER_LANGUAGE; can be used here. It's all about your feedback
     const translations = formatTranslations(event, data.language, data);
-    let oldIdentifier = getIdentifier(event.translations[data.language ?? DEFAULT_IDENTIFIER_LANGUAGE]?.name, event.date, data.language ?? DEFAULT_IDENTIFIER_LANGUAGE);
+    let oldIdentifier = getIdentifier(event.translations[(data.language != null && data.language != undefined) ? data.language : DEFAULT_IDENTIFIER_LANGUAGE]?.name, event.date, (data.language != null && data.language != undefined) ? data.language : DEFAULT_IDENTIFIER_LANGUAGE);
     const newIdentifier = getIdentifier(translations[data.language].name, data.date, data.language);
 
     const defaultIdentifier = getIdentifier(event.name, event.date, DEFAULT_IDENTIFIER_LANGUAGE);
