@@ -119,11 +119,7 @@ const EventSchema = new Schema({
 	is_completed: {
 		type: Boolean,
 		default: false
-	},
-  order: {
-    type: Number,
-    required: true
-  }
+	}
 });
 
 EventSchema.statics.createEvent = function (data, callback) {
@@ -134,33 +130,23 @@ EventSchema.statics.createEvent = function (data, callback) {
 
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
-  
-  // if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
-  //   return callback('bad_request');
 
-  // if (!data.end_date || typeof data.end_date != 'string' || isNaN(new Date(data.end_date)))
-  //   return callback('bad_request');
-  
   const identifier = getIdentifier(data);
 
   Event.findOne({
     identifiers: identifier
-  }, (err, event) => {
+  }, (err) => {
     if (err) return callback('database_error');
-    if (event) return callback('duplicated_unique_field');
 
-    Event.findEventCountByFilters({ is_deleted: false }, (err, order) => {
+    Event.findEventCountByFilters({ is_deleted: false }, (err) => {
       if (err) return callback(err);
 
       const newEventData = {
         name: data.name.trim(),
-        // start_date: new Date(data.start_date),
-        // end_date: new Date(data.end_date),
 				search_name: data.name.trim(),
         identifiers: [ identifier ],
         identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-        created_at: new Date(),
-        order 
+        created_at: new Date()
       };
 
       const newEvent = new Event(newEventData);
@@ -263,11 +249,11 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
     if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
 
-    if (!data.date || typeof data.date != 'string' || isNaN(new Date(data.date)))
+    if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
       return callback('bad_request');
     
-    const newIdentifier = getIdentifier(data.name, data.date, DEFAULT_IDENTIFIER_LANGUAGE);
-    const oldIdentifier = getIdentifier(event.name, event.date, DEFAULT_IDENTIFIER_LANGUAGE);
+    const newIdentifier = getIdentifier(data);
+    const oldIdentifier = getIdentifier(event);
 
     Event.findOne({
       _id: { $ne: event._id },
@@ -284,18 +270,19 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
       Object.keys(event.identifier_languages).forEach(key => {
         if (key != oldIdentifier)
-          identifier_languages[key] = event.identifier_languages[key];
+          identifier_languages[key] = event.identifier_languages[key]
       });
 
       Event.findByIdAndUpdate(event._id, { $set: {
         name: data.name.trim(),
-        date: new Date(data.date),
+        start_date: new Date(data.start_date),
+        end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : undefined,
         identifiers,
         identifier_languages,
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.decription,
+        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
         register_url: data.register_url,
         social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
-        location: data.location
+        location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : event.location
       }}, { new: true }, (err, event) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
@@ -389,7 +376,7 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  if (!data.date && typeof data.date != 'string' && isNaN(new Date(data.date)))
+  if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
     return callback('bad_request');
 
   if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
@@ -400,16 +387,12 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
     
     if (!event.is_completed)
       return callback('not_authenticated_request');
-    // const language = data.language ?? DEFAULT_IDENTIFIER_LANGUAGE; can be used here. It's all about your feedback
-    const translations = formatTranslations(event, data.language, data);
-    let oldIdentifier = getIdentifier(event.translations[(data.language != null && data.language != undefined) ? data.language : DEFAULT_IDENTIFIER_LANGUAGE]?.name, event.date, (data.language != null && data.language != undefined) ? data.language : DEFAULT_IDENTIFIER_LANGUAGE);
-    const newIdentifier = getIdentifier(translations[data.language].name, data.date, data.language);
 
-    const defaultIdentifier = getIdentifier(event.name, event.date, DEFAULT_IDENTIFIER_LANGUAGE);
-  
-    if (oldIdentifier == defaultIdentifier)
-      oldIdentifier = null;
-  
+    const translations = formatTranslations(event, data.language, data);
+
+    const oldIdentifier = getIdentifier(event.translations[data.language], data.language);
+    const newIdentifier = getIdentifier(data, data.language);
+
     Event.findOne({
       _id: { $ne: event._id },
       identifiers: newIdentifier
@@ -498,7 +481,10 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Event
       .find(filters)
-      .sort({ order: -1 })
+      .sort({
+        start_date: 1,
+        end_date: 1
+      })
       .limit(limit)
       .skip(skip)
       .then(events => async.timesSeries(
@@ -522,8 +508,8 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
     Event
       .find(filters)
       .sort({
-        score: { $meta: 'textScore' },
-        order: -1
+        start_date: 1,
+        end_date: 1
       })
       .limit(limit)
       .skip(skip)
@@ -596,28 +582,11 @@ EventSchema.statics.findEventByIdAndDelete = function (id, callback) {
       name: event.name + event._id.toString(),
       identifiers: [],
       identifier_languages: {},
-      is_deleted: true,
-      order: null
+      is_deleted: true
     }}, err => {
       if (err) return callback('database_error');
-      
-      Event.find({
-        order: { $gt: event.order }
-      }, (err, events) => {
-        if (err) return callback('database_error');
 
-        async.timesSeries(
-          events.length,
-          (time, next) => Event.findByIdAndUpdate(events[time]._id, { $inc: {
-            order: -1
-          }}, err => next(err)),
-          err => {
-            if (err) return callback('database_error');
-
-            return callback(null);
-          }
-        );
-      });
+      return callback(null);
     });
   });
 };
@@ -629,13 +598,16 @@ EventSchema.statics.findEventByIdAndRestore = function (id, callback) {
     if (err) return callback(err);
     if (!event.is_deleted) return callback(null);
 
-    identifiers = [ toURLString(event.name.replace(event._id.toString(), '')) ];
-    const identifierLanguages = {
-      identifiers: DEFAULT_IDENTIFIER_LANGUAGE
-    };
+    event.name = event.name.replace(event._id.toString(), '');
 
-    Object.keys(event.translations).forEach((lang, index) => {
-      const languageIdentifier = toURLString(lang.name);
+    const defaultIdentifier = getIdentifier(event, DEFAULT_IDENTIFIER_LANGUAGE);
+    const identifiers = [ defaultIdentifier ];
+    const identifierLanguages = {
+      [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
+    };
+    Object.values(event.translations).forEach((lang, index) => {
+      const languageIdentifier = getIdentifier(lang, Object.keys(event.translations)[index]);
+
       if (!identifiers.includes(languageIdentifier)) {
         identifiers.push(languageIdentifier);
         identifierLanguages[languageIdentifier] = Object.keys(event.translations)[index];
@@ -653,54 +625,22 @@ EventSchema.statics.findEventByIdAndRestore = function (id, callback) {
       err => {
         if (err) return callback(err);
 
-        Event.findEventCountByFilters({ is_deleted: false }, (err, order) => {
+        Event.findEventCountByFilters({ is_deleted: false }, (err) => {
           if (err) return callback(err);
 
           Event.findByIdAndUpdate(event._id, {
             name: event.name.replace(event._id.toString(), ''),
             identifiers,
             identifier_languages: identifierLanguages,
-            is_deleted: false,
-            order
+            is_deleted: false
           }, err => {
             if (err) return callback('database_error');
 
             return callback(null);
-          })
-        })
-      }
-    )
-  })
-};
-
-EventSchema.statics.findEventByIdAndIncOrderByOne = function (id, callback) {
-  const Event = this;
-
-  Event.findEventById(id, (err, event) => {
-    if (err) return callback(err);
-    if (event.is_deleted) return callback('not_authenticated_request');
-
-    Event.findOne({
-      order: event.order + 1
-    }, (err, prev_event) => {
-      if (err) return callback('database_error');
-      if (!prev_event)
-        return callback(null);
-
-      Event.findByIdAndUpdate(event._id, {$inc: {
-        order: 1
-      }}, err => {
-        if (err) return callback('database_error');
-
-        Event.findByIdAndUpdate(prev_event._id, {$inc: {
-          order: -1
-        }}, err => {
-          if (err) return  callback('database_error');
-
-          return callback(null);
+          });
         });
-      });
-    });
+      }
+    );
   });
 };
 
