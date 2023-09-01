@@ -3,19 +3,16 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 
 const deleteFile = require('../../utils/deleteFile');
-const toURLString = require('../../utils/toURLString');
 
 const Image = require('../image/Image');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getEvent = require('./functions/getEvent');
 const getEventByLanguage = require('./functions/getEventByLanguage');
-const getIdentifier = require('./functions/getIdentifier');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isEventComplete = require('./functions/isEventComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
-const DEFAULT_IDENTIFIER_LANGUAGE = 'en';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const LOGO_HEIGHT = 300;
 const LOGO_NAME_PREFIX = 'node101 event logo ';
@@ -73,16 +70,6 @@ const EventSchema = new Schema({
     trim: true,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
-	identifiers: { // toURLString(name) - toURLString(formatDate(date, 'DD-MM-YYYY))
-		type: Array,
-		required: true,
-		default: [],
-		maxlength: MAX_DATABASE_ARRAY_FIELD_LENGTH
-	},
-	identifier_languages: {
-		type: Object,
-		default: {}
-	},
 	logo: {
 		type: String,
 		default: null,
@@ -132,40 +119,31 @@ EventSchema.statics.createEvent = function (data, callback) {
   if (!data.name || typeof data.name != 'string' || !data.name.trim().length || data.name.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
-  const identifier = getIdentifier(data);
+  Event.findEventCountByFilters({ is_deleted: false }, (err) => {
+    if (err) return callback(err);
 
-  Event.findOne({
-    identifiers: identifier
-  }, (err) => {
-    if (err) return callback('database_error');
+    const newEventData = {
+      name: data.name.trim(),
+			search_name: data.name.trim(),
+      created_at: new Date()
+    };
 
-    Event.findEventCountByFilters({ is_deleted: false }, (err) => {
-      if (err) return callback(err);
+    const newEvent = new Event(newEventData);
 
-      const newEventData = {
-        name: data.name.trim(),
-				search_name: data.name.trim(),
-        identifiers: [ identifier ],
-        identifier_languages: { [identifier]: DEFAULT_IDENTIFIER_LANGUAGE },
-        created_at: new Date()
-      };
+    newEvent.save((err, event) => {
+      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+        return callback('duplicated_unique_field');
+      if (err) return callback('database_error');
+        
+      event.translations = formatTranslations(event, 'tr');
+      event.translations = formatTranslations(event, 'ru');
 
-      const newEvent = new Event(newEventData);
-
-      newEvent.save((err, event) => {
-        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-          return callback('duplicated_unique_field');
+      Event.findByIdAndUpdate(event._id, { $set: {
+        translations: event.translations
+      }}, err => {
         if (err) return callback('database_error');
-          
-        event.translations = formatTranslations(event, 'tr');
-        event.translations = formatTranslations(event, 'ru');
 
-        Event.findByIdAndUpdate(event._id, { $set: {
-          translations: event.translations
-        }}, err => {
-          if (err) return callback('database_error');
-
-          Event.collection
+        Event.collection
           .createIndex(
             { search_name: 'text', search_description: 'text' },
             { weights: {
@@ -175,7 +153,6 @@ EventSchema.statics.createEvent = function (data, callback) {
           )
           .then(() => callback(null, event._id.toString()))
           .catch(_ => callback('index_error'));
-        });
       });
     });
   });
@@ -255,79 +232,55 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
     if (!data.event_type || typeof data.event_type != 'string' || !data.event_type.trim().length || data.event_type.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
       return callback('bad_request');
-    
-    const newIdentifier = getIdentifier(data);
-    const oldIdentifier = getIdentifier(event);
 
-    Event.findOne({
-      _id: { $ne: event._id },
-      identifiers: newIdentifier
-    }, (err, duplicate) => {
+    Event.findByIdAndUpdate(event._id, { $set: {
+      name: data.name.trim(),
+      description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
+      event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
+      start_date: new Date(data.start_date),
+      end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
+      location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
+      register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
+      social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
+    }}, { new: true }, (err, event) => {
+      if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
+        return callback('duplicated_unique_field');
       if (err) return callback('database_error');
-      if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = event.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+      event.translations = formatTranslations(event, 'tr', event.translations.tr);
+      event.translations = formatTranslations(event, 'ru', event.translations.ru);
 
-      const identifier_languages = {
-        [newIdentifier]: DEFAULT_IDENTIFIER_LANGUAGE
-      };
-
-      Object.keys(event.identifier_languages).forEach(key => {
-        if (key != oldIdentifier)
-          identifier_languages[key] = event.identifier_languages[key]
-      });
-
-      Event.findByIdAndUpdate(event._id, { $set: {
-        name: data.name.trim(),
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
-        event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
-        start_date: new Date(data.start_date),
-        end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
-        location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
-        identifiers,
-        identifier_languages,
-        register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
-        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
+      Event.findByIdAndUpdate(event._id, {$set: {
+        translations: event.translations
       }}, { new: true }, (err, event) => {
-        if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
-          return callback('duplicated_unique_field');
         if (err) return callback('database_error');
 
-        event.translations = formatTranslations(event, 'tr', event.translations.tr);
-        event.translations = formatTranslations(event, 'ru', event.translations.ru);
+        const searchName = new Set();
+        const searchDescription = new Set();
 
-        Event.findByIdAndUpdate(event._id, {$set: {
-          translations: event.translations
+        event.name.split(' ').forEach(word => searchName.add(word));
+        event.translations.tr.name.split(' ').forEach(word => searchName.add(word));
+        event.translations.ru.name.split(' ').forEach(word => searchName.add(word));
+        event.description.split(' ').forEach(word => searchDescription.add(word));
+        event.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
+        event.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
+
+        Event.findByIdAndUpdate(event._id, { $set: {
+          search_name: Array.from(searchName).join(' '),
+          search_description: Array.from(searchDescription).join(' ')
         }}, { new: true }, (err, event) => {
           if (err) return callback('database_error');
 
-          const searchName = new Set();
-          const searchDescription = new Set();
-
-          event.name.split(' ').forEach(word => searchName.add(word));
-          event.translations.tr.name.split(' ').forEach(word => searchName.add(word));
-          event.translations.ru.name.split(' ').forEach(word => searchName.add(word));
-          event.description.split(' ').forEach(word => searchDescription.add(word));
-          event.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
-          event.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
-
-          Event.findByIdAndUpdate(event._id, { $set: {
-            search_name: Array.from(searchName).join(' '),
-            search_description: Array.from(searchDescription).join(' ')
-          }}, { new: true }, (err, event) => {
-            if (err) return callback('database_error');
-
-            Event.collection
-              .createIndex(
-                { search_name: 'text', search_description: 'text' },
-                { weights: {
-                  search_name: 10,
-                  search_description: 1
-                }}
-              )
-              .then(() => callback(null))
-              .catch(_ => callback('index_error'));
-          });
+          Event.collection
+            .createIndex(
+              { search_name: 'text', search_description: 'text' },
+              { weights: {
+                search_name: 10,
+                search_description: 1
+              }}
+            )
+            .then(() => callback(null))
+            .catch(_ => callback('index_error'));
         });
       });
     });
@@ -392,68 +345,37 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
 
     const translations = formatTranslations(event, data.language, data);
 
-    let oldIdentifier = getIdentifier(event.translations[data.language], data.language);
-
-    data.start_date = event.start_date;
-    data.end_date = event.end_date;
-    const newIdentifier = getIdentifier(data, data.language);
-
-    if (oldIdentifier == getIdentifier(data, data.language))
-      oldIdentifier = null;
-
-    Event.findOne({
-      _id: { $ne: event._id },
-      identifiers: newIdentifier
-    }, (err, duplicate) => {
+    Event.findByIdAndUpdate(event._id, { $set: {
+      translations
+    }}, { new: true }, (err, event) =>  {
       if (err) return callback('database_error');
-      if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = event.identifiers.filter(each => each != oldIdentifier);
-      if (!identifiers.includes(newIdentifier))
-        identifiers.push(newIdentifier);
-      const identifier_languages = {
-        [newIdentifier]: data.language
-      };
+      const searchName = new Set();
+      const searchDescription = new Set();
 
-      Object.keys(event.identifier_languages).forEach(key => {
-        if (key != oldIdentifier)
-          identifier_languages[key] = event.identifier_languages[key]
-      });
+      event.name.split(' ').forEach(word => searchName.add(word));
+      event.translations.tr.name.split(' ').forEach(word => searchName.add(word));
+      event.translations.ru.name.split(' ').forEach(word => searchName.add(word));
+      event.description.split(' ').forEach(word => searchDescription.add(word));
+      event.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
+      event.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
 
       Event.findByIdAndUpdate(event._id, { $set: {
-        identifiers,
-        identifier_languages,
-        translations
-      }}, { new: true }, (err, event) =>  {
+        search_name: Array.from(searchName).join(' '),
+        search_description: Array.from(searchDescription).join(' ')
+      }}, err => {
         if (err) return callback('database_error');
 
-        const searchName = new Set();
-        const searchDescription = new Set();
-
-        event.name.split(' ').forEach(word => searchName.add(word));
-        event.translations.tr.name.split(' ').forEach(word => searchName.add(word));
-        event.translations.ru.name.split(' ').forEach(word => searchName.add(word));
-        event.description.split(' ').forEach(word => searchDescription.add(word));
-        event.translations.tr.description.split(' ').forEach(word => searchDescription.add(word));
-        event.translations.ru.description.split(' ').forEach(word => searchDescription.add(word));
-
-        Event.findByIdAndUpdate(event._id, { $set: {
-          search_name: Array.from(searchName).join(' '),
-          search_description: Array.from(searchDescription).join(' ')
-        }}, err => {
-          if (err) return callback('database_error');
-
-          Event.collection
-            .createIndex(
-              { search_name: 'text', search_description: 'text' },
-              { weights: {
-                search_name: 10,
-                search_description: 1
-              }}
-            )
-            .then(() => callback(null))
-            .catch(_ => callback('index_error'));
-        });
+        Event.collection
+          .createIndex(
+            { search_name: 'text', search_description: 'text' },
+            { weights: {
+              search_name: 10,
+              search_description: 1
+            }}
+          )
+          .then(() => callback(null))
+          .catch(_ => callback('index_error'));
       });
     });
   });
@@ -593,9 +515,6 @@ EventSchema.statics.findEventByIdAndDelete = function (id, callback) {
     if (event.is_deleted) return callback(null);
     
     Event.findByIdAndUpdate(event._id, { $set: {
-      name: event.name + event._id.toString(),
-      identifiers: [],
-      identifier_languages: {},
       is_deleted: true
     }}, err => {
       if (err) return callback('database_error');
@@ -612,49 +531,13 @@ EventSchema.statics.findEventByIdAndRestore = function (id, callback) {
     if (err) return callback(err);
     if (!event.is_deleted) return callback(null);
 
-    event.name = event.name.replace(event._id.toString(), '');
+    Event.findByIdAndUpdate(event._id, {
+      is_deleted: false
+    }, err => {
+      if (err) return callback('database_error');
 
-    const defaultIdentifier = getIdentifier(event, DEFAULT_IDENTIFIER_LANGUAGE);
-    const identifiers = [ defaultIdentifier ];
-    const identifierLanguages = {
-      [identifiers[0]]: DEFAULT_IDENTIFIER_LANGUAGE
-    };
-    Object.values(event.translations).forEach((lang, index) => {
-      const languageIdentifier = getIdentifier(lang, Object.keys(event.translations)[index]);
-
-      if (!identifiers.includes(languageIdentifier)) {
-        identifiers.push(languageIdentifier);
-        identifierLanguages[languageIdentifier] = Object.keys(event.translations)[index];
-      }
+      return callback(null);
     });
-
-    async.timesSeries(
-      identifiers.length,
-      (time, next) => Event.findOne({ identifiers: identifiers[time] }, (err, event) => {
-        if (err) return next('database_error');
-        if (event) return next('duplicated_unique_field');
-
-        return next(null);
-      }),
-      err => {
-        if (err) return callback(err);
-
-        Event.findEventCountByFilters({ is_deleted: false }, (err) => {
-          if (err) return callback(err);
-
-          Event.findByIdAndUpdate(event._id, {
-            name: event.name.replace(event._id.toString(), ''),
-            identifiers,
-            identifier_languages: identifierLanguages,
-            is_deleted: false
-          }, err => {
-            if (err) return callback('database_error');
-
-            return callback(null);
-          });
-        });
-      }
-    );
   });
 };
 

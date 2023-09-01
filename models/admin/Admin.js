@@ -295,7 +295,7 @@ AdminSchema.statics.findAdminsByFilters = function (data, callback) {
     .skip(skip)
     .then(admins => async.timesSeries(
       admins.length,
-      (time, next) => formatAdmin(admins[time], (err, admin) => next(err, admin)),
+      (time, next) => formatAdmin(Admin, admins[time], (err, admin) => next(err, admin)),
       (err, admins) => {
         if (err) return callback(err);
 

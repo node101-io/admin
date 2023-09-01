@@ -14,7 +14,6 @@ module.exports = (event, language, callback) => {
     name: translation.name,
 		start_date: event.start_date,
     end_date: event.end_date,
-    identifiers: event.identifiers.find(each => event.identifier_languages[each] == language) || event.identifiers[0],
 		description: translation.description,
 		logo: event.logo,
 		location: translation.location,
