@@ -48,6 +48,7 @@ if (cluster.isMaster) {
   const wizardRouteController = require('./routes/wizardRoute');
   const writerRouteController = require('./routes/writerRoute');
   const writingRouteController = require('./routes/writingRoute');
+  const eventRouteController = require('./routes/eventRoute');
 
   const fromDateToHTMLInputString = require('./utils/fromDateToHTMLInputString');
   // const updateData = require('./utils/updateData');
@@ -109,6 +110,7 @@ if (cluster.isMaster) {
   app.use('/auth', authRouteController);
   app.use('/blog', blogRouteController);
   app.use('/book', bookRouteController);
+  app.use('/event', eventRouteController);
   app.use('/guide', guideRouteController);
   app.use('/member', memberRouteController);
   app.use('/project', projectRouteController);

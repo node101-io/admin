@@ -4,7 +4,8 @@
   "description": "admin.node101 official website",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
   },
   "author": "Yunus Gürlek",
   "license": "MIT",
@@ -30,5 +31,8 @@
     "serve-favicon": "^2.5.0",
     "sharp": "^0.31.2",
     "validator": "^13.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

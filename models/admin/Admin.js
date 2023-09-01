@@ -27,6 +27,7 @@ const ROLE_VALUES = [
   'blog_view', 'blog_create', 'blog_edit', 'blog_order', 'blog_delete',
   'book_view', 'book_create', 'book_edit', 'book_order', 'book_delete',
   'guide_view', 'guide_create', 'guide_edit', 'guide_order', 'guide_delete',
+  'event_view', 'event_create', 'event_edit', 'event_delete',
   'member_view', 'member_create', 'member_edit', 'member_order', 'member_delete',
   'project_view', 'project_create', 'project_edit', 'project_order', 'project_delete',
   'stake_view', 'stake_create', 'stake_edit', 'stake_order', 'stake_delete',
@@ -294,7 +295,7 @@ AdminSchema.statics.findAdminsByFilters = function (data, callback) {
     .skip(skip)
     .then(admins => async.timesSeries(
       admins.length,
-      (time, next) => formatAdmin(admins[time], (err, admin) => next(err, admin)),
+      (time, next) => formatAdmin(Admin, admins[time], (err, admin) => next(err, admin)),
       (err, admins) => {
         if (err) return callback(err);
 
