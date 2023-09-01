@@ -66,17 +66,10 @@ window.addEventListener('load', () => {
         inputs: [
           {
             name: 'name',
-            placeholder: 'Name (must be unique)'
-          },
-          {
-            date: 'date',
-            placeholder: 'Date of the event'
+            placeholder: 'Name'
           }
         ],
-        button: 'Create New Event',
-        errors: {
-          // duplicated_unique_field: 'Each book must have a unique name. Please use edit & translations page to change this book\'s details.'
-        }
+        button: 'Create New Event'
       }, (error, res) => {
         if (error) return alert(error);
         if (!res) return;

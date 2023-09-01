@@ -4,7 +4,7 @@ block main
     .general-header-text-wrapper
       .general-header-title= __('Event')
       .general-header-subtitle= __('Add event under node101 to access them from various models.')
-    input.general-header-search-input#event-search-input(type='text' placeholder='Search by name' value=events_search)
+    input.general-header-search-input#event-search-input(type='text' placeholder='Search by name or description' value=events_search)
   .all-content-inner-wrapper
     .general-page-wrapper
       if events_search
@@ -32,6 +32,5 @@ block main
             span.general-each-item-title= event.name
             span.general-each-item-subtitle(style=(event.is_completed ? '' : 'color: var(--warning-color)')) #{event.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
-            .general-each-item-third-button.order-each-event-button= __('Move Up')
             .general-each-item-second-button.delete-each-event-button= __('Delete')
             a.general-each-item-first-button(href='/event/edit?id=' + event._id)= __('Edit & Translate')

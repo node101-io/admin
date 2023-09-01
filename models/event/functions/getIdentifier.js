@@ -7,24 +7,42 @@ const MONTHS_BY_LANGUAGES = {
   'ru': [ 'январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль',  'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь' ]
 };
 
-module.exports = (data) => {
-  // const { name, start_date, end_date, language = 'en' } = data;
-  // I did not see the implementation of above line in your code so I didn't use it. I have learnt it in the course. Wouldn't it be faster?
-
+module.exports = (data, language) => {
+  language = language || DEFAULT_IDENTIFIER_LANGUAGE;
+  language = MONTHS_BY_LANGUAGES[language] ? language : DEFAULT_IDENTIFIER_LANGUAGE;
   let identifier = toURLString(data.name);
 
-  if (data.start_date || typeof data.start_date == 'string' || !isNaN(data.start_date)) {
+  if (data.start_date) {
     const startDate = new Date(data.start_date);
-    const startDay = startDate.getDate();
-    const month = MONTHS_BY_LANGUAGES[(data.language != null && data.language != undefined) ? data.language : DEFAULT_IDENTIFIER_LANGUAGE][startDate.getMonth()];
-    const year = startDate.getFullYear();
+    if (isNaN(startDate)) return identifier;
 
-    if (data.end_date || typeof data.end_date == 'string' || !isNaN(data.end_date)) {
+    const startDay = startDate.getDate();
+    const startMonthIndex = startDate.getMonth();
+    const startMonth = MONTHS_BY_LANGUAGES[language][startMonthIndex];
+    const startYear = startDate.getFullYear();
+
+    if (data.end_date) {
       const endDate = new Date(data.end_date);
+      if (isNaN(endDate)) {
+        return `${identifier}-${startDay}-${startMonth}-${startYear}`;
+      }
+
       const endDay = endDate.getDate();
-      return `${identifier}-${startDay}-${endDay}-${month}-${year}`;
+      const endMonthIndex = endDate.getMonth();
+      const endMonth = MONTHS_BY_LANGUAGES[language][endMonthIndex];
+      const endYear = endDate.getFullYear();
+
+      if (startYear == endYear) {
+        if (startMonth == endMonth) {
+          return `${identifier}-${startDay}-${endDay}-${startMonth}-${startYear}`;
+        } else {
+          return `${identifier}-${startDay}-${startMonth}-${endDay}-${endMonth}-${startYear}`;
+        }
+      } else {
+        return `${identifier}-${startDay}-${startMonth}-${startYear}-${endDay}-${endMonth}-${endYear}`;
+      }
     } else {
-      return `${identifier}-${startDay}-${month}-${year}`;
+      return `${identifier}-${startDay}-${startMonth}-${startYear}`;
     }
   }
 

@@ -24,6 +24,7 @@ const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
+const EVENT_TYPES = [ 'summit', 'party', 'conference', 'hackathon', 'meetup', 'workshop', 'dinner', 'brunch', 'co_living', 'nfts', 'tour' ]
 
 const Schema = mongoose.Schema;
 
@@ -47,18 +48,18 @@ const EventSchema = new Schema({
     default: null,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-	// date: {
-	// 	type: Date,
-	// 	required: true,
-	// 	trim: true,
-	// 	maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-	// },
 	description: {
 		type: String,
 		default: null,
 		trim: true,
 		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
+  event_type: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
 	search_name: { // Shadow search fields used for search queries. Includes translated values as well as real field, seperated by a space.
     type: String,
     required: true,
@@ -195,7 +196,7 @@ EventSchema.statics.findEventById = function (id, callback) {
     if (event.is_completed == is_completed)
       return callback(null, event);
     
-    Event.findByIdAndUpdate(event._id, {$set: {
+      Event.findByIdAndUpdate(event._id, {$set: {
       is_completed
     }}, { new: true }, (err, event) => {
       if (err) return callback('database_error');
@@ -251,6 +252,9 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
     if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
       return callback('bad_request');
+
+    if (!data.event_type || typeof data.event_type != 'string' || !data.event_type.trim().length || data.event_type.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
+      return callback('bad_request');
     
     const newIdentifier = getIdentifier(data);
     const oldIdentifier = getIdentifier(event);
@@ -275,14 +279,15 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
       Event.findByIdAndUpdate(event._id, { $set: {
         name: data.name.trim(),
+        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
+        event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
         start_date: new Date(data.start_date),
-        end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : undefined,
+        end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
+        location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
         identifiers,
         identifier_languages,
-        description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
-        register_url: data.register_url,
-        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
-        location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : event.location
+        register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
+        social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
       }}, { new: true }, (err, event) => {
         if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
           return callback('duplicated_unique_field');
@@ -376,9 +381,6 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
   if (!data || typeof data != 'object')
     return callback('bad_request');
 
-  if (!data.start_date || typeof data.start_date != 'string' || isNaN(new Date(data.start_date)))
-    return callback('bad_request');
-
   if (!data.language || !validator.isISO31661Alpha2(data.language.toString()))
     return callback('bad_request');
 
@@ -390,8 +392,14 @@ EventSchema.statics.findEventByIdAndUpdateTranslations = function (id, data, cal
 
     const translations = formatTranslations(event, data.language, data);
 
-    const oldIdentifier = getIdentifier(event.translations[data.language], data.language);
+    let oldIdentifier = getIdentifier(event.translations[data.language], data.language);
+
+    data.start_date = event.start_date;
+    data.end_date = event.end_date;
     const newIdentifier = getIdentifier(data, data.language);
+
+    if (oldIdentifier == getIdentifier(data, data.language))
+      oldIdentifier = null;
 
     Event.findOne({
       _id: { $ne: event._id },
@@ -469,11 +477,14 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
   if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.name.trim(), $options: 'i' };
 
+  if (data.event_type && typeof data.event_type == 'string' && data.event_type.trim().length && data.event_type.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.event_type = { $regex: data.event_type.trim(), $options: 'i' };
+
   if (data.date_after && typeof data.date_after == 'string' && !isNaN(new Date(data.date_after)))
-    filters.date = { $gte: new Date(data.date_after) };
+    filters.start_date = { $gte: new Date(data.date_after) };
 
   if (data.date_before && typeof data.date_before == 'string' && !isNaN(new Date(data.date_before)))
-    filters.date = { $lte: new Date(data.date_before) };
+    filters.start_date = { $lte: new Date(data.date_before) };
 
   if (data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.location = { $regex: data.location.trim(), $options: 'i' };
@@ -482,14 +493,14 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
     Event
       .find(filters)
       .sort({
-        start_date: 1,
-        end_date: 1
+        start_date: -1,
+        end_date: -1
       })
       .limit(limit)
       .skip(skip)
       .then(events => async.timesSeries(
         events.length,
-        (time, next) => Event.findEventByIdAndFormat(events[ time ]._id, (err, event) => next(err, event)),
+        (time, next) => Event.findEventByIdAndFormat(events[time]._id, (err, event) => next(err, event)),
         (err, events) => {
           if (err) return callback(err);
 
@@ -508,8 +519,8 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
     Event
       .find(filters)
       .sort({
-        start_date: 1,
-        end_date: 1
+        start_date: -1,
+        end_date: -1
       })
       .limit(limit)
       .skip(skip)
@@ -545,11 +556,14 @@ EventSchema.statics.findEventCountByFilters = function (data, callback) {
   if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.name.trim(), $options: 'i'};
 
+  if (data.event_type && typeof data.event_type == 'string' && data.event_type.trim().length && data.event_type.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
+    filters.event_type = { $regex: data.event_type.trim(), $options: 'i' };
+
   if (data.date_after && typeof data.date_after == 'string' && !isNaN(new Date(data.date_after)))
-    filters.date = { $gte: new Date(data.date_after) };
+    filters.start_date = { $gte: new Date(data.date_after) };
 
   if (data.date_before && typeof data.date_before == 'string' && !isNaN(new Date(data.date_before)))
-    filters.date = { $lte: new Date(data.date_before) };
+    filters.start_date = { $lte: new Date(data.date_before) };
 
   if (data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.location = { $regex: data.location.trim(), $options: 'i' };

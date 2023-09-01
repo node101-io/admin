@@ -20,11 +20,19 @@ block main
           span.general-create-subtitle.general-create-required= __('Event Description')
           input.general-input#description(type='text' placeholder=__('Describe the event with a few simple sentences.') value=event.description)
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Event Date')
-          input.general-input#date(type='text' placeholder=__('Enter the event date.') value=event.date)
+          span.general-create-subtitle.general-create-required= __('Event Type')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#event-type(value=event.event_type)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Scroll to choose a type.') value=types[event.event_type])
+            .general-select-input-choices-wrapper
+              each type in Object.keys(types)
+                .general-select-each-input-choice(id='select-input-' + type)= types[type]
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create= __('Event Location')
-          input.general-input#location(type='text' placeholder=__('Enter the event location.') value=event.location)
+          span.general-create-subtitle.general-create-required= __('Start Date')
+          input.general-input#start-date(type='date' placeholder=__('The start date of the event') value=fromDateToHTMLInputString(event.start_date))
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('End Date')
+          input.general-input#end-date(type='date' placeholder=__('The end date of the event') value=fromDateToHTMLInputString(event.end_date))
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Event Logo')
           if event.logo
@@ -34,8 +42,14 @@ block main
                 path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
           else
             label.general-image-input-wrapper(style='cursor: pointer')
-              input.display-none#image(type='file')
+              input.display-none#logo(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Event Location')
+          input.general-input#location(type='text' placeholder=__('Enter the event location') value=event.location)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Register URL')
+          input.general-input#register-url(type='text' placeholder=__('Enter the register URL for the event') value=event.register_url)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Event')} #{socialAccounts[social]} 
@@ -45,7 +59,7 @@ block main
         .general-create-button#update-button= __('Update')
       span.general-create-title= __('Translations')
       .general-create-seperator
-      span.general-create-text= __('If you do not add a translation for a language users will see English as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
       .general-create-button-wrapper
       span.general-create-title= __('Turkish Translation')
       .general-create-seperator
@@ -55,8 +69,10 @@ block main
           input.general-input#turkish-name(type='text' placeholder=__('Enter the event name.') value=event.translations.tr.name)
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Event Turkish Description')
-          input.general-input#turkish-description(type='text' placeholder=__('Describe the prevent with a few simple sentences.') value=event.translations.tr.description)
+          input.general-input#turkish-description(type='text' placeholder=__('Describe the event with a few simple sentences.') value=event.translations.tr.description)
         .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Event Turkish Location')
+          input.general-input#turkish-location(type='text' placeholder=__('Enter the event location') value=event.translations.tr.location)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Event Turkish')} #{socialAccounts[social]} 
@@ -74,6 +90,8 @@ block main
           span.general-create-subtitle.general-create-required= __('Event Russian Description')
           input.general-input#russian-description(type='text' placeholder=__('Describe the event with a few simple sentences.') value=event.translations.ru.description)
         .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Event Russian Location')
+          input.general-input#russian-location(type='text' placeholder=__('Enter the event location') value=event.translations.ru.location)
         each social in Object.keys(socialAccounts)
           .general-create-input-grid-each-item-wrapper
             span.general-create-subtitle #{__('Event Russian')} #{socialAccounts[social]} 

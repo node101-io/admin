@@ -5,23 +5,23 @@ window.addEventListener('load', () => {
 
     document.getElementById('event-search-input').addEventListener('keyup', event => {
       if (event.key == 'Enter' && event.target.value?.trim()?.length) {
-        window.location = `/event/delete?search=${event.target.value.trim()}`;
+        window.location = `/event?search=${event.target.value.trim()}`;
       } else if (event.key == 'Enter') {
-        window.location = '/event/delete';
+        window.location = '/event';
       }
     });
   }
 
   document.addEventListener('click', event => {
-    if (event.target.classList.contains('restore-each-event-button')) {
+    if (event.target.classList.contains('delete-each-event-button')) {
       createConfirm({
-        title: 'Are you sure you want to restore this event?',
-        text: 'All restored events are ordered are sorted by the date they start.',
+        title: 'Are you sure you want to delete this event?',
+        text: 'You can restore the event whenever you like from the \`Deleted Events\` page.',
         reject: 'Cancel',
-        accept: 'Restore'
+        accept: 'Delete'
       }, res => {
         if (res) {
-          serverRequest('/event/restore', 'POST', {
+          serverRequest('/event/delete', 'POST', {
             id: event.target.parentNode.parentNode.id
           }, res => {
             if (!res.success) return throwError(res.error);

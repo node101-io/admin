@@ -15,7 +15,6 @@ module.exports = (req, res) => {
     'event_view': res.__('View Events'),
     'event_create': res.__('Create New Events'),
     'event_edit': res.__('Edit & Translate Events'),
-    'event_order': res.__('Change the Order of Events'),
     'event_delete': res.__('Delete & Restore Events'),
     'guide_view': res.__('View Guides'),
     'guide_create': res.__('Create New Guides'),

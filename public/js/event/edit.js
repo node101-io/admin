@@ -1,6 +1,5 @@
 window.addEventListener('load', () => {
-  const event = JSON.parse(document.getElementById('event-json').value);
-
+  const original_event = JSON.parse(document.getElementById('event-json').value);
   if (document.getElementById('event-search-input')) {
     document.getElementById('event-search-input').focus();
     document.getElementById('event-search-input').select();
@@ -21,8 +20,11 @@ window.addEventListener('load', () => {
 
       const name = document.getElementById('name').value;
       const description = document.getElementById('description').value;
-      const date = document.getElementById('date').value;
+      const startDate = document.getElementById('start-date').valueAsDate;
+      const endDate = document.getElementById('end-date').valueAsDate;
+      const eventType = document.getElementById('event-type').value;
       const location = document.getElementById('location').value;
+      const registerURL = document.getElementById('register-url').value;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
@@ -37,21 +39,21 @@ window.addEventListener('load', () => {
       if (!description || !description.trim().length)
         return error.innerHTML = 'Please enter a description for the event.';
 
-      if (!date || !date.trim().length)
-        return error.innerHTML = 'Please enter a date for the event.';
+      if (!startDate)
+        return error.innerHTML = 'Please enter a valid start date for the event.';
 
-      if (!location || !location.trim().length)
-        return error.innerHTML = 'Please enter a location for the event.';
-      
-      serverRequest('/event/edit?id=' + event._id, 'POST', {
+      serverRequest('/event/edit?id=' + original_event._id, 'POST', {
         name,
         description,
-        date,
+        start_date: startDate,
+        end_date: endDate,
+        event_type: eventType,
         location,
+        register_url: registerURL,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
-          return error.innerHTML = 'There is already a event with this name.'
+          return error.innerHTML = 'There is already an event with this information.'
         if (!res.success)
           return throwError(res.error);
 
@@ -67,7 +69,7 @@ window.addEventListener('load', () => {
       const error = document.getElementById('update-turkish-error');
       error.innerHTML = '';
 
-      if (!event.is_completed)
+      if (!original_event.is_completed)
         return error.innerHTML = 'Please complete the event before adding a translation.';
 
       const name = document.getElementById('turkish-name').value;
@@ -82,19 +84,20 @@ window.addEventListener('load', () => {
           socialMediaAccounts[socialAccountInputs[i].id.replace('turkish-', '')]= socialAccountInputs[i].value.trim();
 
       if (!name || !name.trim().length)
-        return error.innerHTML = 'Please enter a name for the project.';
+        return error.innerHTML = 'Please enter a name for the event.';
 
       if (!description || !description.trim().length)
-        return error.innerHTML = 'Please enter a description for the project.';
+        return error.innerHTML = 'Please enter a description for the event.';
 
-      serverRequest('/project/translate?id=' + project._id, 'POST', {
+      serverRequest('/event/translate?id=' + original_event._id, 'POST', {
         language: 'tr',
         name,
         description,
+        location,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
-          return error.innerHTML = 'There is already a project with this name.'
+          return error.innerHTML = 'There is already an event with this information.'
         if (!res.success)
           return throwError(res.error);
 
@@ -110,11 +113,12 @@ window.addEventListener('load', () => {
       const error = document.getElementById('update-russian-error');
       error.innerHTML = '';
 
-      if (!project.is_completed)
-        return error.innerHTML = 'Please complete the project before adding a translation.';
+      if (!original_event.is_completed)
+        return error.innerHTML = 'Please complete the event before adding a translation.';
 
       const name = document.getElementById('russian-name').value;
       const description = document.getElementById('russian-description').value;
+      const location = document.getElementById('russian-location').value;
       const socialMediaAccounts = {};
 
       const socialAccountInputs = document.querySelectorAll('.russian-social-account-input');
@@ -124,19 +128,20 @@ window.addEventListener('load', () => {
           socialMediaAccounts[socialAccountInputs[i].id.replace('russian-', '')]= socialAccountInputs[i].value.trim();
 
       if (!name || !name.trim().length)
-        return error.innerHTML = 'Please enter a name for the project.';
+        return error.innerHTML = 'Please enter a name for the event.';
 
       if (!description || !description.trim().length)
-        return error.innerHTML = 'Please enter a description for the project.';
+        return error.innerHTML = 'Please enter a description for the event.';
 
-      serverRequest('/project/translate?id=' + project._id, 'POST', {
+      serverRequest('/event/translate?id=' + original_event._id, 'POST', {
         language: 'ru',
         name,
         description,
+        location,
         social_media_accounts: socialMediaAccounts
       }, res => {
         if (!res.success && res.error == 'duplicated_unique_field')
-          return error.innerHTML = 'There is already a project with this name.'
+          return error.innerHTML = 'There is already an event with this information.'
         if (!res.success)
           return throwError(res.error);
 
@@ -150,7 +155,7 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('change', event => {
-    if (event.target.id == 'image') {
+    if (event.target.id == 'logo') {
       const file = event.target.files[0];
       const wrapper = event.target.parentNode;
   
@@ -158,14 +163,14 @@ window.addEventListener('load', () => {
       wrapper.childNodes[1].innerHTML = 'Loading...';
       wrapper.childNodes[0].type = 'text';
 
-      serverRequest('/project/image?id=' + project._id, 'FILE', {
+      serverRequest('/event/logo?id=' + original_event._id, 'FILE', {
         file
       }, res => {
         if (!res.success) return throwError(res.error);
     
         return createConfirm({
-          title: 'Project Image is Updated',
-          text: 'Project image is updated. Close to reload the page.',
+          title: 'Event Logo is Updated',
+          text: 'Event Logo is updated. Close to reload the page.',
           accept: 'Close'
         }, _ => window.location.reload());
       });

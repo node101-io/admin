@@ -1,6 +1,20 @@
 const Event = require('../../../models/event/Event');
 
 module.exports = (req, res) => {
+  const types = {
+    'none': res.__('Other'),
+    'summit': res.__('Summit'),
+    'party': res.__('Party'),
+    'conference': res.__('Conference'),
+    'hackathon': res.__('Hackathon'),
+    'meetup': res.__('Meetup'),
+    'workshop': res.__('Workshop'),
+    'dinner': res.__('Dinner'),
+    'brunch': res.__('Brunch'),
+    'co_living': res.__('Co-Living'),
+    'nfts': res.__('NFTs'),
+    'tour': res.__('Tour')
+  }
   const socialAccounts = {
     'instagram': 'Instagram',
     'medium': 'Medium',
@@ -29,6 +43,7 @@ module.exports = (req, res) => {
         }
       },
       event,
+      types,
       socialAccounts
     });
   });
