@@ -20,9 +20,11 @@ window.addEventListener('load', () => {
 
       const name = document.getElementById('name').value;
       const description = document.getElementById('description').value;
+      const category = document.getElementById('category').value;
+      const eventType = document.getElementById('event-type').value;
       const startDate = document.getElementById('start-date').valueAsDate;
       const endDate = document.getElementById('end-date').valueAsDate;
-      const eventType = document.getElementById('event-type').value;
+      const label = document.getElementById('label').value;
       const location = document.getElementById('location').value;
       const registerURL = document.getElementById('register-url').value;
       const socialMediaAccounts = {};
@@ -39,15 +41,26 @@ window.addEventListener('load', () => {
       if (!description || !description.trim().length)
         return error.innerHTML = 'Please enter a description for the event.';
 
+      if (!category)
+        return error.innerHTML = 'Please select a category for the event.';
+
+      if (!eventType)
+        return error.innerHTML = 'Please select an event type.';
+
       if (!startDate)
         return error.innerHTML = 'Please enter a valid start date for the event.';
+
+      if (!label)
+        return error.innerHTML = 'Please enter an event label.';
 
       serverRequest('/event/edit?id=' + original_event._id, 'POST', {
         name,
         description,
+        category,
+        event_type: eventType,
         start_date: startDate,
         end_date: endDate,
-        event_type: eventType,
+        label: label,
         location,
         register_url: registerURL,
         social_media_accounts: socialMediaAccounts
@@ -155,7 +168,7 @@ window.addEventListener('load', () => {
   });
 
   document.addEventListener('change', event => {
-    if (event.target.id == 'logo') {
+    if (event.target.id == 'image') {
       const file = event.target.files[0];
       const wrapper = event.target.parentNode;
   

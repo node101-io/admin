@@ -12,16 +12,17 @@ const getEventByLanguage = require('./functions/getEventByLanguage');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isEventComplete = require('./functions/isEventComplete');
 
+const CATEGORIES = [ 'main', 'side' ];
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const LOGO_HEIGHT = 300;
+const EVENT_LABELS = [ 'none', 'slider' ];
+const LOGO_HEIGHT = 227;
 const LOGO_NAME_PREFIX = 'node101 event logo ';
-const LOGO_WIDTH = 300;
-const MAX_DATABASE_ARRAY_FIELD_LENGTH = 1e4;
+const LOGO_WIDTH = 393;
 const MAX_DATABASE_LONG_TEXT_FIELD_LENGTH = 1e5;
 const MAX_DATABASE_TEXT_FIELD_LENGTH = 1e4;
 const MAX_DOCUMENT_COUNT_PER_QUERY = 1e2;
-const EVENT_TYPES = [ 'summit', 'party', 'conference', 'hackathon', 'meetup', 'workshop', 'dinner', 'brunch', 'co_living', 'nfts', 'tour' ]
+const EVENT_TYPES = [ 'other', 'summit', 'party', 'conference', 'hackathon', 'meetup', 'workshop', 'dinner', 'brunch', 'co_living', 'co_work', 'nfts', 'tour' ]
 
 const Schema = mongoose.Schema;
 
@@ -33,6 +34,24 @@ const EventSchema = new Schema({
 		minlength: 1,
 		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
+  description: {
+		type: String,
+		default: null,
+		trim: true,
+		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+	},
+  category: {
+    type: String,
+    default: 'main',
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  event_type: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
   start_date: {
     type: Date,
     trim: true,
@@ -45,18 +64,42 @@ const EventSchema = new Schema({
     default: null,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
-	description: {
+  logo: {
+		type: String,
+		default: null,
+		minlength: 1,
+		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+	},
+  label: {
+    type: String,
+    default: 'none',
+    trim: true,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
+  location: {
 		type: String,
 		default: null,
 		trim: true,
 		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
-  event_type: {
-    type: String,
-    default: null,
-    trim: true,
-    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-  },
+	register_url: {
+		type: String,
+		default: null,
+		trim: true,
+		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+	},
+  social_media_accounts: {
+		type: Object,
+		default: {}
+	},
+  translations: {
+		type: Object,
+		default: {}
+	},
+  is_completed: {
+		type: Boolean,
+		default: false
+	},
 	search_name: { // Shadow search fields used for search queries. Includes translated values as well as real field, seperated by a space.
     type: String,
     required: true,
@@ -70,44 +113,14 @@ const EventSchema = new Schema({
     trim: true,
     maxlength: MAX_DATABASE_LONG_TEXT_FIELD_LENGTH
   },
-	logo: {
-		type: String,
-		default: null,
-		minlength: 0,
-		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-	},
 	created_at: {
 		type: Date,
 		required: true
-	},
-	social_media_accounts: {
-		type: Object,
-		default: {}
-	},
-	translations: {
-		type: Object,
-		default: {}
-	},
-	location: {
-		type: String,
-		default: null,
-		trim: true,
-		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
-	},
-	register_url: {
-		type: String,
-		default: null,
-		trim: true,
-		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
 	is_deleted: {
 		type: Boolean,
 		default: false
 	},
-	is_completed: {
-		type: Boolean,
-		default: false
-	}
 });
 
 EventSchema.statics.createEvent = function (data, callback) {
@@ -236,9 +249,11 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
     Event.findByIdAndUpdate(event._id, { $set: {
       name: data.name.trim(),
       description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
+      category: data.category && typeof data.category == 'string' && CATEGORIES.includes(data.category) ? data.category : event.category,
       event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
       start_date: new Date(data.start_date),
       end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
+      label: data.label && typeof data.label == 'string' && EVENT_LABELS.includes(data.label) ? data.label : event.label,
       location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
       register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
@@ -289,9 +304,6 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
 
 EventSchema.statics.findEventByIdAndUpdateLogo = function (id, file, callback) {
   const Event = this;
-
-  if (!file || !file.filename)
-    return callback('bad_request');
 
   Event.findEventById(id, (err, event) => {
     if (err) return callback(err);

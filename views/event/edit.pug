@@ -20,6 +20,14 @@ block main
           span.general-create-subtitle.general-create-required= __('Event Description')
           input.general-input#description(type='text' placeholder=__('Describe the event with a few simple sentences.') value=event.description)
         .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Event Category')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#category(value=event.category)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a category') value=categories[event.category || 'main'])
+            .general-select-input-choices-wrapper
+              each category in Object.keys(categories)
+                .general-select-each-input-choice(id='select-input-' + category)= categories[category]
+        .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Event Type')
           .general-select-input-wrapper
             input.general-select-input-real-value#event-type(value=event.event_type)
@@ -42,8 +50,16 @@ block main
                 path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
           else
             label.general-image-input-wrapper(style='cursor: pointer')
-              input.display-none#logo(type='file')
+              input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Event Label')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#label(value=event.label)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=labels[event.label || 'none'])
+            .general-select-input-choices-wrapper
+              each label in Object.keys(labels)
+                .general-select-each-input-choice(id='select-input-' + label)= labels[label]
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create= __('Event Location')
           input.general-input#location(type='text' placeholder=__('Enter the event location') value=event.location)
