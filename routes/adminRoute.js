@@ -21,12 +21,12 @@ const passwordPostController = require('../controllers/admin/password/post');
 
 router.get(
   '/',
-    // isSystemAdmin,
+    isSystemAdmin,
     indexGetController
 );
 router.get(
   '/edit',
-    // isSystemAdmin,
+    isSystemAdmin,
     editGetController
 );
 router.get(
@@ -35,23 +35,23 @@ router.get(
 );
 router.get(
   '/logout',
-    // isSystemAdmin,
+    isSystemAdmin,
     logoutGetController
 );
 
 router.post(
   '/delete',
-    // isSystemAdmin,
+    isSystemAdmin,
     deletePostController
 );
 router.post(
   '/edit',
-    // isSystemAdmin,
+    isSystemAdmin,
     editPostController
 );
 router.post(
   '/create',
-    // isSystemAdmin,
+    isSystemAdmin,
     createPostController
 );
 router.post(
@@ -66,7 +66,7 @@ router.post(
 );
 router.post(
   '/password',
-    // isSystemAdmin,
+    isSystemAdmin,
     passwordPostController
 );
 
