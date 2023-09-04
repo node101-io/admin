@@ -537,5 +537,15 @@
 	"Co-Living": "Co-Living",
 	"NFTs": "NFTs",
 	"Tour": "Tour",
-	"Scroll to choose a type.": "Scroll to choose a type."
+	"Scroll to choose a type.": "Scroll to choose a type.",
+	"Add events to show in istanbulblockchain.events.": "Add events to show in istanbulblockchain.events.",
+	"Project Klein Key": "Project Klein Key",
+	"Enter the Klein key for the usage in application.": "Enter the Klein key for the usage in application.",
+	"Event Image": "Event Image",
+	"Event Label": "Event Label",
+	"Co-Work": "Co-Work",
+	"Main": "Main",
+	"Side": "Side",
+	"Event Category": "Event Category",
+	"Type to choose a category": "Type to choose a category"
 }

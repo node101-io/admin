@@ -73,9 +73,9 @@ router.post(
 router.post(
   '/logo',
     upload.single('file'),
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     logoPostController
 );
 router.post(

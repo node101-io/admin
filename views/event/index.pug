@@ -3,7 +3,7 @@ block main
   .general-header-wrapper
     .general-header-text-wrapper
       .general-header-title= __('Event')
-      .general-header-subtitle= __('Add event under node101 to access them from various models.')
+      .general-header-subtitle= __('Add events to show in istanbulblockchain.events.')
     input.general-header-search-input#event-search-input(type='text' placeholder='Search by name or description' value=events_search)
   .all-content-inner-wrapper
     .general-page-wrapper
@@ -25,6 +25,7 @@ block main
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
         span.general-page-info #{__('Showing')} #{events_limit} #{__('results per page.')}
+    - events = events.sort((a, b) => a.is_completed - b.is_completed)
     .general-items-wrapper
       each event in events
         .general-each-item-wrapper(id=event._id)
