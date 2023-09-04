@@ -15,7 +15,7 @@ const isEventComplete = require('./functions/isEventComplete');
 const CATEGORIES = [ 'main', 'side' ];
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const EVENT_LABELS = [ 'none', 'slider' ];
+const EVENT_LABELS = [ 'slider' ];
 const LOGO_HEIGHT = 227;
 const LOGO_NAME_PREFIX = 'node101 event logo ';
 const LOGO_WIDTH = 393;
@@ -253,7 +253,7 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
       event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
       start_date: new Date(data.start_date),
       end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
-      label: data.label && typeof data.label == 'string' && EVENT_LABELS.includes(data.label) ? data.label : event.label,
+      label: data.label && typeof data.label == 'string' && EVENT_LABELS.includes(data.label) ? data.label : null,
       location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
       register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
