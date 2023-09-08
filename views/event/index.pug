@@ -1,0 +1,37 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Event')
+      .general-header-subtitle= __('Add events to show in istanbulblockchain.events.')
+    input.general-header-search-input#event-search-input(type='text' placeholder='Search by name or description' value=events_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if events_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{events_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if events_page > 0
+            a.general-page-prev-button(href=`/event?page=${events_page-1}${events_search ? '&search=' + events_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(events_count / events_limit) + (events_count % events_limit ? 1 : 0); i += 1)
+            if i != events_page
+              a.general-each-page-button(href=`/event?page=${i}${events_search ? '&search=' + events_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (events_page + 1) * events_limit < events_count
+            a.general-page-next-button(href=`/event?page=${events_page+1}${events_search ? '&search=' + events_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{events_limit} #{__('results per page.')}
+    - events = events.sort((a, b) => a.is_completed - b.is_completed)
+    .general-items-wrapper
+      each event in events
+        .general-each-item-wrapper(id=event._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= event.name
+            span.general-each-item-subtitle(style=(event.is_completed ? '' : 'color: var(--warning-color)')) #{event.is_completed ? '' : `(${__('not completed')})`}
+          .general-each-item-buttons-wrapper
+            .general-each-item-second-button.delete-each-event-button= __('Delete')
+            a.general-each-item-first-button(href='/event/edit?id=' + event._id)= __('Edit & Translate')

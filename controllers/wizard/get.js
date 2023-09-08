@@ -17,8 +17,10 @@ module.exports = (req, res) => {
       .then(res => res.json())
       .catch(console.log);
 
-    if (github_data)
+    if (github_data) {
       github_data.platforms['darwin-aarch64'] = github_data.platforms['darwin-x86_64'];
+      github_data.notes = '';
+    }
 
     return res.render('wizard/edit', {
       page: 'wizard/edit',

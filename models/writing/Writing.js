@@ -601,8 +601,8 @@ WritingSchema.statics.findWritingByIdAndParentIdAndUpdate = function (id, parent
             created_at: data.created_at && !isNaN(new Date(data.created_at)) ? new Date(data.created_at) : writing.created_at,
             writer_id: !writer_err && writer ? writer._id : writing.writer_id,
             subtitle: data.subtitle && typeof data.subtitle == 'string' && data.subtitle.trim().length && data.subtitle.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.subtitle.trim() : writing.subtitle,
-            label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : writing.label,
-            flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : writing.flag,
+            label: data.label && typeof data.label == 'string' && LABEL_VALUES.includes(data.label) ? data.label : null,
+            flag: data.flag && typeof data.flag == 'string' && data.flag.trim().length && data.flag.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.flag.trim() : null,
             social_media_accounts: getSocialMediaAccounts(data.social_media_accounts),
             content: data.content && Array.isArray(data.content) && data.content.length < MAX_DATABASE_ARRAY_FIELD_LENGTH ? data.content : writing.content,
             is_hidden: 'is_hidden' in data ? (data.is_hidden ? true : false) : writing.is_hidden
