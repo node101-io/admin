@@ -52,16 +52,16 @@ const restorePostController = require('../controllers/venue/restore/post');
 
 router.post(
   '/create',
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     createPostController
 );
 router.post(
   '/delete',
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     deletePostController
 );
 // router.post(
@@ -74,23 +74,23 @@ router.post(
 router.post(
   '/image',
     upload.single('file'),
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     imagePostController
 );
 router.post(
   '/order',
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     orderPostController
 );
 router.post(
   '/restore',
-    // isAdmin,
-    // checkAdminPermission,
-    // createNavbarData,
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
     restorePostController
 );
 // router.post(
