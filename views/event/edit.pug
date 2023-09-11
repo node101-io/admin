@@ -22,11 +22,11 @@ block main
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Event Category')
           .general-select-input-wrapper
-            input.general-select-input-real-value#category(value=event.category)
-            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a category') value=categories[event.category || 'main'])
+            input.general-select-input-real-value#category(type='text' value=event.is_side ? 'side' : 'main')
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a category.') value=event.is_side ? 'Side Event' : 'Main Event')
             .general-select-input-choices-wrapper
-              each category in Object.keys(categories)
-                .general-select-each-input-choice(id='select-input-' + category)= categories[category]
+              .general-select-each-input-choice(id='select-input-side') Side Event
+              .general-select-each-input-choice(id='select-input-main') Main Event
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create-required= __('Event Type')
           .general-select-input-wrapper
@@ -53,13 +53,13 @@ block main
               input.display-none#image(type='file')
               span.general-image-input-placeholder= __('Upload from your device.')
         .general-create-input-grid-each-item-wrapper
-          span.general-create-subtitle.general-create-required= __('Event Label')
+          span.general-create-subtitle.general-create-required= __('Venue Label')
           .general-select-input-wrapper
-            input.general-select-input-real-value#label(value=event.label)
-            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=labels[event.label || 'none'])
+            input.general-select-input-real-value#label(type='text' value=event.is_slider ? 'slider' : '')
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label.') value=event.is_slider ? 'Slider' : 'None')
             .general-select-input-choices-wrapper
-              each label in Object.keys(labels)
-                .general-select-each-input-choice(id='select-input-' + label)= labels[label]
+              .general-select-each-input-choice(id='select-input-slider') Slider
+              .general-select-each-input-choice(id='select-input-') None
         .general-create-input-grid-each-item-wrapper
           span.general-create-subtitle.general-create= __('Event Location')
           input.general-input#location(type='text' placeholder=__('Enter the event location') value=event.location)

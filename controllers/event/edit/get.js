@@ -1,11 +1,6 @@
 const Event = require('../../../models/event/Event');
 
 module.exports = (req, res) => {
-  const labels = {
-    'none': res.__('None'),
-    'slider': res.__('Slider')
-  };
-
   const types = {
     'other': res.__('Other'),
     'summit': res.__('Summit'),
@@ -20,11 +15,6 @@ module.exports = (req, res) => {
     'co_work': res.__('Co-Work'),
     'nfts': res.__('NFTs'),
     'tour': res.__('Tour')
-  };
-
-  const categories = {
-    'main': res.__('Main'),
-    'side': res.__('Side')
   };
   
   const socialAccounts = {
@@ -55,9 +45,7 @@ module.exports = (req, res) => {
         }
       },
       event,
-      labels,
       types,
-      categories,
       socialAccounts
     });
   });
