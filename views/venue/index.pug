@@ -1,0 +1,37 @@
+extends ../partials/navbar
+block main
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title= __('Venues')
+      .general-header-subtitle= __('Add venues to show in istanbulblockchain.events.')
+    input.general-header-search-input#venue-search-input(type='text' placeholder='Search by name or description' value=venues_search)
+  .all-content-inner-wrapper
+    .general-page-wrapper
+      if venues_search
+        span.general-page-search-text #{__('Showing results of the search:')} "#{venues_search}"
+      .general-page-inner-wrapper
+        .general-page-buttons-wrapper
+          if venues_page > 0
+            a.general-page-prev-button(href=`/venue?page=${venues_page-1}${venues_search ? '&search=' + venues_search : ''}`) < #{__('Previous')}
+          else
+            span.general-page-prev-button.general-page-prev-button-not-allowed < #{__('Previous')}
+          - for (let i = 0; i < parseInt(venues_count / venues_limit) + (venues_count % venues_limit ? 1 : 0); i += 1)
+            if i != venues_page
+              a.general-each-page-button(href=`/venue?page=${i}${venues_search ? '&search=' + venues_search : ''}`)= i+1
+            else
+              span.general-each-page-button.general-each-page-button-selected= i+1
+          if (venues_page + 1) * venues_limit < venues_count
+            a.general-page-next-button(href=`/venue?page=${venues_page+1}${venues_search ? '&search=' + venues_search : ''}`) #{__('Next')} >
+          else
+            span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
+        span.general-page-info #{__('Showing')} #{venues_limit} #{__('results per page.')}
+    .general-items-wrapper
+      each venue in venues
+        .general-each-item-wrapper(id=venue._id)
+          .general-each-item-title-wrapper
+            span.general-each-item-title= venue.name
+            span.general-each-item-subtitle(style=(venue.is_completed ? '' : 'color: var(--warning-color)')) #{venue.is_completed ? '' : `(${__('not completed')})`}
+          .general-each-item-buttons-wrapper
+            .general-each-item-third-button.order-each-venue-button= __('Move Up')
+            .general-each-item-second-button.delete-each-venue-button= __('Delete')
+            a.general-each-item-first-button(href='/venue/edit?id=' + venue._id)= __('Edit & Translate')

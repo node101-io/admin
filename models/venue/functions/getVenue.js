@@ -8,7 +8,7 @@ module.exports = (venue, callback) => {
     description: venue.description,
     image: venue.image,
     address: venue.address,
-    province: venue.province,
+    district: venue.district,
     seated_capacity: venue.seated_capacity,
     standing_capacity: venue.standing_capacity,
     contact_number: venue.contact_number,

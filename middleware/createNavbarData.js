@@ -10,27 +10,32 @@ module.exports = (req, res, next) => {
       { permission: 'book_create', name: res.__('New Book'), link: '/book/create' },
       { permission: 'book_delete', name: res.__('Deleted Books'), link: '/book/delete' }
     ],
-    'Events': [
-      { permission: 'event_view', name: res.__('All Events'), link: '/event' },
-      { permission: 'event_create', name: res.__('New Event'), link: '/event/create' },
-      { permission: 'event_delete', name: res.__('Deleted Events'), link: '/event/delete' }
+    'Projects': [
+      { permission: 'project_view', name: res.__('All Projects'), link: '/project' },
+      { permission: 'project_create', name: res.__('New Project'), link: '/project/create' },
+      { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/project/delete' }
     ],
     'Guides': [
       { permission: 'guide_view', name: res.__('All Guides'), link: '/guide' },
       { permission: 'guide_create', name: res.__('New Guide'), link: '/guide/create' },
       { permission: 'guide_delete', name: res.__('Deleted Guides'), link: '/guide/delete' }
     ],
-    'Klein': [
-      { permission: 'wizard_view', name: res.__('Klein Version Controller'), link: '/wizard' }
+    'Events': [
+      { permission: 'event_view', name: res.__('All Events'), link: '/event' },
+      { permission: 'event_create', name: res.__('New Event'), link: '/event/create' },
+      { permission: 'event_delete', name: res.__('Deleted Events'), link: '/event/delete' }
     ],
-    'Projects': [
-      { permission: 'project_view', name: res.__('All Projects'), link: '/project' },
-      { permission: 'project_create', name: res.__('New Project'), link: '/project/create' },
-      { permission: 'project_delete', name: res.__('Deleted Projects'), link: '/project/delete' }
+    'Venues': [
+      { permission: 'venue_view', name: res.__('All Venues'), link: '/venue' },
+      { permission: 'venue_create', name: res.__('New Venue'), link: '/venue/create' },
+      { permission: 'venue_delete', name: res.__('Deleted Venues'), link: '/venue/delete' }
     ],
     'Tags': [
       { permission: 'tag_view', name: res.__('All Library Tags'), link: '/tag' },
       { permission: 'tag_create', name: res.__('New Tag'), link: '/tag/create' }
+    ],
+    'Klein': [
+      { permission: 'wizard_view', name: res.__('Klein Version Controller'), link: '/wizard' }
     ],
     'Team Members': [
       { permission: 'member_view', name: res.__('All Members'), link: '/member' },

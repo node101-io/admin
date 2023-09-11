@@ -179,6 +179,32 @@ window.addEventListener('load', () => {
       });
     }
 
+    if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/venue/create')) {
+      event.preventDefault();
+
+      createFormPopUp({
+        title: 'Create a New Venue',
+        url: '/venue/create',
+        method: 'POST',
+        description: 'You will be asked to complete venue details once you create it.',
+        inputs: [
+          {
+            name: 'name',
+            placeholder: 'Name (must be unique)'
+          }
+        ],
+        button: 'Create New Venue',
+        errors: {
+          duplicated_unique_field: 'Each venue must have a unique name. Please use edit & translations page to change this venue\'s details.'
+        }
+      }, (error, res) => {
+        if (error) return alert(error);
+        if (!res) return;
+
+        return window.location = '/venue/edit?id=' + res.id;
+      });
+    }
+
     if (event.target.classList.contains('each-navbar-group-link') && event.target.href.includes('/writer/create')) {
       event.preventDefault();
 

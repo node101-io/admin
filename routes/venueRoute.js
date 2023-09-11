@@ -8,47 +8,47 @@ const checkAdminPermission = require('../middleware/checkAdminPermission');
 const createNavbarData = require('../middleware/createNavbarData');
 const isAdmin = require('../middleware/isAdmin');
 
-// const deleteGetController = require('../controllers/event/delete/get');
-// const editGetController = require('../controllers/event/edit/get');
-// const filterGetController = require('../controllers/event/filter/get');
-// const indexGetController = require('../controllers/event/index/get');
+const deleteGetController = require('../controllers/venue/delete/get');
+const editGetController = require('../controllers/venue/edit/get');
+const filterGetController = require('../controllers/venue/filter/get');
+const indexGetController = require('../controllers/venue/index/get');
 
 const createPostController = require('../controllers/venue/create/post');
 const deletePostController = require('../controllers/venue/delete/post');
-// const editPostController = require('../controllers/event/edit/post');
+const editPostController = require('../controllers/venue/edit/post');
 const imagePostController = require('../controllers/venue/image/post');
 const orderPostController = require('../controllers/venue/order/post');
 const restorePostController = require('../controllers/venue/restore/post');
-// const translatePostController = require('../controllers/event/translate/post');
+const translatePostController = require('../controllers/venue/translate/post');
 
-// router.get(
-//   '/',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     indexGetController
-// );
-// router.get(
-//   '/delete',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     deleteGetController
-// );
-// router.get(
-//   '/edit',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     editGetController
-// );
-// router.get(
-//   '/filter',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     filterGetController
-// );
+router.get(
+  '/',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    indexGetController
+);
+router.get(
+  '/delete',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    deleteGetController
+);
+router.get(
+  '/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    editGetController
+);
+router.get(
+  '/filter',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    filterGetController
+);
 
 router.post(
   '/create',
@@ -64,13 +64,13 @@ router.post(
     createNavbarData,
     deletePostController
 );
-// router.post(
-//   '/edit',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     editPostController
-// );
+router.post(
+  '/edit',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    editPostController
+);
 router.post(
   '/image',
     upload.single('file'),
@@ -93,12 +93,12 @@ router.post(
     createNavbarData,
     restorePostController
 );
-// router.post(
-//   '/translate',
-//     isAdmin,
-//     checkAdminPermission,
-//     createNavbarData,
-//     translatePostController
-// );
+router.post(
+  '/translate',
+    isAdmin,
+    checkAdminPermission,
+    createNavbarData,
+    translatePostController
+);
 
 module.exports = router;

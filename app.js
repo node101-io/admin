@@ -39,16 +39,17 @@ if (cluster.isMaster) {
   const authRouteController = require('./routes/authRoute');
   const blogRouteController = require('./routes/blogRoute');
   const bookRouteController = require('./routes/bookRoute');
+  const eventRouteController = require('./routes/eventRoute');
   const guideRouteController = require('./routes/guideRoute');
   const indexRouteController = require('./routes/indexRoute');
   const memberRouteController = require('./routes/memberRoute');
   const projectRouteController = require('./routes/projectRoute');
   const stakeRouteController = require('./routes/stakeRoute');
   const tagRouteController = require('./routes/tagRoute');
+  const venueRouteController = require('./routes/venueRoute');
   const wizardRouteController = require('./routes/wizardRoute');
   const writerRouteController = require('./routes/writerRoute');
   const writingRouteController = require('./routes/writingRoute');
-  const eventRouteController = require('./routes/eventRoute');
 
   const fromDateToHTMLInputString = require('./utils/fromDateToHTMLInputString');
   // const updateData = require('./utils/updateData');
@@ -116,6 +117,7 @@ if (cluster.isMaster) {
   app.use('/project', projectRouteController);
   app.use('/stake', stakeRouteController);
   app.use('/tag', tagRouteController);
+  app.use('/venue', venueRouteController);
   app.use('/wizard', wizardRouteController);
   app.use('/writer', writerRouteController);
   app.use('/writing', writingRouteController);

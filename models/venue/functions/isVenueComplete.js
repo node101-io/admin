@@ -4,7 +4,5 @@ module.exports = venue => {
     venue.description &&
     venue.image &&
     venue.address &&
-    venue.province &&
-    venue.seated_capacity &&
-    venue.standing_capacity ? true : false
+    venue.district ? true : false
 };
