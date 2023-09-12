@@ -21,6 +21,8 @@ module.exports = (event, language, callback) => {
     label: event.label,
 		location: translation.location,
 		register_url: event.register_url,
+    is_slider: event.is_slider,
+    is_side: event.is_side,
     social_media_accounts: translation.social_media_accounts,
     is_completed: event.is_completed,
   });
