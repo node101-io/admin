@@ -404,16 +404,16 @@ VenueSchema.statics.findVenuesByFilters = function (data, callback) {
     filters.district = { $regex: data.district.trim(), $options: 'i' };
 
   if (data.more_seated_capacity && !isNaN(parseInt(data.more_seated_capacity)) && parseInt(data.more_seated_capacity) > 0)
-    filters.seated_capacity = { $gt: parseInt(data.more_seated_capacity) };
+    filters.seated_capacity = { $gte: parseInt(data.more_seated_capacity) };
 
   if (data.less_seated_capacity && !isNaN(parseInt(data.less_seated_capacity)) && parseInt(data.less_seated_capacity) > 0)
-    filters.seated_capacity = { $lt: parseInt(data.less_seated_capacity) };
+    filters.seated_capacity = { $lte: parseInt(data.less_seated_capacity) };
 
   if (data.more_standing_capacity && !isNaN(parseInt(data.more_standing_capacity)) && parseInt(data.more_standing_capacity) > 0)
-    filters.standing_capacity = { $gt: parseInt(data.more_standing_capacity) };
+    filters.standing_capacity = { $gte: parseInt(data.more_standing_capacity) };
 
   if (data.less_standing_capacity && !isNaN(parseInt(data.less_standing_capacity)) && parseInt(data.less_standing_capacity) > 0)
-    filters.standing_capacity = { $lt: parseInt(data.less_standing_capacity) };
+    filters.standing_capacity = { $lte: parseInt(data.less_standing_capacity) };
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Venue
@@ -483,16 +483,16 @@ VenueSchema.statics.findVenueCountByFilters = function (data, callback) {
     filters.district = { $regex: data.district.trim(), $options: 'i' };
 
   if (data.more_seated_capacity && !isNaN(parseInt(data.more_seated_capacity)) && parseInt(data.more_seated_capacity) > 0)
-    filters.seated_capacity = parseInt(data.seated_capacity);
+    filters.seated_capacity = { $gte: parseInt(data.more_seated_capacity) };
 
   if (data.less_seated_capacity && !isNaN(parseInt(data.less_seated_capacity)) && parseInt(data.less_seated_capacity) > 0)
-    filters.seated_capacity = parseInt(data.seated_capacity);
+    filters.seated_capacity = { $lte: parseInt(data.less_seated_capacity)}
 
   if (data.more_standing_capacity && !isNaN(parseInt(data.more_standing_capacity)) && parseInt(data.more_standing_capacity) > 0)
-    filters.standing_capacity = parseInt(data.standing_capacity);
+    filters.standing_capacity = { $gte: parseInt(data.more_standing_capacity) };
 
   if (data.less_standing_capacity && !isNaN(parseInt(data.less_standing_capacity)) && parseInt(data.less_standing_capacity) > 0)
-    filters.standing_capacity = parseInt(data.standing_capacity);
+    filters.standing_capacity = { $lte: parseInt(data.less_standing_capacity)}
 
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Venue
