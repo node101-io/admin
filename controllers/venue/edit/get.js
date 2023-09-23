@@ -1,22 +1,18 @@
-const Event = require('../../../models/event/Event');
+const Venue = require('../../../models/venue/Venue');
 
 module.exports = (req, res) => {
-  const types = {
-    'other': res.__('Other'),
-    'summit': res.__('Summit'),
-    'party': res.__('Party'),
-    'conference': res.__('Conference'),
-    'hackathon': res.__('Hackathon'),
-    'meetup': res.__('Meetup'),
-    'workshop': res.__('Workshop'),
-    'dinner': res.__('Dinner'),
-    'brunch': res.__('Brunch'),
-    'co_living': res.__('Co-Living'),
-    'co_work': res.__('Co-Work'),
-    'nfts': res.__('NFTs'),
-    'tour': res.__('Tour')
+  const districts = {
+    'fatih': 'Historical Peninsula (Fatih)',
+    'beyoglu': 'Historical European District (Beyoğlu)',
+    'halic': 'Golden Horn (Haliç)',
+    'sisli': 'Şişli',
+    'besiktas': 'Beşiktaş',
+    'sariyer': 'Sarıyer',
+    'kadıkoy': 'Kadıköy',
+    'uskudar': 'Üsküdar',
+    'beykoz': 'Beykoz',
+    'adalar': 'Adalar'
   };
-  
   const socialAccounts = {
     'instagram': 'Instagram',
     'medium': 'Medium',
@@ -32,20 +28,20 @@ module.exports = (req, res) => {
     'facebook': 'Facebook'
   };
 
-  Event.findEventByIdAndFormat(req.query.id, (err, event) => {
+  Venue.findVenueByIdAndFormat(req.query.id, (err, venue) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    return res.render('event/edit', {
-      page: 'event/edit',
-      title: event.name,
+    return res.render('venue/edit', {
+      page: 'venue/edit',
+      title: venue.name,
       includes: {
         external: {
           css: ['confirm', 'create', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'text'],
           js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'navbarListeners', 'page', 'serverRequest']
         }
       },
-      event,
-      types,
+      venue,
+      districts,
       socialAccounts
     });
   });

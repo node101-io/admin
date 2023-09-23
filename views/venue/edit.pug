@@ -1,0 +1,105 @@
+extends ../partials/navbar
+block main
+  input.display-none#venue-json(type='text' value=JSON.stringify(venue))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Venue')} - #{venue.name}
+      .general-header-subtitle= __('Edit the venue information and translate the venue.')
+    input.general-header-search-input#venue-search-input(autocomplete='search' name='new-password' placeholder='Search by name or description' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !venue.is_completed
+        .general-create-info= __('IMPORTANT! This venue is not yet complete. Please complete all the required fields to start using this venue in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Name')
+          input.general-input#name(type='text' placeholder=__('Enter the venue name.') value=venue.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Description')
+          input.general-input#description(type='text' placeholder=__('Describe the venue with a few simple sentences.') value=venue.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue District')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#district(value=venue.district)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Scroll to choose a district.') value=districts[venue.district])
+            .general-select-input-choices-wrapper
+              each district in Object.keys(districts)
+                .general-select-each-input-choice(id='select-input-' + district)= districts[district] 
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Address')
+          input.general-input#address(type='text' placeholder=__('Enter the venue address.') value=venue.address)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Image')
+          if venue.image
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${venue.image}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Venue Seated Capacity')
+          input.general-input#seated-capacity(type='number' placeholder=__('Enter the seated capacity of the venue') value=venue.seated_capacity)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create= __('Venue Standing Capacity')
+          input.general-input#standing-capacity(type='number' placeholder=__('Enter the standing capacity of the venue') value=venue.standing_capacity)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-created= __('Venue Contact Number')
+          input.general-input#contact-number(type='text' placeholder=__('Enter a contact number for the venue.') value=venue.contact_number)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-created= __('Venue Contact Email')
+          input.general-input#contact-email(type='text' placeholder=__('Enter a contact email for the venue.') value=venue.contact_email)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Venue')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=venue.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Turkish Name')
+          input.general-input#turkish-name(type='text' placeholder=__('Enter the venue name.') value=venue.translations.tr.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Turkish Description')
+          input.general-input#turkish-description(type='text' placeholder=__('Describe the venue with a few simple sentences.') value=venue.translations.tr.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Turkish Address')
+          input.general-input#turkish-address(type='text' placeholder=__('Enter the venue address.') value=venue.translations.tr.address)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Venue Turkish')} #{socialAccounts[social]} 
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=venue.translations.tr.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Russian Name')
+          input.general-input#russian-name(type='text' placeholder=__('Enter the venue name.') value=venue.translations.ru.name)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Russian Description')
+          input.general-input#russian-description(type='text' placeholder=__('Describe the venue with a few simple sentences.') value=venue.translations.ru.description)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Venue Russian Address')
+          input.general-input#russian-address(type='text' placeholder=__('Enter the venue address.') value=venue.translations.ru.address)
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Venue Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=venue.translations.ru.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

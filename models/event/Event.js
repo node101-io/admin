@@ -12,10 +12,8 @@ const getEventByLanguage = require('./functions/getEventByLanguage');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isEventComplete = require('./functions/isEventComplete');
 
-const CATEGORIES = [ 'main', 'side' ];
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
-const EVENT_LABELS = [ 'slider' ];
 const LOGO_HEIGHT = 227;
 const LOGO_NAME_PREFIX = 'node101 event logo ';
 const LOGO_WIDTH = 393;
@@ -42,8 +40,9 @@ const EventSchema = new Schema({
 	},
   category: {
     type: String,
-    default: 'main',
+    default: '',
     trim: true,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   event_type: {
@@ -72,8 +71,9 @@ const EventSchema = new Schema({
 	},
   label: {
     type: String,
-    default: 'none',
+    default: null,
     trim: true,
+    minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
   location: {
@@ -121,6 +121,14 @@ const EventSchema = new Schema({
 		type: Boolean,
 		default: false
 	},
+  is_slider: {
+    type: Boolean,
+    default: false
+  },
+  is_side: {
+    type: Boolean,
+    default: false
+  }
 });
 
 EventSchema.statics.createEvent = function (data, callback) {
@@ -249,13 +257,15 @@ EventSchema.statics.findEventByIdAndUpdate = function (id, data, callback) {
     Event.findByIdAndUpdate(event._id, { $set: {
       name: data.name.trim(),
       description: data.description && typeof data.description == 'string' && data.description.trim().length && data.description.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.description.trim() : event.description,
-      category: data.category && typeof data.category == 'string' && CATEGORIES.includes(data.category) ? data.category : event.category,
+      category: data.category && typeof data.category == 'string' && data.category.trim().length && data.category.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.category.trim() : event.category,
       event_type: data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type) ? data.event_type : event.event_type,
       start_date: new Date(data.start_date),
       end_date: data.end_date && typeof data.end_date == 'string' && !isNaN(new Date(data.end_date)) ? new Date(data.end_date) : null,
-      label: data.label && typeof data.label == 'string' && EVENT_LABELS.includes(data.label) ? data.label : null,
+      label: data.label && typeof data.label == 'string' && data.label.trim().length && data.label.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.label.trim() : null,
       location: data.location && typeof data.location == 'string' && data.location.trim().length && data.location.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.location.trim() : null,
       register_url: data.register_url && typeof data.register_url == 'string' && data.register_url.trim().length && data.register_url.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.register_url.trim() : null,
+      is_slider: data.is_slider && typeof data.is_slider == 'boolean' ? data.is_slider : false,
+      is_side: data.is_side && typeof data.is_side == 'boolean' ? data.is_side : false,
       social_media_accounts: getSocialMediaAccounts(data.social_media_accounts)
     }}, { new: true }, (err, event) => {
       if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
@@ -408,11 +418,17 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
   if ('is_deleted' in data)
     filters.is_deleted = data.is_deleted ? true : false;
 
+  if ('is_slider' in data)
+    filters.is_slider = data.is_slider ? true : false;
+
+  if ('is_side' in data)
+    filters.is_side = data.is_side ? true : false;
+
   if (data.name && typeof data.name == 'string' && data.name.trim().length && data.name.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
     filters.name = { $regex: data.name.trim(), $options: 'i' };
 
-  if (data.event_type && typeof data.event_type == 'string' && data.event_type.trim().length && data.event_type.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH)
-    filters.event_type = { $regex: data.event_type.trim(), $options: 'i' };
+  if (data.event_type && typeof data.event_type == 'string' && EVENT_TYPES.includes(data.event_type))
+    filters.event_type = data.event_type;
 
   if (data.date_after && typeof data.date_after == 'string' && !isNaN(new Date(data.date_after)))
     filters.start_date = { $gte: new Date(data.date_after) };
