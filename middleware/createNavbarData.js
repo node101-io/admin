@@ -72,7 +72,6 @@ module.exports = (req, res, next) => {
     });
   });
 
-  console.log(admin.image);
   res.locals.navbar = {
     title: admin.name,
     subtitle: admin.email,

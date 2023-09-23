@@ -94,7 +94,7 @@ window.addEventListener('load', () => {
       const choices = event.target.nextElementSibling?.childNodes;
 
       for (let i = 0; i < choices.length; i++)
-        if (choices[i].innerHTML.includes(event.target.value.trim().toLocaleLowerCase())) {
+        if (choices[i].innerHTML.toLocaleLowerCase().includes(event.target.value.trim().toLocaleLowerCase())) {
           choices[i].style.display = 'flex';
         } else {
           choices[i].style.display = 'none';
