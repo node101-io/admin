@@ -13,6 +13,7 @@ const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isEventComplete = require('./functions/isEventComplete');
 
 const DEFAULT_DOCUMENT_COUNT_PER_QUERY = 20;
+const DEFAULT_IMAGE_ROUTE = 'https://istanbulblockchain.events/img/default.webp';
 const DUPLICATED_UNIQUE_FIELD_ERROR_CODE = 11000;
 const LOGO_HEIGHT = 227;
 const LOGO_NAME_PREFIX = 'node101 event logo ';
@@ -65,7 +66,7 @@ const EventSchema = new Schema({
   },
   logo: {
 		type: String,
-		default: null,
+		default: DEFAULT_IMAGE_ROUTE,
 		minlength: 1,
 		maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
 	},
@@ -146,7 +147,8 @@ EventSchema.statics.createEvent = function (data, callback) {
     const newEventData = {
       name: data.name.trim(),
 			search_name: data.name.trim(),
-      created_at: new Date()
+      created_at: new Date(),
+      logo: DEFAULT_IMAGE_ROUTE
     };
 
     const newEvent = new Event(newEventData);
@@ -336,7 +338,7 @@ EventSchema.statics.findEventByIdAndUpdateLogo = function (id, file, callback) {
         deleteFile(file, err => {
           if (err) return callback(err);
 
-          if (!event.logo || event.logo.split('/')[event.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
+          if (!event.logo || event.logo == DEFAULT_IMAGE_ROUTE || event.logo.split('/')[event.logo.split('/').length-1] == url.split('/')[url.split('/').length-1])
             return callback(null, url);
 
           Image.findImageByUrlAndDelete(event.logo, err => {
