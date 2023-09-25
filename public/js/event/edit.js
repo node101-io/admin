@@ -50,6 +50,9 @@ window.addEventListener('load', () => {
       if (!startDate)
         return error.innerHTML = 'Please enter a valid start date for the event.';
 
+      if (!location)
+        return error.innerHTML = 'Please enter a location for the event.';
+
       serverRequest('/event/edit?id=' + original_event._id, 'POST', {
         name,
         description,
