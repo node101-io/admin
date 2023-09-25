@@ -8,7 +8,7 @@ module.exports = (req, res) => {
     'sisli': 'Şişli',
     'besiktas': 'Beşiktaş',
     'sariyer': 'Sarıyer',
-    'kadıkoy': 'Kadıköy',
+    'kadikoy': 'Kadıköy',
     'uskudar': 'Üsküdar',
     'beykoz': 'Beykoz',
     'adalar': 'Adalar'
