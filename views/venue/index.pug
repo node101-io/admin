@@ -25,6 +25,7 @@ block main
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
         span.general-page-info #{__('Showing')} #{venues_limit} #{__('results per page.')}
+    - venues = venues.sort((a, b) => a.is_completed - b.is_completed)
     .general-items-wrapper
       each venue in venues
         .general-each-item-wrapper(id=venue._id)
