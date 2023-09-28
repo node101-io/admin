@@ -326,8 +326,8 @@ WritingSchema.statics.findWritingByIdAndParentId = function (id, parent_id, call
   Writing.findById(mongoose.Types.ObjectId(id.toString()), (err, writing) => {
     if (err) return callback('database_error');
     if (!writing) return callback('document_not_found');
-    if (writing.parent_id.toString() != parent_id.toString())
-      return callback('not_authenticated_request');
+    // if (writing.parent_id.toString() != parent_id.toString())
+    //   return callback('not_authenticated_request');
 
     if (writing.is_completed == isWritingComplete(writing))
       return checkAndUpdateWritingFilter(writing, err => {

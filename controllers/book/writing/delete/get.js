@@ -1,27 +1,27 @@
-const Blog = require('../../../../models/blog/Blog');
+const Book = require('../../../../models/book/Book');
 
 module.exports = (req, res) => {
   req.query.is_deleted = true;
 
-  Blog.findBlogByIdAndFormat(req.query.id, (err, blog) => {
+  Book.findBookByIdAndFormat(req.query.id, (err, book) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    Blog.findBlogByIdAndGetWritingCountByFilters(req.query.id, req.query, (err, count) => {
+    Book.findBookByIdAndGetWritingCountByFilters(req.query.id, req.query, (err, count) => {
       if (err) return res.redirect('/error?message=' + err);
   
-      Blog.findBlogByIdAndGetWritingsByFilters(req.query.id, req.query, (err, data) => {
+      Book.findBookByIdAndGetWritingsByFilters(req.query.id, req.query, (err, data) => {
         if (err) return res.redirect('/error?message=' + err);
   
-        return res.render('blog/writing/delete', {
-          page: 'blog/writing/delete',
-          title: `${res.__('Deleted Writings')} - ${blog.title}`, 
+        return res.render('book/writing/delete', {
+          page: 'book/writing/delete',
+          title: `${res.__('Deleted Writings')} - ${book.title}`, 
           includes: {
             external: {
               css: ['confirm', 'form', 'formPopUp', 'general', 'header', 'items', 'navbar', 'navigation', 'page', 'text'],
               js: ['createConfirm', 'createFormPopUp', 'navbarListeners', 'page', 'serverRequest']
             }
           },
-          blog,
+          book,
           writings_count: count,
           writings_search: data.search,
           writings_limit: data.limit,

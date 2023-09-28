@@ -1,7 +1,7 @@
-const Blog = require('../../../../models/blog/Blog');
+const Book = require('../../../../models/book/Book');
 
 module.exports = (req, res) => {
-  Blog.findBlogByIdAndGetWritingByIdAndUpdateTranslations(req.query.id, req.query.writing_id, req.body, err => {
+  Book.findBookByIdAndGetWritingByIdAndUpdateTranslations(req.query.id, req.query.writing_id, req.body, err => {
     if (err) {
       res.write(JSON.stringify({ success: false, error: err }));
       return res.end();

@@ -1,6 +1,6 @@
 const DEFAULT_WRITING_LANGUAGE = 'en';
 
-const Blog = require('../../../../models/blog/Blog');
+const Book = require('../../../../models/book/Book');
 
 module.exports = (req, res) => {
   const translations = {
@@ -11,14 +11,14 @@ module.exports = (req, res) => {
   const translate = req.query.translate && translations[req.query.translate] ? req.query.translate : DEFAULT_WRITING_LANGUAGE;
 
   if (translate && translate != DEFAULT_WRITING_LANGUAGE) {
-    Blog.findBlogByIdAndFormatByLanguage(req.query.id, translate, (err, blog) => {
+    Book.findBookByIdAndFormatByLanguage(req.query.id, translate, (err, book) => {
       if (err) return res.redirect('/error?message=' + err);
   
-      Blog.findBlogByIdAndGetWritingByIdAndFormatByLanguage(req.query.id, req.query.writing_id, translate, (err, writing) => {
+      Book.findBookByIdAndGetWritingByIdAndFormatByLanguage(req.query.id, req.query.writing_id, translate, (err, writing) => {
         if (err) return res.redirect('/error?message=' + err);
   
-        return res.render('blog/writing/content', {
-          page: 'blog/writing/content',
+        return res.render('book/writing/content', {
+          page: 'book/writing/content',
           title: `${res.__('Edit Writing')} - ${writing.title}`, 
           includes: {
             external: {
@@ -27,21 +27,21 @@ module.exports = (req, res) => {
             }
           },
           translations,
-          blog,
+          book,
           writing,
           translate
         });
       });
     });
   } else {
-    Blog.findBlogByIdAndFormat(req.query.id, (err, blog) => {
+    Book.findBookByIdAndFormat(req.query.id, (err, book) => {
       if (err) return res.redirect('/error?message=' + err);
   
-      Blog.findBlogByIdAndGetWritingByIdAndFormat(req.query.id, req.query.writing_id, (err, writing) => {
+      Book.findBookByIdAndGetWritingByIdAndFormat(req.query.id, req.query.writing_id, (err, writing) => {
         if (err) return res.redirect('/error?message=' + err);
   
-        return res.render('blog/writing/content', {
-          page: 'blog/writing/content',
+        return res.render('book/writing/content', {
+          page: 'book/writing/content',
           title: `${res.__('Edit Writing')} - ${writing.title}`, 
           includes: {
             external: {
@@ -50,7 +50,7 @@ module.exports = (req, res) => {
             }
           },
           translations,
-          blog,
+          book,
           writing,
           translate: DEFAULT_WRITING_LANGUAGE
         });

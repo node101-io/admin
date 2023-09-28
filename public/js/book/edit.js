@@ -211,6 +211,6 @@ window.addEventListener('load', () => {
             document.getElementById('writer-id').value = writer._id.toString();
         });
       });
-    }
-  })
+    };
+  });
 });

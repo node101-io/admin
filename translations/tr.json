@@ -659,5 +659,13 @@
 	"co-Work": "co-Work",
 	"bFTs": "bFTs",
 	"tour": "tour",
-	"nfts": "nfts"
+	"nfts": "nfts",
+	"Chapter Title": "Chapter Title",
+	"Enter the chapter title. Must be unique.": "Enter the chapter title. Must be unique.",
+	"Chapter Turkish Title": "Chapter Turkish Title",
+	"Enter the Turkish translation of the chapter title. Must be unique.": "Enter the Turkish translation of the chapter title. Must be unique.",
+	"Chapter Russian Title": "Chapter Russian Title",
+	"Enter the Russian translation of the chapter title. Must be unique.": "Enter the Russian translation of the chapter title. Must be unique.",
+	"Edit Chapter": "Edit Chapter",
+	"Edit the chapter information and translate the chapter.": "Edit the chapter information and translate the chapter."
 }
