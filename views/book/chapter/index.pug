@@ -36,17 +36,22 @@ block main
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
         span.general-page-info #{__('Showing')} #{children_limit} #{__('results per page.')}
     .general-items-wrapper
+      - children.sort((a, b) => (a.type > b.type) ? 1 : -1)
       each child in children
         .general-each-item-wrapper(id=child._id)
           .general-each-item-title-wrapper
             span.general-each-item-title= child.title
+            if child.type == 'writing'
+              span.general-each-item-subtitle(style=(child.is_completed ? '' : 'color: var(--warning-color)')) #{child.is_completed ? '' : `(${__('not completed')})`}
           .general-each-item-buttons-wrapper
             .general-each-item-third-button.order-each-children-button= __('Move Up')
-            .general-each-item-second-button.delete-each-children-button= __('Delete')
+            //- .general-each-item-second-button.delete-each-children-button= __('Delete')
             if child.type == 'chapter'
               if chapter
                 a.general-each-item-fourth-button.show-each-children-chilren-button(href=`${breadcrumps[breadcrumps.length - 1].link},${child._id}`)= __('Chapters')
               else
                 a.general-each-item-fourth-button.show-each-children-chilren-button(href=`/book/chapter?book_id=${book._id}&chapter_id=${child._id}`)= __('Chapters')
-            .general-each-item-first-button.edit-child-button= __('Edit & Translate')
-            
+              a.general-each-item-first-button.edit-child-button(href=`/book/chapter/edit?id=${child._id}`)= __('Edit & Translate')
+            else
+              a.general-each-item-fourth-button.edit-child-button(href=`/book/writing/edit?id=${book._id}&writing_id=${child._id}`)= __('Informations')
+              a.general-each-item-first-button.edit-child-button(href=`/book/writing/content?id=${book._id}&writing_id=${child._id}`)= __('Edit Content')

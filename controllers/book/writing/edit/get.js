@@ -1,4 +1,4 @@
-const Blog = require('../../../../models/blog/Blog');
+const Book = require('../../../../models/book/Book');
 
 module.exports = (req, res) => {
   const labels = {
@@ -13,14 +13,14 @@ module.exports = (req, res) => {
     'spotify': 'Spotify'
   };
 
-  Blog.findBlogByIdAndFormat(req.query.id, (err, blog) => {
+  Book.findBookByIdAndFormat(req.query.id, (err, book) => {
     if (err) return res.redirect('/error?message=' + err);
 
-    Blog.findBlogByIdAndGetWritingByIdAndFormat(req.query.id, req.query.writing_id, (err, writing) => {
+    Book.findBookByIdAndGetWritingByIdAndFormat(req.query.id, req.query.writing_id, (err, writing) => {
       if (err) return res.redirect('/error?message=' + err);
   
-      return res.render('blog/writing/edit', {
-        page: 'blog/writing/edit',
+      return res.render('book/writing/edit', {
+        page: 'book/writing/edit',
         title: writing.name,
         includes: {
           external: {
@@ -28,7 +28,7 @@ module.exports = (req, res) => {
             js: ['ancestorWithClassName', 'createConfirm', 'createFormPopUp', 'form', 'navbarListeners', 'page', 'serverRequest']
           }
         },
-        blog,
+        book,
         writing,
         labels,
         socialAccounts

@@ -8,10 +8,12 @@ const toURLString =require('../../utils/toURLString');
 const Chapter = require('../chapter/Chapter');
 const Image = require('../image/Image');
 const Project = require('../project/Project');
+const Writing = require('../writing/Writing');
 const Writer = require('../writer/Writer');
 
 const formatTranslations = require('./functions/formatTranslations');
 const getBook = require('./functions/getBook');
+const getBookByLanguage = require('./functions/getBookByLanguage');
 const getSocialMediaAccounts = require('./functions/getSocialMediaAccounts');
 const isBookComplete = require('./functions/isBookComplete');
 
@@ -193,6 +195,25 @@ BookSchema.statics.findBookByIdAndFormat = function (id, callback) {
   });
 };
 
+BookSchema.statics.findBookByIdAndFormatByLanguage = function (id, language, callback) {
+  const Book = this;
+
+  if (!language || !validator.isISO31661Alpha2(language.toString()))
+    return callback('bad_request');
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+    if (!book.is_completed)
+      return callback('not_authenticated_request');
+
+    getBookByLanguage(book, language, (err, book) => {
+      if (err) return callback(err);
+
+      return callback(null, book);
+    });
+  });
+};
+
 BookSchema.statics.findBookByIdAndUpdate = function (id, data, callback) {
   const Book = this;
 
@@ -263,11 +284,9 @@ BookSchema.statics.findBookByIdAndUpdate = function (id, data, callback) {
             }}, err => {
               if (err) return callback('database_error');
   
-              Project.findProjectById(data.project_id, (err, project) => {
-                if (err) return callback(err);
-
+              Project.findProjectById(data.project_id, (project_err, project) => {
                 Book.findByIdAndUpdate(book._id, {$set: {
-                  project_id: project._id
+                  project_id: !project_err ? project._id : book.project_id
                 }}, err => {
                   if (err) return callback('database_error');
 
@@ -643,17 +662,19 @@ BookSchema.statics.findBookByIdAndGetChildrenByFilters = function (id, data, cal
             return next(null, {
               _id: chapter._id,
               type: 'chapter',
-              title: chapter.title
+              title: chapter.title,
+              is_completed: chapter.is_completed
             });
           });
         else
-          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+          Writing.findWritingByIdAndParentIdAndFormat(child._id, book._id, (err, writing) => {
             if (err) return next(err);
 
             return next(null, {
               _id: writing._id,
               type: 'writing',
-              title: writing.title
+              title: writing.title,
+              is_completed: writing.is_completed
             });
           });
       },
@@ -735,6 +756,123 @@ BookSchema.statics.findBookByIdAndCreateWriting = function (id, data, callback) 
       });
     })
   })
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdate = function (id, writing_id, data, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdate(
+      writing_id,
+      book._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateCover = function (id, writing_id, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateCover(
+      writing_id,
+      book._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateLogo = function (id, writing_id, file, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdUpdateLogo(
+      writing_id,
+      book._id,
+      file,
+      (err, url) => callback(err, url)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndUpdateTranslations = function (id, writing_id, data, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndUpdateTranslations(
+      writing_id,
+      book._id,
+      data,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndDelete = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentId(writing_id, book._id, (err, writing) => {
+      Writing.deleteOne({ _id: writing._id }, err => {
+        if (err) callback('database_error');
+      });
+    });
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndFormat = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormat(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndFormatByLanguage = function (id, writing_id, language, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndFormatByLanguage(
+      writing_id,
+      book._id,
+      language,
+      (err, writing) => callback(err, writing)
+    );
+  });
+};
+
+BookSchema.statics.findBookByIdAndGetWritingByIdAndIncOrderByOne = function (id, writing_id, callback) {
+  const Book = this;
+
+  Book.findBookById(id, (err, book) => {
+    if (err) return callback(err);
+
+    Writing.findWritingByIdAndParentIdAndIncOrderByOne(
+      writing_id,
+      book._id,
+      (err, writing) => callback(err, writing)
+    );
+  });
 };
 
 module.exports = mongoose.model('Book', BookSchema);

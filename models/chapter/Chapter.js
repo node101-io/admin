@@ -156,16 +156,20 @@ ChapterSchema.statics.findChapterByIdAndGetChildrenByFilters = function (id, dat
 
             return next(null, {
               _id: chapter._id,
+              is_completed: chapter.is_completed,
+              is_deleted: chapter.is_deleted,
               type: 'chapter',
-              title: chapter.title
+              title: chapter.title,
             });
           });
         else
-          Writing.findWritingByIdAndFormat(child._id, (err, writing) => {
+          Writing.findWritingByIdAndParentIdAndFormat(child._id, chapter._id, (err, writing) => {
             if (err) return next(err);
 
             return next(null, {
               _id: writing._id,
+              is_completed: writing.is_completed,
+              is_deleted: writing.is_deleted,
               type: 'writing',
               title: writing.title
             });
@@ -254,6 +258,9 @@ ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
   if (!data.title || typeof data.title != 'string' || !data.title.trim().length || data.title.trim().length > MAX_DATABASE_TEXT_FIELD_LENGTH)
     return callback('bad_request');
 
+  if (!data.writer_id || !validator.isMongoId(data.writer_id.toString()))
+    return callback('bad_request');
+
   Chapter.findChapterById(id, (err, chapter) => {
     if (err) return callback(err);
 
@@ -267,13 +274,13 @@ ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
       if (err) return callback('database_error');
       if (duplicate) return callback('duplicated_unique_field');
 
-      const identifiers = writing.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
+      const identifiers = chapter.identifiers.filter(each => each != oldIdentifier).concat(newIdentifier);
 
       const identifier_languages = {
         identifier: DEFAULT_LANGUAGE
       };
 
-      Object.keys(writing.identifier_languages).forEach(key => {
+      Object.keys(chapter.identifier_languages).forEach(key => {
         if (key != oldIdentifier)
           identifier_languages[key] = chapter.identifier_languages[key]
       });
@@ -288,6 +295,8 @@ ChapterSchema.statics.findChapterByIdAndUpdate = function (id, data, callback) {
           identifier_languages
         }}, err => {
           if (err) return callback('database_error');
+
+          return callback(null);
         })
       });
     });

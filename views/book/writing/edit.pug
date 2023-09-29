@@ -1,0 +1,149 @@
+extends ../../partials/navbar
+block main
+  input.display-none#book-json(type='text' value=JSON.stringify(book))
+  input.display-none#writing-json(type='text' value=JSON.stringify(writing))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Writing')} - #{writing.title}
+      .general-header-subtitle= __('Edit the writing information and translate the writing. Please use edit content page to change the content of the writing')
+    input.general-header-search-input#writing-search-input(autocomplete='search' name='new-password' placeholder='Search by title or subtitle' value='')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      if !writing.is_completed
+        .general-create-info= __('IMPORTANT! This writing is not yet complete. Please complete all the required fields to start using this writing in the website.')
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Title')
+          input.general-input#title(type='text' placeholder=__('Enter the writing title. Must be unique.') value=writing.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writer')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#writer-id(value=(writing.writer ? writing.writer._id : ''))
+            input.general-select-input-selected-value.do-not-listen#writer-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(writing.writer ? writing.writer.name : ''))
+            .general-select-input-choices-wrapper#writer-choices
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Subtitle')
+          input.general-input#subtitle(type='text' placeholder=__('Enter a short subtitle to show on writing preview.') value=writing.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Logo')
+          if writing.logo
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${writing.logo}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Created At')
+          input.general-input#date(type='date' placeholder=__('The date the writing is created') value=fromDateToHTMLInputString(writing.created_at))
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Label')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#label(value=writing.label)
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=labels[writing.label || 'none'])
+            .general-select-input-choices-wrapper
+              each label in Object.keys(labels)
+                .general-select-each-input-choice(id='select-input-' + label)= labels[label]
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Flag')
+          input.general-input#flag(type='text' placeholder=__('Add a custom flag to writing') value=writing.flag)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Is Visible')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#is-hidden(value=JSON.stringify(writing.is_hidden))
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=(writing.is_hidden ? __('No, this writing is hidden from users.') : __('Yes, this writing is visible to users.')))
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-false')= __('Yes, this writing is visible to users.')
+              .general-select-each-input-choice(id='select-input-true')= __('No, this writing is hidden from users.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Writing')} #{socialAccounts[social]} 
+            input.general-input.social-account-input(type='text' id=social placeholder=__('URL address') value=writing.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper.turkish-translation
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Turkish Title')
+          input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the writing title. Must be unique.') value=writing.translations.tr.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Turkish Subtitle')
+          input.general-input#turkish-subtitle(type='text' placeholder=__('Enter the Turkish translation of the writing subtitle.') value=writing.translations.tr.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Turkish Flag')
+          input.general-input#turkish-flag(type='text' placeholder=__('Translate the custom flag to turkish') value=writing.translations.tr.flag)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Is Turkish Visible')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#turkish-is-hidden(value=JSON.stringify(writing.translations.tr.is_hidden))
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=(writing.translations.tr.is_hidden ? __('No, this writing is hidden from users in turkish.') : __('Yes, this writing is visible to users in turkish.')))
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-false')= __('Yes, this writing is visible to users in turkish.')
+              .general-select-each-input-choice(id='select-input-true')= __('No, this writing is hidden from users in turkish.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Turkish Logo')
+          if writing.translations.tr.logo
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${writing.translations.tr.logo}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Writing Turkish')} #{socialAccounts[social]} 
+            input.general-input.turkish-social-account-input(type='text' id='turkish-' + social placeholder=__('URL address') value=writing.translations.tr.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper.russian-translation
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Russian Title')
+          input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the writing title. Must be unique.') value=writing.translations.ru.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Russian Subtitle')
+          input.general-input#russian-subtitle(type='text' placeholder=__('Enter the Russian translation of the writing subtitle.') value=writing.translations.ru.subtitle)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Russian Flag')
+          input.general-input#russian-flag(type='text' placeholder=__('Translate the custom flag to russian') value=writing.translations.ru.flag)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Is Russian Visible')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#russian-is-hidden(value=JSON.stringify(writing.translations.ru.is_hidden))
+            input.general-select-input-selected-value(type='text' autocomplete='off' name='new-password' placeholder=__('Type to choose a label') value=(writing.translations.ru.is_hidden ? __('No, this writing is hidden from users in russian.') : __('Yes, this writing is visible to users in russian.')))
+            .general-select-input-choices-wrapper
+              .general-select-each-input-choice(id='select-input-false')= __('Yes, this writing is visible to users in russian.')
+              .general-select-each-input-choice(id='select-input-true')= __('No, this writing is hidden from users in russian.')
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Writing Russian Logo')
+          if writing.translations.ru.logo
+            label.general-image-input-wrapper(style='cursor: default')
+              .general-image-input-image(style=`background-image: url(${writing.translations.ru.logo}?${new Date().getTime()})`)
+              svg.general-image-input-delete-button(fill='var(--warning-color)' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512')
+                path(d='M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z')
+          else
+            label.general-image-input-wrapper(style='cursor: pointer')
+              input.display-none.russian-logo#image(type='file')
+              span.general-image-input-placeholder= __('Upload from your device.')
+        each social in Object.keys(socialAccounts)
+          .general-create-input-grid-each-item-wrapper
+            span.general-create-subtitle #{__('Writing Russian')} #{socialAccounts[social]} 
+            input.general-input.russian-social-account-input(type='text' id='russian-' + social placeholder=__('URL address') value=writing.translations.ru.social_media_accounts[social])
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')
+      

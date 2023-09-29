@@ -1,0 +1,46 @@
+extends ../../partials/navbar
+block main
+  input.display-none#chapter-json(type='text' value=JSON.stringify(chapter))
+  .general-header-wrapper
+    .general-header-text-wrapper
+      .general-header-title #{__('Edit Chapter')} - #{chapter.title}
+      .general-header-subtitle= __('Edit the chapter information and translate the chapter.')
+  .all-content-inner-wrapper
+    .general-create-wrapper
+      span.general-create-title= __('General Information')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle.general-create-required= __('Chapter Title')
+          input.general-input#title(type='text' placeholder=__('Enter the chapter title. Must be unique.') value=chapter.title)
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Writer')
+          .general-select-input-wrapper
+            input.general-select-input-real-value#writer-id(value=(chapter.writer ? chapter.writer._id : ''))
+            input.general-select-input-selected-value.do-not-listen#writer-search(type='text' autocomplete='off' name='new-password' placeholder=__('Type to search') value=(chapter.writer ? chapter.writer.name : ''))
+            .general-select-input-choices-wrapper#writer-choices
+      .general-create-button-wrapper
+        span.general-create-error#update-error
+        .general-create-button#update-button= __('Update')
+      span.general-create-title= __('Translations')
+      .general-create-seperator
+      span.general-create-text= __('If you do not add a translation for a language users will see english as the default option. You do not have to change all the given fields for any translation, just leave them as they are.')
+      .general-create-button-wrapper
+      span.general-create-title= __('Turkish Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Chapter Turkish Title')
+          input.general-input#turkish-title(type='text' placeholder=__('Enter the Turkish translation of the chapter title. Must be unique.') value=chapter.translations.tr.title)
+      .general-create-button-wrapper
+        span.general-create-error#update-turkish-error
+        .general-create-button#update-turkish-button= __('Update Turkish')
+      span.general-create-title= __('Russian Translation')
+      .general-create-seperator
+      .general-create-input-grid-wrapper
+        .general-create-input-grid-each-item-wrapper
+          span.general-create-subtitle= __('Chapter Russian Title')
+          input.general-input#russian-title(type='text' placeholder=__('Enter the Russian translation of the chapter title. Must be unique.') value=chapter.translations.ru.title)
+      .general-create-button-wrapper
+        span.general-create-error#update-russian-error
+        .general-create-button#update-russian-button= __('Update Russian')

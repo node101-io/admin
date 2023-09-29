@@ -1,7 +1,8 @@
 const STATIC_LINK_URL = 'https://library.node101.io/stable/'
 
 window.addEventListener('load', () => {
-  const blog = JSON.parse(document.getElementById('blog-json').value);
+  const book = JSON.parse(document.getElementById('book-json').value);
+  const chapter = document.getElementById('chapter-json') ? JSON.parse(document.getElementById('chapter-json').value) : null;
 
   if (document.getElementById('writing-search-input')) {
     document.getElementById('writing-search-input').focus();
@@ -9,9 +10,9 @@ window.addEventListener('load', () => {
 
     document.getElementById('writing-search-input').addEventListener('keyup', event => {
       if (event.key == 'Enter' && event.target.value?.trim()?.length) {
-        window.location = `/blog/writing?id=${blog._id}&search=${event.target.value.trim()}`;
+        window.location = `/book/writing?id=${book._id}&search=${event.target.value.trim()}`;
       } else if (event.key == 'Enter') {
-        window.location = '/blog/writing?id=' + blog._id;
+        window.location = '/book/writing?id=' + book._id;
       }
     });
   }
@@ -20,16 +21,16 @@ window.addEventListener('load', () => {
     const copyElement = document.getElementById('copy-element');
 
     if (event.target.id == 'create-writing-button') {
-      if (!blog.is_completed)
+      if (!book.is_completed)
         return createConfirm({
           title: 'Unauthorized Request',
-          text: 'You must complete a blog before you start adding writings. Please complete the blog from edit blog page',
+          text: 'You must complete a book before you start adding writings. Please complete the book from edit book page',
           reject: 'Close'
-        }, _ => {});
+        }, _ => { });
 
       createFormPopUp({
         title: 'Create a New Writing',
-        url: '/blog/writing/create?id=' + blog._id,
+        url: `/book/writing/create?id=${book._id}`,
         method: 'POST',
         description: 'You will be able to edit the writing once you create it. A writing is not displayed in the site until it is completed.',
         inputs: [
@@ -46,9 +47,9 @@ window.addEventListener('load', () => {
         if (error) return alert(error);
         if (!res) return;
 
-        return window.location = `/blog/writing/edit?id=${blog._id}&writing_id=${res.id}`;
+        return window.location = `/book/writing/edit?id=${book._id}&writing_id=${res.id}`;
       });
-    };
+    }
 
     if (event.target.classList.contains('copy-static-link-each-writing-button')) {
       const id = event.target.parentNode.parentNode.id;
@@ -60,10 +61,10 @@ window.addEventListener('load', () => {
       setTimeout(() => {
         event.target.innerHTML = 'Copy Static Link';
       }, 1000);
-    };
+    }
 
     if (event.target.classList.contains('order-each-writing-button')) {
-      serverRequest('/blog/writing/order?id=' + blog._id, 'POST', {
+      serverRequest('/book/writing/order?id=' + book._id, 'POST', {
         id: event.target.parentNode.parentNode.id
       }, res => {
         if (!res.success) return throwError(res.error);
@@ -80,7 +81,7 @@ window.addEventListener('load', () => {
         accept: 'Delete'
       }, res => {
         if (res) {
-          serverRequest('/blog/writing/delete?id=' + blog._id, 'POST', {
+          serverRequest('/book/writing/delete?id=' + book._id, 'POST', {
             id: event.target.parentNode.parentNode.id
           }, res => {
             if (!res.success) return throwError(res.error);

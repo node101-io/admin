@@ -280,7 +280,6 @@ GuideSchema.statics.findGuideById = function (id, callback) {
     Guide.findByIdAndUpdate(guide._id, {$set: {
       is_completed: isGuideComplete(guide)
     }}, { new: true }, (err, guide) => {
-      console.log(err);
       if (err) return callback('database_error');
 
       return callback(null, guide);
