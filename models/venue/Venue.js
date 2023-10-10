@@ -418,7 +418,7 @@ VenueSchema.statics.findVenuesByFilters = function (data, callback) {
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Venue
       .find(filters)
-      .sort({ order: -1 })
+      .sort({ is_completed: 1 })
       .limit(limit)
       .skip(skip)
       .then(venues => async.timesSeries(
