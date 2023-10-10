@@ -445,6 +445,7 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
     Event
       .find(filters)
       .sort({
+        is_completed: 1,
         start_date: -1,
         end_date: -1
       })
@@ -471,6 +472,7 @@ EventSchema.statics.findEventsByFilters = function (data, callback) {
     Event
       .find(filters)
       .sort({
+        is_completed: 1,
         start_date: -1,
         end_date: -1
       })

@@ -25,7 +25,6 @@ block main
           else
             span.general-page-next-button.general-page-next-button-not-allowed #{__('Next')} >
         span.general-page-info #{__('Showing')} #{events_limit} #{__('results per page.')}
-    - events = events.sort((a, b) => a.is_completed - b.is_completed)
     .general-items-wrapper
       each event in events
         .general-each-item-wrapper(id=event._id)
