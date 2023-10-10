@@ -418,7 +418,10 @@ VenueSchema.statics.findVenuesByFilters = function (data, callback) {
   if (!data.search || typeof data.search != 'string' || !data.search.trim().length) {
     Venue
       .find(filters)
-      .sort({ is_completed: 1 })
+      .sort({
+        is_completed: 1,
+        order: -1
+      })
       .limit(limit)
       .skip(skip)
       .then(venues => async.timesSeries(
@@ -443,6 +446,7 @@ VenueSchema.statics.findVenuesByFilters = function (data, callback) {
       .find(filters)
       .sort({ 
         score: { $meta: 'textScore' },
+        is_completed: 1,
         order: -1
       })
       .limit(limit)
