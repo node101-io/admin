@@ -366,7 +366,7 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
           network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
           frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions),
           wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null,
-          is_mainnet: (is_mainnet in data) && typeof data.is_mainnet == 'boolean' ? data.is_mainnet : guide.is_mainnet,
+          is_mainnet: ('is_mainnet' in data) && typeof data.is_mainnet == 'boolean' ? data.is_mainnet : guide.is_mainnet,
           system_requirements: getSystemRequirements(data.system_requirements)
         }}, { new: true }, (err, guide) => {
           if (err && err.code == DUPLICATED_UNIQUE_FIELD_ERROR_CODE)
