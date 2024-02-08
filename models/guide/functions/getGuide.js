@@ -34,6 +34,7 @@ module.exports = (guide, callback) => {
           is_active: guide.is_active,
           is_mainnet: guide.is_mainnet,
           wizard_key: guide.wizard_key,
+          latest_version: guide.latest_version,
           system_requirements: guide.system_requirements,
           writing
         });
@@ -61,6 +62,7 @@ module.exports = (guide, callback) => {
         is_active: guide.is_active,
         is_mainnet: guide.is_mainnet,
         wizard_key: guide.wizard_key,
+        latest_version: guide.latest_version,
         system_requirements: guide.system_requirements,
         writing
       });

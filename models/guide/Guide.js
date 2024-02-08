@@ -186,6 +186,13 @@ const GuideSchema = new Schema({
     minlength: 0,
     maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
   },
+  latest_version: {
+    type: String,
+    default: null,
+    trim: true,
+    minlength: 0,
+    maxlength: MAX_DATABASE_TEXT_FIELD_LENGTH
+  },
   system_requirements: {
     type: Object,
     default: {}
@@ -366,6 +373,7 @@ GuideSchema.statics.findGuideByIdAndUpdate = function (id, data, callback) {
           network: data.network && typeof data.network == 'string' && data.network.trim().length && data.network.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.network.trim() : null,
           frequently_asked_questions: getFrequentlyAskedQuestions(data.frequently_asked_questions),
           wizard_key: data.wizard_key && typeof data.wizard_key == 'string' && data.wizard_key.trim().length && data.wizard_key.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.wizard_key.trim() : null,
+          latest_version: data.latest_version && typeof data.latest_version == 'string' && data.latest_version.trim().length && data.latest_version.trim().length < MAX_DATABASE_TEXT_FIELD_LENGTH ? data.latest_version.trim() : null,
           is_mainnet: ('is_mainnet' in data) && typeof data.is_mainnet == 'boolean' ? data.is_mainnet : guide.is_mainnet,
           system_requirements: getSystemRequirements(data.system_requirements)
         }}, { new: true }, (err, guide) => {

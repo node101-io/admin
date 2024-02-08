@@ -40,6 +40,7 @@ window.addEventListener('load', () => {
       const socialMediaAccounts = {};
       const systemRequirements = {};
       const wizardKey = document.getElementById('wizard-key').value;
+      const latestVersion = document.getElementById('latest-version').value;
       const network = document.getElementById('network').value;
 
       const socialAccountInputs = document.querySelectorAll('.social-account-input');
@@ -79,6 +80,7 @@ window.addEventListener('load', () => {
         network, // useless for now
         social_media_accounts: socialMediaAccounts,
         wizard_key: wizardKey,
+        latest_version: latestVersion,
         system_requirements: systemRequirements,
         is_mainnet: network == 'mainnet'
       }, res => {
