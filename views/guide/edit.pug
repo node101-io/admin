@@ -48,7 +48,7 @@ block main
           span.general-create-subtitle.general-create-required= __('Project Klein Key')
           input.general-input#wizard-key(type='text' placeholder=__('Enter the Klein key for the usage in application.') value=guide.wizard_key)
         .general-create-input-grid-each-item-wrapper
-         span.general-create-subtitle.general-create= __('Project Latest Version')
+          span.general-create-subtitle.general-create= __('Project Latest Version')
           input.general-input#latest-version(type='text' placeholder=__('Enter the latest version of the project.') value=guide.latest_version)
         each requirement in Object.keys(systemRequirements)
           .general-create-input-grid-each-item-wrapper
